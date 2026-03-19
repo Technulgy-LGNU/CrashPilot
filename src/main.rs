@@ -1,5 +1,32 @@
+use std::net::{UdpSocket, Ipv4Addr};
+use prost::Message;
+
 mod proto;
 
 fn main() {
-    println!("Hello, world!");
+    let multicast_addr = Ipv4Addr::new(224, 5, 23, 1);
+    let port = 10003;
+
+    let socket = UdpSocket::bind(("0.0.0.0", port)).expect("couldn't bind to address");
+
+    socket.join_multicast_v4(&multicast_addr, &Ipv4Addr::UNSPECIFIED).expect("Error joining stream");
+
+    let mut buf = [0u8; 65536];
+
+    loop {
+        let (size, src) = socket.recv_from(&mut buf).expect("Didn't receive data");
+        println!("Received {} bytes from {}", size, src);
+
+
+        match proto::Referee::decode(&buf[..size]) {
+            Ok(msg) => {
+                println!("{:?}", msg.command);
+            }
+            Err(err) => {
+                println!("{:?}", err);
+            }
+        }
+    }
 }
+
+
