@@ -2,3 +2,4 @@
 unixMsgRec
 cmake-build-debug/
 .idea
+rust_to_cpp.sock
