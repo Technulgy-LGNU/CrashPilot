@@ -4,6 +4,7 @@ use std::os::unix::net::UnixStream;
 use prost::Message;
 
 mod proto;
+mod ssl;
 
 fn main() {
     let multicast_addr = Ipv4Addr::new(224, 5, 23, 1);
