@@ -5,7 +5,7 @@
 #include <cstring>
 
 int main() {
-    const char* socket_path = "/tmp/rust_to_cpp.sock";
+    const auto socket_path = "/tmp/rust_to_cpp.sock";
 
     // Remove existing socket file
     unlink(socket_path);
@@ -20,7 +20,7 @@ int main() {
     addr.sun_family = AF_UNIX;
     strncpy(addr.sun_path, socket_path, sizeof(addr.sun_path) - 1);
 
-    if (bind(server_fd, (struct sockaddr*)&addr, sizeof(addr)) < 0) {
+    if (bind(server_fd, reinterpret_cast<struct sockaddr *>(&addr), sizeof(addr)) < 0) {
         std::cerr << "Bind failed\n";
         return 1;
     }
