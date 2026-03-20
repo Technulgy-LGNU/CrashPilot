@@ -10,7 +10,7 @@ int main() {
     // Remove existing socket file
     unlink(socket_path);
 
-    int server_fd = socket(AF_UNIX, SOCK_STREAM, 0);
+    const int server_fd = socket(AF_UNIX, SOCK_STREAM, 0);
     if (server_fd < 0) {
         std::cerr << "Failed to create socket\n";
         return 1;
@@ -32,7 +32,7 @@ int main() {
 
     std::cout << "C++ server listening on " << socket_path << std::endl;
 
-    int client_fd = accept(server_fd, nullptr, nullptr);
+    const int client_fd = accept(server_fd, nullptr, nullptr);
     if (client_fd < 0) {
         std::cerr << "Accept failed\n";
         return 1;

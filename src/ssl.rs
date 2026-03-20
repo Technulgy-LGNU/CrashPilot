@@ -23,7 +23,7 @@ pub async fn get_ssl_data() -> mpsc::Receiver<Event> {
   );
 
   // Vision
-  let vis_socket = create_multicast_socket(Ipv4Addr::new(224, 5, 23, 1), 10006);
+  let vis_socket = create_multicast_socket(Ipv4Addr::new(224, 5, 23, 2), 10006);
 
   spawn_udp_listener::<SslWrapperPacket>(
     vis_socket.unwrap(),
