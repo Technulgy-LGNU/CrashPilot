@@ -1,14 +1,13 @@
+use crate::ssl::Event;
 use prost::Message;
 use tokio::net::UdpSocket;
 use tokio::sync::mpsc;
-use crate::ssl::Event;
 
 pub(crate) fn spawn_udp_listener<T>(
   socket: UdpSocket,
   tx: mpsc::Sender<Event>,
   wrap: fn(T) -> Event,
-)
-where
+) where
   T: Message + Default + Send + 'static,
 {
   tokio::spawn(async move {

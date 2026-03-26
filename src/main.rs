@@ -1,8 +1,10 @@
 use crate::ssl::Event;
+use crate::utils::write_to_file::write_to_file;
 
+mod network;
 mod proto;
 mod ssl;
-mod network;
+mod utils;
 
 #[tokio::main]
 async fn main() {
@@ -15,10 +17,11 @@ async fn main() {
         println!("Referee: {:?}", referee);
       }
       Event::SslWrapper(wrapper) => {
+        if wrapper.geometry.is_some() {
+          tokio::spawn(write_to_file("", wrapper.clone()));
+        }
         println!("SslWrapper: {:?}", wrapper);
       }
     }
   }
 }
-
-

@@ -1,6 +1,6 @@
 use std::net::Ipv4Addr;
-use tokio::net::UdpSocket;
 use std::net::UdpSocket as StdUdpSocket;
+use tokio::net::UdpSocket;
 
 pub fn create_multicast_socket(multicast: Ipv4Addr, port: u16) -> anyhow::Result<UdpSocket> {
   let std_socket = StdUdpSocket::bind(("0.0.0.0", port))?;
