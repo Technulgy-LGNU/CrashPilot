@@ -1957,7 +1957,7 @@ pub mod change {
         #[prost(message, tag="12")]
         UpdateConfigChange(UpdateConfig),
         #[prost(message, tag="13")]
-        UpdateTeamStateChange(UpdateTeamState),
+        UpdateTeamStateChange(Box<UpdateTeamState>),
         #[prost(message, tag="14")]
         SwitchColorsChange(SwitchColors),
         #[prost(message, tag="15")]
