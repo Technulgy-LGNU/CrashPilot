@@ -1,0 +1,14 @@
+syntax = "proto2";
+// buf:lint:ignore PACKAGE_VERSION_SUFFIX
+package crashpilot.robot_cp;
+
+message Robot_CP {
+  required uint32 robot_id = 1;
+
+  optional float battery_voltage = 2;
+
+  required bool kicker_ready = 3;
+  required bool has_ball = 4;
+
+  optional string error_msg = 5;
+}

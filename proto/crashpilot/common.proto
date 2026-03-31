@@ -1,0 +1,54 @@
+syntax = "proto2";
+// buf:lint:ignore PACKAGE_VERSION_SUFFIX
+package crashpilot;
+
+message Ball {
+  // The position (x, y, height) [m] in the ssl-vision coordinate system
+  required Vector3 pos = 1;
+
+  // The velocity [m/s] in the ssl-vision coordinate system
+  optional Vector3 vel = 2;
+}
+
+// A ball kicked by a robot, including predictions when the ball will come to a stop
+message KickedBall {
+  // The initial position [m] from which the ball was kicked
+  required Vector2 pos = 1;
+  // The initial velocity [m/s] with which the ball was kicked
+  required Vector3 vel = 2;
+  // The unix timestamp [s] when the kick was performed
+  required double start_timestamp = 3;
+
+  // The predicted unix timestamp [s] when the ball comes to a stop
+  optional double stop_timestamp = 4;
+  // The predicted position [m] at which the ball will come to a stop
+  optional Vector2 stop_pos = 5;
+}
+
+// A single tracked robot
+message TrackedRobot {
+  required uint32 robot_id = 1;
+
+  // The position [m] in the ssl-vision coordinate system
+  required Vector2 pos = 2;
+  // The orientation [rad] in the ssl-vision coordinate system
+  required float orientation = 3;
+
+  // The velocity [m/s] in the ssl-vision coordinate system
+  optional Vector2 vel = 4;
+  // The angular velocity [rad/s] in the ssl-vision coordinate system
+  optional float vel_angular = 5;
+}
+
+// A vector with two dimensions
+message Vector2 {
+  required float x = 1;
+  required float y = 2;
+}
+
+// A vector with three dimensions
+message Vector3 {
+  required float x = 1;
+  required float y = 2;
+  required float z = 3;
+}

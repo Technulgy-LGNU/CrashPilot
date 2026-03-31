@@ -1,0 +1,44 @@
+syntax = "proto2";
+// buf:lint:ignore PACKAGE_VERSION_SUFFIX
+package crashpilot.cp_robot;
+
+import "crashpilot/common.proto";
+import "google/protobuf/timestamp.proto";
+
+message CP_Robot {
+  required uint32 robot_id = 1;
+  required google.protobuf.Timestamp timestamp = 2;
+
+  optional Ball ball = 3;
+
+  repeated TrackedRobot robots_yellow = 4;
+  repeated TrackedRobot robots_blue = 5;
+
+  required Command cmd = 6;
+}
+
+message Command {
+  required State state = 1;
+  required Task task = 2;
+
+  optional Vector2 pos = 3;
+  optional float orientation = 4;
+
+  optional float kick_orient = 5;
+}
+
+enum State {
+  STATE_UNSPECIFIED = 0;
+  STATE_HALT = 1;
+  STATE_STOP = 2;
+  STATE_FREE = 3;
+  STATE_GOALIE = 4;
+}
+
+enum Task {
+  TASK_UNSPECIFIED = 0;
+  TASK_POS = 1;
+  TASK_KICK = 2;
+  TASK_REC_KICK = 3;
+  TASK_STEAL = 4;
+}
