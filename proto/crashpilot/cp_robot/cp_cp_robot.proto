@@ -1,22 +1,28 @@
 syntax = "proto2";
-// buf:lint:ignore PACKAGE_VERSION_SUFFIX
-package crashpilot.cp_robot;
 
 import "crashpilot/common.proto";
 import "google/protobuf/timestamp.proto";
 
+// The message from the crash pilot to the robot
 message CP_Robot {
+  // Some fields to check stuff, drop all packets that are really late (for now 400ms) and the packet id should also be newer than the last one
   required uint32 robot_id = 1;
   required google.protobuf.Timestamp timestamp = 2;
+  required uint32 packet_id = 3;
 
-  optional Ball ball = 3;
+  // the ball data,
+  optional Ball ball = 4;
+  optional KickedBall kicked_ball = 5;
 
-  repeated TrackedRobot robots_yellow = 4;
-  repeated TrackedRobot robots_blue = 5;
+  // The robots, the robot can extract their own position easily, because you should now your own robot id.
+  repeated TrackedRobot robots_yellow = 6;
+  repeated TrackedRobot robots_blue = 7;
 
-  required Command cmd = 6;
+  // The actual command
+  required Command cmd = 8;
 }
 
+// The commands as enums and the fields are for stuff like drive to position and kick
 message Command {
   required State state = 1;
   required Task task = 2;
@@ -29,16 +35,33 @@ message Command {
 
 enum State {
   STATE_UNSPECIFIED = 0;
+  // The GameController Halt Command
+  // Robot is not allowed to move
   STATE_HALT = 1;
+  // The GameController Stop Command
+  // Max velocity is 1.5m/s and distance to the ball should be 0.5m
   STATE_STOP = 2;
+  // Should listen to CP_Task Commands
   STATE_FREE = 3;
+  // This robot is the goalie, only listens to the GC_Task::Kick commands, to receive and kick the ball.
   STATE_GOALIE = 4;
 }
 
 enum Task {
   TASK_UNSPECIFIED = 0;
+  // Drive to that position, if CP_State::STOP, max velocity is 1.5m/s
   TASK_POS = 1;
+  // Kick the ball in the CP_Command::kick_orient direction
   TASK_KICK = 2;
-  TASK_REC_KICK = 3;
-  TASK_STEAL = 4;
+  // Chip the ball in the CP_Command::kick_orient direction
+  TASK_CHIP = 3;
+  // Receive the ball from the CP_Command::kick_orient direction
+  TASK_REC_KICK = 4;
+  // Try to steal the ball from another robot.
+  // This is to steal the ball from the ball capturing zone, the CrashPilot will try to position robots accordingly to intercept balls
+  TASK_STEAL = 5;
+  // Dribble the ball to the CP_Command::pos position
+  TASK_DRIBBLE = 6;
+  // Get the ball and move it to the CP_Command::pos position
+  TASK_PosBall = 7;
 }

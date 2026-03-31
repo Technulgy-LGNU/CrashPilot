@@ -1,7 +1,6 @@
 syntax = "proto2";
-// buf:lint:ignore PACKAGE_VERSION_SUFFIX
-package crashpilot;
 
+// From the tracked ssl vision packet, removed unnecessary fields
 message Ball {
   // The position (x, y, height) [m] in the ssl-vision coordinate system
   required Vector3 pos = 1;
@@ -10,6 +9,7 @@ message Ball {
   optional Vector3 vel = 2;
 }
 
+// From the tracked ssl vision packet, removed unnecessary fields
 // A ball kicked by a robot, including predictions when the ball will come to a stop
 message KickedBall {
   // The initial position [m] from which the ball was kicked
@@ -25,6 +25,7 @@ message KickedBall {
   optional Vector2 stop_pos = 5;
 }
 
+// From the tracked ssl vision packet, removed unnecessary fields
 // A single tracked robot
 message TrackedRobot {
   required uint32 robot_id = 1;
@@ -40,12 +41,14 @@ message TrackedRobot {
   optional float vel_angular = 5;
 }
 
+// From the tracked ssl vision packet, removed unnecessary fields
 // A vector with two dimensions
 message Vector2 {
   required float x = 1;
   required float y = 2;
 }
 
+// From the tracked ssl vision packet, removed unnecessary fields
 // A vector with three dimensions
 message Vector3 {
   required float x = 1;

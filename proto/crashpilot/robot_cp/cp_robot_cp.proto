@@ -1,7 +1,6 @@
 syntax = "proto2";
-// buf:lint:ignore PACKAGE_VERSION_SUFFIX
-package crashpilot.robot_cp;
 
+// The packet the robot should send back
 message Robot_CP {
   required uint32 robot_id = 1;
 
@@ -11,4 +10,7 @@ message Robot_CP {
   required bool has_ball = 4;
 
   optional string error_msg = 5;
+
+  optional bool acting = 6;
+  optional uint32 last_rec_packet = 7;
 }
