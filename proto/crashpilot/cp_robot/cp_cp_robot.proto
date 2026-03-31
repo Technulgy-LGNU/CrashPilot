@@ -64,4 +64,6 @@ enum Task {
   TASK_DRIBBLE = 6;
   // Get the ball and move it to the CP_Command::pos position
   TASK_PosBall = 7;
+  // Receive ball, so robot drives to ball and gets it
+  TASK_RecBall = 8;
 }
