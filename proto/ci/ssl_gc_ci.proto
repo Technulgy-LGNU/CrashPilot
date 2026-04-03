@@ -1,9 +1,9 @@
 syntax = "proto2";
 
-import "tracker/ssl_vision_wrapper_tracked.proto";
+import "vision_tracked/messages_robocup_ssl_wrapper_tracked.proto";
 import "api/ssl_gc_api.proto";
 import "state/ssl_gc_referee_message.proto";
-import "vision/ssl_vision_geometry.proto";
+import "vision_tracked/messages_robocup_ssl_geometry.proto";
 
 // The input format to the GC
 message CiInput {

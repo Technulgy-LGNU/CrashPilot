@@ -1,9 +1,9 @@
 syntax = "proto2";
 
-import "tracker/ssl_vision_wrapper_tracked.proto";
-import "vision/ssl_vision_detection.proto";
-import "vision/ssl_vision_geometry.proto";
+import "vision_tracked/messages_robocup_ssl_detection.proto";
+import "vision_tracked/messages_robocup_ssl_geometry.proto";
 import "state/ssl_gc_referee_message.proto";
+import "vision_tracked/messages_robocup_ssl_wrapper_tracked.proto";
 
 // The AutoRefCiInput contains all packets/messages that would otherwise be received through multicast by the auto-referee
 // It may contain either a raw or a tracked SSL-vision packet. If both are given, the implementation may choose either one.
