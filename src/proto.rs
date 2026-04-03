@@ -1957,7 +1957,7 @@ pub mod change {
         #[prost(message, tag="12")]
         UpdateConfigChange(UpdateConfig),
         #[prost(message, tag="13")]
-        UpdateTeamStateChange(Box<UpdateTeamState>),
+        UpdateTeamStateChange(UpdateTeamState),
         #[prost(message, tag="14")]
         SwitchColorsChange(SwitchColors),
         #[prost(message, tag="15")]
@@ -2414,142 +2414,6 @@ pub struct Input {
     #[prost(message, optional, tag="4")]
     pub continue_action: ::core::option::Option<ContinueAction>,
 }
-/// A single tracked ball
-#[derive(Clone, Copy, PartialEq, ::prost::Message)]
-pub struct TrackedBall {
-    /// The position (x, y, height) \[m\] in the ssl-vision coordinate system
-    #[prost(message, required, tag="1")]
-    pub pos: Vector3,
-    /// The velocity \[m/s\] in the ssl-vision coordinate system
-    #[prost(message, optional, tag="2")]
-    pub vel: ::core::option::Option<Vector3>,
-    /// The visibility of the ball
-    /// A value between 0 (not visible) and 1 (visible)
-    /// The exact implementation depends on the source software
-    #[prost(float, optional, tag="3")]
-    pub visibility: ::core::option::Option<f32>,
-}
-/// A ball kicked by a robot, including predictions when the ball will come to a stop
-#[derive(Clone, Copy, PartialEq, ::prost::Message)]
-pub struct KickedBall {
-    /// The initial position \[m\] from which the ball was kicked
-    #[prost(message, required, tag="1")]
-    pub pos: Vector2,
-    /// The initial velocity \[m/s\] with which the ball was kicked
-    #[prost(message, required, tag="2")]
-    pub vel: Vector3,
-    /// The unix timestamp \[s\] when the kick was performed
-    #[prost(double, required, tag="3")]
-    pub start_timestamp: f64,
-    /// The predicted unix timestamp \[s\] when the ball comes to a stop
-    #[prost(double, optional, tag="4")]
-    pub stop_timestamp: ::core::option::Option<f64>,
-    /// The predicted position \[m\] at which the ball will come to a stop
-    #[prost(message, optional, tag="5")]
-    pub stop_pos: ::core::option::Option<Vector2>,
-    /// The robot that kicked the ball
-    #[prost(message, optional, tag="6")]
-    pub robot_id: ::core::option::Option<RobotId>,
-}
-/// A single tracked robot
-#[derive(Clone, Copy, PartialEq, ::prost::Message)]
-pub struct TrackedRobot {
-    #[prost(message, required, tag="1")]
-    pub robot_id: RobotId,
-    /// The position \[m\] in the ssl-vision coordinate system
-    #[prost(message, required, tag="2")]
-    pub pos: Vector2,
-    /// The orientation \[rad\] in the ssl-vision coordinate system
-    #[prost(float, required, tag="3")]
-    pub orientation: f32,
-    /// The velocity \[m/s\] in the ssl-vision coordinate system
-    #[prost(message, optional, tag="4")]
-    pub vel: ::core::option::Option<Vector2>,
-    /// The angular velocity \[rad/s\] in the ssl-vision coordinate system
-    #[prost(float, optional, tag="5")]
-    pub vel_angular: ::core::option::Option<f32>,
-    /// The visibility of the robot
-    /// A value between 0 (not visible) and 1 (visible)
-    /// The exact implementation depends on the source software
-    #[prost(float, optional, tag="6")]
-    pub visibility: ::core::option::Option<f32>,
-}
-/// A frame that contains all currently tracked objects on the field on all cameras
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct TrackedFrame {
-    /// A monotonous increasing frame counter
-    #[prost(uint32, required, tag="1")]
-    pub frame_number: u32,
-    /// The unix timestamp in \[s\] of the data
-    /// If timestamp is larger than timestamp_captured, the source has applied a prediction already
-    #[prost(double, required, tag="2")]
-    pub timestamp: f64,
-    /// The list of detected balls
-    /// The first ball is the primary one
-    /// Sources may add additional balls based on their capabilities
-    #[prost(message, repeated, tag="3")]
-    pub balls: ::prost::alloc::vec::Vec<TrackedBall>,
-    /// The list of detected robots of both teams
-    #[prost(message, repeated, tag="4")]
-    pub robots: ::prost::alloc::vec::Vec<TrackedRobot>,
-    /// Information about a kicked ball, if the ball was kicked by a robot and is still moving
-    /// Note: This field is optional. Some source implementations might not set this at any time
-    #[prost(message, optional, tag="5")]
-    pub kicked_ball: ::core::option::Option<KickedBall>,
-    /// List of capabilities of the source implementation
-    #[prost(enumeration="Capability", repeated, packed="false", tag="6")]
-    pub capabilities: ::prost::alloc::vec::Vec<i32>,
-}
-// Default network address: 224.5.23.2:10010
-
-/// Capabilities that a source implementation can have
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
-#[repr(i32)]
-pub enum Capability {
-    Unknown = 0,
-    DetectFlyingBalls = 1,
-    DetectMultipleBalls = 2,
-    DetectKickedBalls = 3,
-}
-impl Capability {
-    /// String value of the enum field names used in the ProtoBuf definition.
-    ///
-    /// The values are not transformed in any way and thus are considered stable
-    /// (if the ProtoBuf definition does not change) and safe for programmatic use.
-    pub fn as_str_name(&self) -> &'static str {
-        match self {
-            Self::Unknown => "CAPABILITY_UNKNOWN",
-            Self::DetectFlyingBalls => "CAPABILITY_DETECT_FLYING_BALLS",
-            Self::DetectMultipleBalls => "CAPABILITY_DETECT_MULTIPLE_BALLS",
-            Self::DetectKickedBalls => "CAPABILITY_DETECT_KICKED_BALLS",
-        }
-    }
-    /// Creates an enum from field names used in the ProtoBuf definition.
-    pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
-        match value {
-            "CAPABILITY_UNKNOWN" => Some(Self::Unknown),
-            "CAPABILITY_DETECT_FLYING_BALLS" => Some(Self::DetectFlyingBalls),
-            "CAPABILITY_DETECT_MULTIPLE_BALLS" => Some(Self::DetectMultipleBalls),
-            "CAPABILITY_DETECT_KICKED_BALLS" => Some(Self::DetectKickedBalls),
-            _ => None,
-        }
-    }
-}
-/// A wrapper packet containing meta data of the source
-/// Also serves for the possibility to extend the protocol later
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct TrackerWrapperPacket {
-    /// A random UUID of the source that is kept constant at the source while running
-    /// If multiple sources are broadcasting to the same network, this id can be used to identify individual sources
-    #[prost(string, required, tag="1")]
-    pub uuid: ::prost::alloc::string::String,
-    /// The name of the source software that is producing this messages.
-    #[prost(string, optional, tag="2")]
-    pub source_name: ::core::option::Option<::prost::alloc::string::String>,
-    /// The tracked frame
-    #[prost(message, optional, tag="3")]
-    pub tracked_frame: ::core::option::Option<TrackedFrame>,
-}
 #[derive(Clone, Copy, PartialEq, ::prost::Message)]
 pub struct SslDetectionBall {
     /// Confidence in \[0-1\] of the detection
@@ -2737,7 +2601,7 @@ pub struct SslGeometryFieldSize {
     /// Max allowed robot radius in mm (note that this is a float type to represent sub-mm precision)
     #[prost(float, optional, tag="15")]
     pub max_robot_radius: ::core::option::Option<f32>,
-    /// Width of the goal substitution area (distance from goal line center plus boundary width to boundary walls) in mm
+    /// Width of the goal substitution area (distance from boundary walls that count as "inside the substitution area") in mm
     #[prost(int32, optional, tag="17")]
     pub goal_substitution_area_width: ::core::option::Option<i32>,
 }
@@ -2888,6 +2752,174 @@ impl SslFieldShapeType {
         }
     }
 }
+/// A single tracked ball
+#[derive(Clone, Copy, PartialEq, ::prost::Message)]
+pub struct TrackedBall {
+    /// The position (x, y, height) \[m\] in the ssl-vision coordinate system
+    #[prost(message, required, tag="1")]
+    pub pos: Vector3,
+    /// The velocity \[m/s\] in the ssl-vision coordinate system
+    #[prost(message, optional, tag="2")]
+    pub vel: ::core::option::Option<Vector3>,
+    /// The visibility of the ball
+    /// A value between 0 (not visible) and 1 (visible)
+    /// The exact implementation depends on the source software
+    #[prost(float, optional, tag="3")]
+    pub visibility: ::core::option::Option<f32>,
+}
+/// A ball kicked by a robot, including predictions when the ball will come to a stop
+#[derive(Clone, Copy, PartialEq, ::prost::Message)]
+pub struct KickedBall {
+    /// The initial position \[m\] from which the ball was kicked
+    #[prost(message, required, tag="1")]
+    pub pos: Vector2,
+    /// The initial velocity \[m/s\] with which the ball was kicked
+    #[prost(message, required, tag="2")]
+    pub vel: Vector3,
+    /// The unix timestamp \[s\] when the kick was performed
+    #[prost(double, required, tag="3")]
+    pub start_timestamp: f64,
+    /// The predicted unix timestamp \[s\] when the ball comes to a stop
+    #[prost(double, optional, tag="4")]
+    pub stop_timestamp: ::core::option::Option<f64>,
+    /// The predicted position \[m\] at which the ball will come to a stop
+    #[prost(message, optional, tag="5")]
+    pub stop_pos: ::core::option::Option<Vector2>,
+    /// The robot that kicked the ball
+    #[prost(message, optional, tag="6")]
+    pub robot_id: ::core::option::Option<RobotId>,
+}
+/// A single tracked robot
+#[derive(Clone, Copy, PartialEq, ::prost::Message)]
+pub struct TrackedRobot {
+    #[prost(message, required, tag="1")]
+    pub robot_id: RobotId,
+    /// The position \[m\] in the ssl-vision coordinate system
+    #[prost(message, required, tag="2")]
+    pub pos: Vector2,
+    /// The orientation \[rad\] in the ssl-vision coordinate system
+    #[prost(float, required, tag="3")]
+    pub orientation: f32,
+    /// The velocity \[m/s\] in the ssl-vision coordinate system
+    #[prost(message, optional, tag="4")]
+    pub vel: ::core::option::Option<Vector2>,
+    /// The angular velocity \[rad/s\] in the ssl-vision coordinate system
+    #[prost(float, optional, tag="5")]
+    pub vel_angular: ::core::option::Option<f32>,
+    /// The visibility of the robot
+    /// A value between 0 (not visible) and 1 (visible)
+    /// The exact implementation depends on the source software
+    #[prost(float, optional, tag="6")]
+    pub visibility: ::core::option::Option<f32>,
+}
+/// A frame that contains all currently tracked objects on the field on all cameras
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct TrackedFrame {
+    /// A monotonous increasing frame counter
+    #[prost(uint32, required, tag="1")]
+    pub frame_number: u32,
+    /// The unix timestamp in \[s\] of the data
+    #[prost(double, required, tag="2")]
+    pub timestamp: f64,
+    /// The list of detected balls
+    /// The first ball is the primary one
+    /// Sources may add additional balls based on their capabilities
+    #[prost(message, repeated, tag="3")]
+    pub balls: ::prost::alloc::vec::Vec<TrackedBall>,
+    /// The list of detected robots of both teams
+    #[prost(message, repeated, tag="4")]
+    pub robots: ::prost::alloc::vec::Vec<TrackedRobot>,
+    /// Information about a kicked ball, if the ball was kicked by a robot and is still moving
+    /// Note: This field is optional. Some source implementations might not set this at any time
+    #[prost(message, optional, tag="5")]
+    pub kicked_ball: ::core::option::Option<KickedBall>,
+    /// List of capabilities of the source implementation
+    #[prost(enumeration="Capability", repeated, packed="false", tag="6")]
+    pub capabilities: ::prost::alloc::vec::Vec<i32>,
+}
+// Default network address: 224.5.23.2:10010
+
+/// The team color of the robot
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
+#[repr(i32)]
+pub enum TeamColor {
+    /// team not set
+    Unknown = 0,
+    /// yellow team
+    Yellow = 1,
+    /// blue team
+    Blue = 2,
+}
+impl TeamColor {
+    /// String value of the enum field names used in the ProtoBuf definition.
+    ///
+    /// The values are not transformed in any way and thus are considered stable
+    /// (if the ProtoBuf definition does not change) and safe for programmatic use.
+    pub fn as_str_name(&self) -> &'static str {
+        match self {
+            Self::Unknown => "TEAM_COLOR_UNKNOWN",
+            Self::Yellow => "TEAM_COLOR_YELLOW",
+            Self::Blue => "TEAM_COLOR_BLUE",
+        }
+    }
+    /// Creates an enum from field names used in the ProtoBuf definition.
+    pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
+        match value {
+            "TEAM_COLOR_UNKNOWN" => Some(Self::Unknown),
+            "TEAM_COLOR_YELLOW" => Some(Self::Yellow),
+            "TEAM_COLOR_BLUE" => Some(Self::Blue),
+            _ => None,
+        }
+    }
+}
+/// Capabilities that a source implementation can have
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
+#[repr(i32)]
+pub enum Capability {
+    Unknown = 0,
+    DetectFlyingBalls = 1,
+    DetectMultipleBalls = 2,
+    DetectKickedBalls = 3,
+}
+impl Capability {
+    /// String value of the enum field names used in the ProtoBuf definition.
+    ///
+    /// The values are not transformed in any way and thus are considered stable
+    /// (if the ProtoBuf definition does not change) and safe for programmatic use.
+    pub fn as_str_name(&self) -> &'static str {
+        match self {
+            Self::Unknown => "CAPABILITY_UNKNOWN",
+            Self::DetectFlyingBalls => "CAPABILITY_DETECT_FLYING_BALLS",
+            Self::DetectMultipleBalls => "CAPABILITY_DETECT_MULTIPLE_BALLS",
+            Self::DetectKickedBalls => "CAPABILITY_DETECT_KICKED_BALLS",
+        }
+    }
+    /// Creates an enum from field names used in the ProtoBuf definition.
+    pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
+        match value {
+            "CAPABILITY_UNKNOWN" => Some(Self::Unknown),
+            "CAPABILITY_DETECT_FLYING_BALLS" => Some(Self::DetectFlyingBalls),
+            "CAPABILITY_DETECT_MULTIPLE_BALLS" => Some(Self::DetectMultipleBalls),
+            "CAPABILITY_DETECT_KICKED_BALLS" => Some(Self::DetectKickedBalls),
+            _ => None,
+        }
+    }
+}
+/// A wrapper packet containing meta data of the source
+/// Also serves for the possibility to extend the protocol later
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct TrackerWrapperPacket {
+    /// A random UUID of the source that is kept constant at the source while running
+    /// If multiple sources are broadcasting to the same network, this id can be used to identify individual sources
+    #[prost(string, required, tag="1")]
+    pub uuid: ::prost::alloc::string::String,
+    /// The name of the source software that is producing this messages.
+    #[prost(string, optional, tag="2")]
+    pub source_name: ::core::option::Option<::prost::alloc::string::String>,
+    /// The tracked frame
+    #[prost(message, optional, tag="3")]
+    pub tracked_frame: ::core::option::Option<TrackedFrame>,
+}
 /// The AutoRefCiInput contains all packets/messages that would otherwise be received through multicast by the auto-referee
 /// It may contain either a raw or a tracked SSL-vision packet. If both are given, the implementation may choose either one.
 #[derive(Clone, PartialEq, ::prost::Message)]
@@ -2936,6 +2968,210 @@ pub struct CiOutput {
     /// Latest referee message
     #[prost(message, optional, tag="1")]
     pub referee_msg: ::core::option::Option<Referee>,
+}
+/// From the tracked ssl vision packet, removed unnecessary fields
+/// A ball kicked by a robot, including predictions when the ball will come to a stop
+#[derive(Clone, Copy, PartialEq, ::prost::Message)]
+pub struct CpKickedBall {
+    /// The initial position \[m\] from which the ball was kicked
+    #[prost(message, required, tag="1")]
+    pub pos: Vector2,
+    /// The initial velocity \[m/s\] with which the ball was kicked
+    #[prost(message, required, tag="2")]
+    pub vel: Vector3,
+    /// The unix timestamp \[s\] when the kick was performed
+    #[prost(double, required, tag="3")]
+    pub start_timestamp: f64,
+    /// The predicted unix timestamp \[s\] when the ball comes to a stop
+    #[prost(double, optional, tag="4")]
+    pub stop_timestamp: ::core::option::Option<f64>,
+    /// The predicted position \[m\] at which the ball will come to a stop
+    #[prost(message, optional, tag="5")]
+    pub stop_pos: ::core::option::Option<Vector2>,
+}
+/// From the tracked ssl vision packet, removed unnecessary fields
+/// A single tracked robot
+#[derive(Clone, Copy, PartialEq, ::prost::Message)]
+pub struct CpTrackedRobot {
+    #[prost(uint32, required, tag="1")]
+    pub robot_id: u32,
+    /// The position \[m\] in the ssl-vision coordinate system
+    #[prost(message, required, tag="2")]
+    pub pos: Vector2,
+    /// The orientation \[rad\] in the ssl-vision coordinate system
+    #[prost(float, required, tag="3")]
+    pub orientation: f32,
+    /// The velocity \[m/s\] in the ssl-vision coordinate system
+    #[prost(message, optional, tag="4")]
+    pub vel: ::core::option::Option<Vector2>,
+    /// The angular velocity \[rad/s\] in the ssl-vision coordinate system
+    #[prost(float, optional, tag="5")]
+    pub vel_angular: ::core::option::Option<f32>,
+}
+/// The message from the crash pilot to the robot
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct CpRobot {
+    /// Some fields to check stuff, drop all packets that are really late (for now 400ms) and the packet id should also be newer than the last one
+    #[prost(uint32, required, tag="1")]
+    pub robot_id: u32,
+    #[prost(message, required, tag="2")]
+    pub timestamp: ::prost_types::Timestamp,
+    #[prost(uint32, required, tag="3")]
+    pub packet_id: u32,
+    /// the ball data,
+    #[prost(message, optional, tag="4")]
+    pub ball: ::core::option::Option<Ball>,
+    #[prost(message, optional, tag="5")]
+    pub kicked_ball: ::core::option::Option<CpKickedBall>,
+    /// The robots, the robot can extract their own position easily, because you should now your own robot id.
+    #[prost(message, repeated, tag="6")]
+    pub robots_yellow: ::prost::alloc::vec::Vec<CpTrackedRobot>,
+    #[prost(message, repeated, tag="7")]
+    pub robots_blue: ::prost::alloc::vec::Vec<CpTrackedRobot>,
+    /// The actual command
+    #[prost(message, required, tag="8")]
+    pub cmd: CpCommand,
+}
+/// The commands as enums and the fields are for stuff like drive to position and kick
+#[derive(Clone, Copy, PartialEq, ::prost::Message)]
+pub struct CpCommand {
+    #[prost(enumeration="CpState", required, tag="1")]
+    pub state: i32,
+    #[prost(enumeration="CpTask", required, tag="2")]
+    pub task: i32,
+    #[prost(message, optional, tag="3")]
+    pub pos: ::core::option::Option<Vector2>,
+    #[prost(float, optional, tag="4")]
+    pub orientation: ::core::option::Option<f32>,
+    #[prost(float, optional, tag="5")]
+    pub kick_orient: ::core::option::Option<f32>,
+}
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
+#[repr(i32)]
+pub enum CpState {
+    StateUnspecified = 0,
+    /// The GameController Halt Command
+    /// Robot is not allowed to move
+    StateHalt = 1,
+    /// The GameController Stop Command
+    /// Max velocity is 1.5m/s and distance to the ball should be 0.5m
+    StateStop = 2,
+    /// Should listen to CP_Task Commands
+    StateFree = 3,
+    /// This robot is the goalie, only listens to the GC_Task::Kick commands, to receive and kick the ball.
+    StateGoalie = 4,
+}
+impl CpState {
+    /// String value of the enum field names used in the ProtoBuf definition.
+    ///
+    /// The values are not transformed in any way and thus are considered stable
+    /// (if the ProtoBuf definition does not change) and safe for programmatic use.
+    pub fn as_str_name(&self) -> &'static str {
+        match self {
+            Self::StateUnspecified => "STATE_UNSPECIFIED",
+            Self::StateHalt => "STATE_HALT",
+            Self::StateStop => "STATE_STOP",
+            Self::StateFree => "STATE_FREE",
+            Self::StateGoalie => "STATE_GOALIE",
+        }
+    }
+    /// Creates an enum from field names used in the ProtoBuf definition.
+    pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
+        match value {
+            "STATE_UNSPECIFIED" => Some(Self::StateUnspecified),
+            "STATE_HALT" => Some(Self::StateHalt),
+            "STATE_STOP" => Some(Self::StateStop),
+            "STATE_FREE" => Some(Self::StateFree),
+            "STATE_GOALIE" => Some(Self::StateGoalie),
+            _ => None,
+        }
+    }
+}
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
+#[repr(i32)]
+pub enum CpTask {
+    TaskUnspecified = 0,
+    /// Drive to that position, if CP_State::STOP, max velocity is 1.5m/s
+    TaskPos = 1,
+    /// Kick the ball in the CP_Command::kick_orient direction
+    TaskKick = 2,
+    /// Chip the ball in the CP_Command::kick_orient direction
+    TaskChip = 3,
+    /// Receive the ball from the CP_Command::kick_orient direction
+    TaskRecKick = 4,
+    /// Try to steal the ball from another robot.
+    /// This is to steal the ball from the ball capturing zone, the CrashPilot will try to position robots accordingly to intercept balls
+    TaskSteal = 5,
+    /// Dribble the ball to the CP_Command::pos position
+    TaskDribble = 6,
+    /// Get the ball and move it to the CP_Command::pos position
+    TaskPosBall = 7,
+    /// Receive ball, so robot drives to ball and gets it
+    TaskRecBall = 8,
+    /// This robot should do a kickoff
+    StateKickoff = 9,
+    /// Do a ball placement, the end position is the position from CP_Command::pos
+    StateBallplacement = 10,
+    /// Free Kick, use the CP_Command::kick_orientation direction
+    StateFreekick = 11,
+}
+impl CpTask {
+    /// String value of the enum field names used in the ProtoBuf definition.
+    ///
+    /// The values are not transformed in any way and thus are considered stable
+    /// (if the ProtoBuf definition does not change) and safe for programmatic use.
+    pub fn as_str_name(&self) -> &'static str {
+        match self {
+            Self::TaskUnspecified => "TASK_UNSPECIFIED",
+            Self::TaskPos => "TASK_POS",
+            Self::TaskKick => "TASK_KICK",
+            Self::TaskChip => "TASK_CHIP",
+            Self::TaskRecKick => "TASK_REC_KICK",
+            Self::TaskSteal => "TASK_STEAL",
+            Self::TaskDribble => "TASK_DRIBBLE",
+            Self::TaskPosBall => "TASK_PosBall",
+            Self::TaskRecBall => "TASK_RecBall",
+            Self::StateKickoff => "STATE_KICKOFF",
+            Self::StateBallplacement => "STATE_BALLPLACEMENT",
+            Self::StateFreekick => "STATE_FREEKICK",
+        }
+    }
+    /// Creates an enum from field names used in the ProtoBuf definition.
+    pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
+        match value {
+            "TASK_UNSPECIFIED" => Some(Self::TaskUnspecified),
+            "TASK_POS" => Some(Self::TaskPos),
+            "TASK_KICK" => Some(Self::TaskKick),
+            "TASK_CHIP" => Some(Self::TaskChip),
+            "TASK_REC_KICK" => Some(Self::TaskRecKick),
+            "TASK_STEAL" => Some(Self::TaskSteal),
+            "TASK_DRIBBLE" => Some(Self::TaskDribble),
+            "TASK_PosBall" => Some(Self::TaskPosBall),
+            "TASK_RecBall" => Some(Self::TaskRecBall),
+            "STATE_KICKOFF" => Some(Self::StateKickoff),
+            "STATE_BALLPLACEMENT" => Some(Self::StateBallplacement),
+            "STATE_FREEKICK" => Some(Self::StateFreekick),
+            _ => None,
+        }
+    }
+}
+/// The packet the robot should send back
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct RobotCp {
+    #[prost(uint32, required, tag="1")]
+    pub robot_id: u32,
+    #[prost(float, optional, tag="2")]
+    pub battery_voltage: ::core::option::Option<f32>,
+    #[prost(bool, required, tag="3")]
+    pub kicker_ready: bool,
+    #[prost(bool, required, tag="4")]
+    pub has_ball: bool,
+    #[prost(string, optional, tag="5")]
+    pub error_msg: ::core::option::Option<::prost::alloc::string::String>,
+    #[prost(bool, optional, tag="6")]
+    pub acting: ::core::option::Option<bool>,
+    #[prost(uint32, optional, tag="7")]
+    pub last_rec_packet: ::core::option::Option<u32>,
 }
 /// a reply that is sent by the controller for each request from teams or autoRefs
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
