@@ -47,6 +47,9 @@ enum CP_State {
   STATE_FREE = 3;
   // This robot is the goalie, only listens to the GC_Task::Kick commands, to receive and kick the ball.
   STATE_GOALIE = 4;
+  // Drive to the substitution area and turn all motors  off (we need to define the exact position for each robot at the start, so they don't touch
+  // when we call all our robots back)
+  STATE_SUBSTITUTE = 5
 }
 
 enum CP_Task {
