@@ -1,7 +1,7 @@
-use crate::ssl::Event;
 use prost::Message;
 use tokio::net::UdpSocket;
 use tokio::sync::mpsc;
+use crate::ssl_communication::Event;
 
 pub(crate) fn spawn_udp_listener<T>(
   socket: UdpSocket,

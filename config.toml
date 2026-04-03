@@ -1,0 +1,15 @@
+[ssl]
+ssl_vision_ip = "10.0.0.1"
+ssl_vision_port = 10010
+ssl_gc_ip = "10.0.0.1"
+ssl_gc_port = 10008
+
+[server]
+host = "0.0.0.0"
+port = 8192
+
+[robots]
+1 = { ip = "10.0.64.101" }
+2 = { ip = "10.0.64.102" }
+3 = { ip = "10.0.64.103" }
+4 = { ip = "10.0.64.104" }
