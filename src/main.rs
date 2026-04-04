@@ -101,7 +101,16 @@ async fn main() {
                 vel: robot_tracked.vel,
                 vel_angular: robot_tracked.vel_angular,
               };
-              robot.robots_yellow.push(robot_yellow);
+              // Check if robot already exist
+              let mut robot_exists = false;
+              for ry in &robot.robots_yellow {
+                if ry.robot_id == robot_yellow.robot_id {
+                  robot_exists = true;
+                }
+              }
+              if !robot_exists {
+                robot.robots_yellow.push(robot_yellow);
+              }
             } else if robot_tracked.robot_id.team == Some(proto::Team::Blue as i32) {
               let robot_blue: CpTrackedRobot = CpTrackedRobot {
                 robot_id: robot_tracked.robot_id.id.unwrap(),
@@ -110,7 +119,15 @@ async fn main() {
                 vel: robot_tracked.vel,
                 vel_angular: robot_tracked.vel_angular,
               };
-              robot.robots_blue.push(robot_blue);
+              let mut robot_exists = false;
+              for rb in &robot.robots_blue {
+                if rb.robot_id == robot_blue.robot_id {
+                  robot_exists = true;
+                }
+              }
+              if !robot_exists {
+                robot.robots_blue.push(robot_blue);
+              }
             }
           }
 
