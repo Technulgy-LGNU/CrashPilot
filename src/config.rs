@@ -48,14 +48,18 @@ impl Default for SslConfig {
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct ServerConfig {
-  pub host: Ipv4Addr,
-  pub port: u16,
+  pub web_host: Ipv4Addr,
+  pub web_port: u16,
+  pub websocket_host: Ipv4Addr,
+  pub websocket_port: u16,
 }
 impl Default for ServerConfig {
   fn default() -> Self {
     Self {
-      host: Ipv4Addr::new(0, 0, 0, 0),
-      port: 8192,
+      web_host: Ipv4Addr::new(0, 0, 0, 0),
+      web_port: 8192,
+      websocket_host: Ipv4Addr::new(0, 0, 0, 0),
+      websocket_port: 4096,
     }
   }
 }

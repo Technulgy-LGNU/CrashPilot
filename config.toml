@@ -5,8 +5,10 @@ ssl_gc_ip = "10.0.0.1"
 ssl_gc_port = 10008
 
 [server]
-host = "0.0.0.0"
-port = 8192
+web_host = "0.0.0.0"
+web_port = 8192
+websocket_host = "0.0.0.0"
+websocket_port = 4096
 
 [robots]
 1 = { ip = "10.0.64.101" }
