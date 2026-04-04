@@ -3155,6 +3155,13 @@ impl CpTask {
         }
     }
 }
+#[derive(Clone, Copy, PartialEq, ::prost::Message)]
+pub struct CpInterface {
+    #[prost(uint32, required, tag="1")]
+    pub robot_id: u32,
+    #[prost(message, required, tag="2")]
+    pub command: CpCommand,
+}
 /// The packet the robot should send back
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct RobotCp {

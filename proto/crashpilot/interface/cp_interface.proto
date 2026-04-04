@@ -1,0 +1,9 @@
+syntax = "proto2";
+import "crashpilot/cp_robot/cp_cp_robot.proto";
+
+message CP_Interface {
+  required uint32 robot_id = 1;
+
+  required CP_Command command = 2;
+}
+
