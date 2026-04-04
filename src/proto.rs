@@ -2979,12 +2979,6 @@ pub struct CpKickedBall {
     /// The initial velocity \[m/s\] with which the ball was kicked
     #[prost(message, required, tag="2")]
     pub vel: Vector3,
-    /// The unix timestamp \[s\] when the kick was performed
-    #[prost(double, required, tag="3")]
-    pub start_timestamp: f64,
-    /// The predicted unix timestamp \[s\] when the ball comes to a stop
-    #[prost(double, optional, tag="4")]
-    pub stop_timestamp: ::core::option::Option<f64>,
     /// The predicted position \[m\] at which the ball will come to a stop
     #[prost(message, optional, tag="5")]
     pub stop_pos: ::core::option::Option<Vector2>,
