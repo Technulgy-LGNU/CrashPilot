@@ -8,7 +8,7 @@ use crate::ssl_communication::udp_listener::spawn_udp_listener;
 pub mod udp_listener;
 pub mod create_multicast_socket;
 
-pub async fn get_ssl_data(cfg: &Config, tx: mpsc::Sender<Event>){
+pub async fn get_ssl_data(cfg: &Config, tx: mpsc::Sender<Event>) {
   // Referee
   let ref_socket = match create_multicast_socket(cfg.ssl.ssl_gc_ip, cfg.ssl.ssl_gc_port) {
     Ok(s) => s,

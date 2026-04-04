@@ -3013,10 +3013,10 @@ pub struct CpRobot {
     #[prost(uint32, required, tag="3")]
     pub packet_id: u32,
     /// the ball data,
-    #[prost(message, optional, tag="4")]
-    pub ball: ::core::option::Option<Ball>,
-    #[prost(message, optional, tag="5")]
-    pub kicked_ball: ::core::option::Option<CpKickedBall>,
+    #[prost(message, required, tag="4")]
+    pub ball: Ball,
+    #[prost(message, required, tag="5")]
+    pub kicked_ball: CpKickedBall,
     /// The robots, the robot can extract their own position easily, because you should now your own robot id.
     #[prost(message, repeated, tag="6")]
     pub robots_yellow: ::prost::alloc::vec::Vec<CpTrackedRobot>,

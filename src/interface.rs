@@ -1,43 +1,57 @@
 use futures_util::StreamExt;
 use prost::Message;
+use tokio::net::TcpListener;
 use tokio::sync::mpsc::Sender;
-use tokio_tungstenite::connect_async;
 use crate::config;
 use crate::proto::CpInterface;
 use crate::ssl_communication::Event;
 
 pub async fn spawn_websocket(cfg: &config::Config, tx: Sender<Event>) {
-  let url = format!("ws://{}:{}", cfg.server.websocket_host, cfg.server.websocket_port);
+  let addr = format!("{}:{}", cfg.server.websocket_host, cfg.server.websocket_port);
 
-  let (ws_stream, _) = connect_async(url)
-    .await
-    .expect("WS connect failed");
+  // Create raw TCP Stream
+  let tcp_socket = match TcpListener::bind(&addr).await {
+    Ok(socket) => socket,
+    Err(e) => panic!("Can't bind websocket to {}: {}", addr, e),
+  };
 
-  let (_, mut read) = ws_stream.split();
-
+  // Accept incoming connections
   tokio::spawn(async move {
-    while let Some(msg) = read.next().await {
-      match msg {
-        Ok(msg) if msg.is_binary() => {
-          let data = msg.into_data();
+    while let Ok((stream, _)) = tcp_socket.accept().await {
+      let ws_stream = match tokio_tungstenite::accept_async(stream).await {
+        Ok(ws_stream) => ws_stream,
+        Err(e) => panic!("WebSocket handshake failed: {:?}", e),
+      };
 
-          match CpInterface::decode(&*data) {
-            Ok(decoded) => {
-              tx.send(Event::Websocket(decoded)).await.unwrap_or_else(|e| {
-                eprintln!("Failed to send WebSocket event: {}", e);
-              });
+      let (_, mut incoming) =  ws_stream.split();
+
+      // Process incoming messages
+      let tx = tx.clone();
+      tokio::spawn(async move {
+        while let Some(msg) = incoming.next().await {
+          match msg {
+            Ok(msg) if msg.is_binary() => {
+              let data = msg.into_data();
+
+              match CpInterface::decode(&*data) {
+                Ok(decoded) => {
+                  tx.send(Event::Websocket(decoded)).await.unwrap_or_else(|e| {
+                    eprintln!("Failed to send WebSocket event: {}", e);
+                  });
+                }
+                Err(e) => {
+                  eprintln!("Protobuf decode error: {}", e);
+                }
+              }
             }
+            Ok(_) => {}
             Err(e) => {
-              eprintln!("Protobuf decode error: {}", e);
+              eprintln!("WebSocket error: {}", e);
+              break;
             }
           }
         }
-        Ok(_) => {}
-        Err(e) => {
-          eprintln!("WebSocket error: {}", e);
-          break;
-        }
-      }
+      });
     }
   });
 }

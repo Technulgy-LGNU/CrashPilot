@@ -1,47 +1,42 @@
+use std::collections::HashMap;
 use std::string::String;
-use std::net::Ipv4Addr;
 use prost::Message;
+use tokio::net::{ UdpSocket, UnixStream };
+use crate::config::Config;
 use crate::proto::CpRobot;
 
-trait RobotSender {
-  async fn robot_send_to(&mut self, message: &CpRobot) -> std::io::Result<()>;
+pub struct NetworkSender<'a> {
+  pub(crate) socket: &'a UdpSocket,
+  pub(crate) data: HashMap<u32, CpRobot>,
 }
 
-struct NetworkSender {
-  addr: Ipv4Addr,
-  socket: tokio::net::UdpSocket,
+pub struct SocketSender {
+  stream: UnixStream,
+  data: HashMap<String, CpRobot>,
 }
 
-struct SocketSender {
-  path: String,
-  stream: tokio::net::UnixStream
+pub trait RobotSender {
+  async fn send_to_all_robots(&mut self, cfg: &Config);
 }
 
-impl RobotSender for NetworkSender {
-  async fn robot_send_to(&mut self, message: &CpRobot) -> std::io::Result<()> {
-    let mut buf  = Vec::with_capacity(message.encoded_len());
-    message.encode(&mut buf)?;
+impl RobotSender for NetworkSender<'_> {
+  async fn send_to_all_robots(&mut self, cfg: &Config) {
+    let mut buf = vec![0u8; 1024];
+    for robot in self.data.keys() {
+      let robot_data = self.data.get(robot).unwrap();
+      robot_data.encode(&mut buf).unwrap();
 
-    // ip and port (used port 1024)
-    let mut r_ip = String::new();
-    r_ip += &self.addr.to_string();
-    r_ip += ":1024";
-
-    match self.socket.send_to(&buf[..], r_ip).await {
-      Ok(_) => Ok(()),
-      Err(e) => Err(e),
+      let robot_addr = format!("{}:{}", cfg.robots.get(robot).unwrap().ip, 1024);
+      match self.socket.send_to(&buf, robot_addr).await {
+        Ok(_) => (),
+        Err(e) => eprintln!("Failed to send data to robot {}: {}", robot, e),
+      };
     }
   }
 }
 
 impl RobotSender for SocketSender {
-  async fn robot_send_to(&mut self, message: &CpRobot) -> std::io::Result<()> {
-    let mut buf  = Vec::with_capacity(message.encoded_len());
-    message.encode(&mut buf)?;
-
-    match self.stream.try_write(&buf) {
-      Ok(_) => Ok(()),
-      Err(e) => Err(e),
-    }
+  async fn send_to_all_robots(&mut self, cfg: &Config) {
+    todo!()
   }
 }
