@@ -1,5 +1,6 @@
 use tokio::sync::mpsc;
-use crate::config;
+pub(crate) use crate::communication::Event;
+use crate::config::Config;
 use crate::proto::{Referee, TrackerWrapperPacket};
 use crate::ssl_communication::create_multicast_socket::create_multicast_socket;
 use crate::ssl_communication::udp_listener::spawn_udp_listener;
@@ -7,15 +8,7 @@ use crate::ssl_communication::udp_listener::spawn_udp_listener;
 pub mod udp_listener;
 pub mod create_multicast_socket;
 
-#[derive(Debug)]
-pub enum Event {
-  Referee(Referee),
-  SslWrapper(TrackerWrapperPacket),
-}
-
-pub async fn get_ssl_data(cfg: config::Config) -> mpsc::Receiver<Event> {
-  let (tx, rx) = mpsc::channel::<Event>(100);
-
+pub async fn get_ssl_data<'a>(cfg: &Config, tx: mpsc::Sender<Event>){
   // Referee
   let ref_socket = create_multicast_socket(cfg.ssl.ssl_gc_ip, cfg.ssl.ssl_gc_port);
 
@@ -28,6 +21,4 @@ pub async fn get_ssl_data(cfg: config::Config) -> mpsc::Receiver<Event> {
 
   // Drop extra sender on stream drop
   drop(tx);
-
-  rx
 }

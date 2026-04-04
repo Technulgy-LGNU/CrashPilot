@@ -9,7 +9,7 @@ use std::path::Path;
 pub struct Config {
   pub ssl: SslConfig,
   pub server: ServerConfig,
-  pub robots: HashMap<u16, RobotConfig>,
+  pub robots: HashMap<u32, RobotConfig>,
 }
 impl Default for Config {
   fn default() -> Self {
