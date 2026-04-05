@@ -50,7 +50,6 @@ async fn main() {
   // Robots Hashmap
   let mut packet_id = 0;
   let mut robots: HashMap<u32, proto::CpRobot> = HashMap::new();
-  let mut robots_ws_data: HashMap<u32, proto::CpInterface> = HashMap::new();
   for robot in config.robots.iter() {
     robots.insert(
       *robot.0,
@@ -66,7 +65,14 @@ async fn main() {
       },
     );
   }
+  // Initialize the hashmap for the websocket data, which will be used to store the last command received for each robot
+  let mut robots_ws_data: HashMap<u32, proto::CpInterface> = HashMap::new();
+  for robot in config.robots.iter() {
+    robots_ws_data.insert(*robot.0, Default::default());
+  }
 
+
+  println!("Starting robots...");
   // Data packets
   let mut referee: proto::Referee = Default::default();
   let mut ssl_wrapper: proto::TrackerWrapperPacket = Default::default();
@@ -81,8 +87,10 @@ async fn main() {
         ssl_wrapper = packet;
       }
       Event::Websocket(packet) => {
-        robots_ws_data.insert(packet.robot_id, packet);
-        println!("Received websocket packet: {:?}", robots_ws_data);
+        // Check if robot exists in hashmap
+        if robots_ws_data.contains_key(&packet.robot_id) {
+          robots_ws_data.insert(packet.robot_id, packet);
+        }
       }
     }
 
@@ -141,24 +149,27 @@ async fn main() {
 
           match frame.kicked_ball {
             Some(kicked_ball) => {
+              println!("Kicked ball: {:?}", kicked_ball);
               robot.kicked_ball.pos = kicked_ball.pos;
               robot.kicked_ball.vel = kicked_ball.vel;
               robot.kicked_ball.stop_pos = kicked_ball.stop_pos;
             }
-            None => continue,
+            None => println!("No Kicked ball"),
           }
         }
-        None => continue,
+        None => println!("No tracked frame"),
       };
 
       // Commands
       // Check for the referee command and overwrite cp commands
       // HALT Command, all robots stop
+      println!("Referee Command: {:?}", referee.command);
       if referee.command == 0 {
         robot.cmd.state = 0;
 
       // STOP Command, all robots are only allowed to move with a max velocity of 1.5m/s and should avoid the ball with a clearance of 0.5m
       } else if referee.command == 1 {
+        robot.cmd = robots_ws_data.get(&robot.robot_id).unwrap().command;
         robot.cmd.state = 1;
 
       // Send the last command received by the interface

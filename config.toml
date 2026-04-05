@@ -5,13 +5,13 @@ ssl_gc_ip = "224.5.23.1"
 ssl_gc_port = 10003
 
 [server]
-robot_socket_host = "0.0.0.0"
+robot_socket_host = "10.0.64.221"
 robot_socket_port = 8192
 robots_port = 1024
-websocket_host = "0.0.0.0"
+websocket_host = "127.0.0.1"
 websocket_port = 4096
 
 [robots]
 1 = { ip = "127.0.0.1" }
-2 = { ip = "10.0.64.230" }
+2 = { ip = "10.0.64.101" }
 

@@ -32,19 +32,7 @@ async fn main() {
 
     match proto::CpRobot::decode(&buf[..size]) {
       Ok(msg) => {
-        let timestamp = timestamp_to_system_time(&msg.timestamp);
-        let now = SystemTime::now();
-        let delay = now.duration_since(timestamp).unwrap();
-        let delay_ms = delay.as_secs_f64() * 1000.0;
-
-        // Use system time in milliseconds for CSV
-        let now_ms = now.duration_since(UNIX_EPOCH).unwrap().as_secs_f64() * 1000.0;
-
-        println!("Network delay: {:.2} ms", delay_ms);
-
-        // Append row to CSV
-        writeln!(file, "{:.2},{:.2}", now_ms, delay_ms).expect("Failed to write to CSV");
-        file.flush().expect("Failed to flush CSV file");
+        println!("Command: {:?}", msg.cmd.state);
       }
       Err(e) => eprintln!("Failed to decode protobuf: {}", e),
     }

@@ -17,10 +17,25 @@ pub async fn spawn_websocket(cfg: &config::Config, tx: Sender<Event>) {
 
   // Accept incoming connections
   tokio::spawn(async move {
-    while let Ok((stream, _)) = tcp_socket.accept().await {
+    loop {
+      let (stream, peer_addr) = match tcp_socket.accept().await {
+        Ok(connection) => connection,
+        Err(e) => {
+          eprintln!("Failed to accept websocket TCP connection: {}", e);
+          continue;
+        }
+      };
+
       let ws_stream = match tokio_tungstenite::accept_async(stream).await {
         Ok(ws_stream) => ws_stream,
-        Err(e) => panic!("WebSocket handshake failed: {:?}", e),
+        Err(e) => {
+          eprintln!(
+            "WebSocket handshake failed from {}: {:?}. Ensure the client connects with ws:// and sends a valid HTTP Upgrade request.",
+            peer_addr,
+            e
+          );
+          continue;
+        }
       };
 
       let (_, mut incoming) =  ws_stream.split();
