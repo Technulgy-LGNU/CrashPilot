@@ -5,8 +5,9 @@ ssl_gc_ip = "224.5.23.1"
 ssl_gc_port = 10003
 
 [server]
-web_host = "0.0.0.0"
-web_port = 8192
+robot_socket_host = "0.0.0.0"
+robot_socket_port = 8192
+robots_port = 1024
 websocket_host = "0.0.0.0"
 websocket_port = 4096
 

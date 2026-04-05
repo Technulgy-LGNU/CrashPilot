@@ -31,7 +31,11 @@ async fn main() {
   };
 
   // UDPSocket for robot communication
-  let robot_socket = match tokio::net::UdpSocket::bind("10.0.64.242:8080").await {
+  let robot_socket = match tokio::net::UdpSocket::bind(
+    format!("{}:{}",
+            config.server.robot_socket_host,
+            config.server.robot_socket_port)
+  ).await {
     Ok(socket) => socket,
     Err(e) => match e.kind() {
       ErrorKind::AddrNotAvailable => {
