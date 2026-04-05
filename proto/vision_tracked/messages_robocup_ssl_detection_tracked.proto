@@ -1,19 +1,8 @@
 syntax = "proto2";
+import "state/ssl_gc_common.proto";
+import "geom/ssl_gc_geometry.proto";
 
 // Default network address: 224.5.23.2:10010
-
-// A vector with two dimensions
-message Vector2 {
-    required float x = 1;
-    required float y = 2;
-}
-
-// A vector with three dimensions
-message Vector3 {
-    required float x = 1;
-    required float y = 2;
-    required float z = 3;
-}
 
 // The team color of the robot
 enum TeamColor {
@@ -23,14 +12,6 @@ enum TeamColor {
     TEAM_COLOR_YELLOW = 1;
     // blue team
     TEAM_COLOR_BLUE = 2;
-}
-
-// A unique robot id with team information
-message RobotId {
-    // The robot number
-    required uint32 id = 1;
-    // The team color
-    required TeamColor team_color = 2;
 }
 
 // Capabilities that a source implementation can have

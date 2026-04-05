@@ -2,6 +2,8 @@ syntax = "proto2";
 
 import "crashpilot/common.proto";
 import "google/protobuf/timestamp.proto";
+import "engine/ssl_gc_engine.proto";
+import "geom/ssl_gc_geometry.proto";
 
 // The message from the crash pilot to the robot
 message CP_Robot {
@@ -11,21 +13,21 @@ message CP_Robot {
   required uint32 packet_id = 3;
 
   // the ball data,
-  optional Ball ball = 4;
-  optional KickedBall kicked_ball = 5;
+  required Ball ball = 4;
+  required CP_KickedBall kicked_ball = 5;
 
   // The robots, the robot can extract their own position easily, because you should now your own robot id.
-  repeated TrackedRobot robots_yellow = 6;
-  repeated TrackedRobot robots_blue = 7;
+  repeated CP_TrackedRobot robots_yellow = 6;
+  repeated CP_TrackedRobot robots_blue = 7;
 
   // The actual command
-  required Command cmd = 8;
+  required CP_Command cmd = 8;
 }
 
 // The commands as enums and the fields are for stuff like drive to position and kick
-message Command {
-  required State state = 1;
-  required Task task = 2;
+message CP_Command {
+  required CP_State state = 1;
+  required CP_Task task = 2;
 
   optional Vector2 pos = 3;
   optional float orientation = 4;
@@ -33,7 +35,7 @@ message Command {
   optional float kick_orient = 5;
 }
 
-enum State {
+enum CP_State {
   STATE_UNSPECIFIED = 0;
   // The GameController Halt Command
   // Robot is not allowed to move
@@ -47,7 +49,7 @@ enum State {
   STATE_GOALIE = 4;
 }
 
-enum Task {
+enum CP_Task {
   TASK_UNSPECIFIED = 0;
   // Drive to that position, if CP_State::STOP, max velocity is 1.5m/s
   TASK_POS = 1;
@@ -64,4 +66,12 @@ enum Task {
   TASK_DRIBBLE = 6;
   // Get the ball and move it to the CP_Command::pos position
   TASK_PosBall = 7;
+  // Receive ball, so robot drives to ball and gets it
+  TASK_RecBall = 8;
+  // This robot should do a kickoff
+  STATE_KICKOFF = 9;
+  // Do a ball placement, the end position is the position from CP_Command::pos
+  STATE_BALLPLACEMENT = 10;
+  // Free Kick, use the CP_Command::kick_orientation direction
+  STATE_FREEKICK = 11;
 }
