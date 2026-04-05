@@ -1,0 +1,9 @@
+[package]
+name = "udp-test"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+prost = "0.14.3"
+prost-types = "0.14.3"
+tokio = { version = "1.50.0", features = ["net", "sync", "rt", "rt-multi-thread", "macros"] }

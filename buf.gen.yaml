@@ -6,3 +6,9 @@ managed:
 plugins:
   - remote: buf.build/community/neoeinstein-prost:v0.5.0
     out: src/proto
+
+  - protoc_builtin: cpp
+    out: compiled_proto/cpp
+
+  - protoc_builtin: python
+    out: compiled_proto/python

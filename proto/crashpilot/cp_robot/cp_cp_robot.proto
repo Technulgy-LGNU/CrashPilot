@@ -13,8 +13,8 @@ message CP_Robot {
   required uint32 packet_id = 3;
 
   // the ball data,
-  optional Ball ball = 4;
-  optional CP_KickedBall kicked_ball = 5;
+  required Ball ball = 4;
+  required CP_KickedBall kicked_ball = 5;
 
   // The robots, the robot can extract their own position easily, because you should now your own robot id.
   repeated CP_TrackedRobot robots_yellow = 6;

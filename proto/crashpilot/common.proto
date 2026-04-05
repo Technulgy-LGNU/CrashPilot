@@ -8,11 +8,6 @@ message CP_KickedBall {
   required Vector2 pos = 1;
   // The initial velocity [m/s] with which the ball was kicked
   required Vector3 vel = 2;
-  // The unix timestamp [s] when the kick was performed
-  required double start_timestamp = 3;
-
-  // The predicted unix timestamp [s] when the ball comes to a stop
-  optional double stop_timestamp = 4;
   // The predicted position [m] at which the ball will come to a stop
   optional Vector2 stop_pos = 5;
 }
