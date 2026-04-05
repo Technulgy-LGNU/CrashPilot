@@ -1,5 +1,7 @@
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use tokio::net::UdpSocket;
 use prost::Message;
+use prost_types::Timestamp;
 
 mod proto;
 
@@ -11,7 +13,7 @@ async fn main() {
   };
   println!("Listening on UDP port 1024...");
 
-  let mut buf = Vec::new();
+  let mut buf = vec![0u8; 1024]; // Buffer to hold incoming data
 
   loop {
     let (size, src) = match socket.recv_from(&mut buf).await {
@@ -21,13 +23,22 @@ async fn main() {
 
     println!("\nReceived {} bytes from {}", size, src);
 
-    match proto::CpTracked::decode(&buf[..size]) {
+    match proto::CpRobot::decode(&buf[..size]) {
       Ok(msg) => {
-        println!("Got message: {:?}", msg);
+        // Print the network delay
+        let timestamp = timestamp_to_system_time(&msg.timestamp);
+        let now = SystemTime::now();
+        let delay = now.duration_since(timestamp).unwrap();
+        println!("Network delay: {:?}", delay);
       }
       Err(e) => {
         eprintln!("Failed to decode protobuf: {}", e);
       }
     }
   }
+}
+
+fn timestamp_to_system_time(ts: &Timestamp) -> SystemTime {
+  let duration = Duration::new(ts.seconds as u64, ts.nanos as u32);
+  UNIX_EPOCH + duration
 }

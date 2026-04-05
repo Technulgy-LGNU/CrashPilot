@@ -37,7 +37,6 @@ impl RobotSender for NetworkSender<'_> {
         }
       };
 
-      println!("Sending robot {:?}: {:?}", robot_data.robot_id, robot_data);
       let robot_addr = format!("{}:{}", cfg.robots.get(robot).unwrap().ip, 1024);
       match self.socket.send_to(&buf, robot_addr.clone()).await {
         Ok(_) => (),
