@@ -32,7 +32,7 @@ async fn main() {
 
     match proto::CpRobot::decode(&buf[..size]) {
       Ok(msg) => {
-        println!("Command: {:?}", msg.cmd.state);
+        println!("Command: {:?}", msg.cmd.pos);
       }
       Err(e) => eprintln!("Failed to decode protobuf: {}", e),
     }

@@ -49,7 +49,7 @@ enum CP_State {
   STATE_GOALIE = 4;
   // Drive to the substitution area and turn all motors  off (we need to define the exact position for each robot at the start, so they don't touch
   // when we call all our robots back)
-  STATE_SUBSTITUTE = 5
+  STATE_SUBSTITUTE = 5;
 }
 
 enum CP_Task {
@@ -71,10 +71,8 @@ enum CP_Task {
   TASK_PosBall = 7;
   // Receive ball, so robot drives to ball and gets it
   TASK_RecBall = 8;
-  // This robot should do a kickoff
+  // This robot should do a kickoff, basically kick the ball in the CP_Command::kick_orient direction, but adhere to the kickoff rules
   STATE_KICKOFF = 9;
-  // Do a ball placement, the end position is the position from CP_Command::pos
-  STATE_BALLPLACEMENT = 10;
   // Free Kick, use the CP_Command::kick_orientation direction
   STATE_FREEKICK = 11;
 }

@@ -87,6 +87,7 @@ async fn main() {
         ssl_wrapper = packet;
       }
       Event::Websocket(packet) => {
+        println!("Received Websocket packet: {:?}", packet);
         // Check if robot exists in hashmap
         if robots_ws_data.contains_key(&packet.robot_id) {
           robots_ws_data.insert(packet.robot_id, packet);
@@ -104,7 +105,11 @@ async fn main() {
       match ssl_wrapper.tracked_frame.clone() {
         Some(frame) => {
           // Robot
+          // Clear robots already in array
+          robot.robots_yellow = vec![];
+          robot.robots_blue = vec![];
           for robot_tracked in frame.robots {
+            // Yellow  Team
             if robot_tracked.robot_id.team == Some(proto::Team::Yellow as i32) {
               let robot_yellow: CpTrackedRobot = CpTrackedRobot {
                 robot_id: robot_tracked.robot_id.id.unwrap(),
@@ -113,16 +118,9 @@ async fn main() {
                 vel: robot_tracked.vel,
                 vel_angular: robot_tracked.vel_angular,
               };
-              // Check if robot already exist
-              let mut robot_exists = false;
-              for ry in &robot.robots_yellow {
-                if ry.robot_id == robot_yellow.robot_id {
-                  robot_exists = true;
-                }
-              }
-              if !robot_exists {
-                robot.robots_yellow.push(robot_yellow);
-              }
+              robot.robots_yellow.push(robot_yellow);
+
+            // Blue Team
             } else if robot_tracked.robot_id.team == Some(proto::Team::Blue as i32) {
               let robot_blue: CpTrackedRobot = CpTrackedRobot {
                 robot_id: robot_tracked.robot_id.id.unwrap(),
@@ -154,17 +152,17 @@ async fn main() {
               robot.kicked_ball.vel = kicked_ball.vel;
               robot.kicked_ball.stop_pos = kicked_ball.stop_pos;
             }
-            None => println!("No Kicked ball"),
+            None => (),
           }
         }
-        None => println!("No tracked frame"),
+        None => (),
       };
 
       // Commands
       // Check for the referee command and overwrite cp commands
       // HALT Command, all robots stop
-      println!("Referee Command: {:?}", referee.command);
       if referee.command == 0 {
+        robot.cmd = robots_ws_data.get(&robot.robot_id).unwrap().command;
         robot.cmd.state = 0;
 
       // STOP Command, all robots are only allowed to move with a max velocity of 1.5m/s and should avoid the ball with a clearance of 0.5m
