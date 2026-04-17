@@ -142,12 +142,13 @@ async fn main() {
           }
 
           // Balls
-          robot.ball.pos = Option::from(frame.balls[0].pos);
-          robot.ball.vel = frame.balls[0].vel;
+          if frame.balls.len() != 0 {
+            robot.ball.pos = Option::from(frame.balls[0].pos);
+            robot.ball.vel = frame.balls[0].vel;
+          }
 
           match frame.kicked_ball {
             Some(kicked_ball) => {
-              println!("Kicked ball: {:?}", kicked_ball);
               robot.kicked_ball.pos = kicked_ball.pos;
               robot.kicked_ball.vel = kicked_ball.vel;
               robot.kicked_ball.stop_pos = kicked_ball.stop_pos;
