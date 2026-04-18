@@ -47,6 +47,7 @@ async fn main() {
     },
   };
 
+
   // Robots Hashmap
   let mut packet_id = 0;
   let mut robots: HashMap<u32, proto::CpRobot> = HashMap::new();
@@ -74,22 +75,36 @@ async fn main() {
 
   println!("Starting robots...");
   // Data packets
-  let mut referee: proto::Referee = Default::default();
+  let referee: proto::Referee = Default::default();
   let mut ssl_wrapper: proto::TrackerWrapperPacket = Default::default();
 
-  while let Some(event) = rx.recv().await {
+  loop {
+    let mut lock = rx.lock().await;
+
+    let event = lock.0.take().map(Event::SslWrapper).or_else(|| lock.1.take().map(Event::Websocket));
+
+    drop(lock);
+
+    let Some(event) = event else {
+      continue;
+    };
+
+
+
     // Receive all packets and store them in the corresponding variables
     match event {
-      Event::Referee(packet) => {
-        referee = packet;
-      }
       Event::SslWrapper(packet) => {
         ssl_wrapper = packet;
       }
-      Event::Websocket(packet) => {
+      Event::Websocket(mut packet) => {
         println!("Received Websocket packet: {:?}", packet);
         // Check if robot exists in hashmap
         if robots_ws_data.contains_key(&packet.robot_id) {
+          packet.command.pos.as_mut().map(|pos| {
+            pos.x /= 1000.0;
+            pos.y /= 1000.0;
+          });
+
           robots_ws_data.insert(packet.robot_id, packet);
         }
       }
@@ -164,12 +179,12 @@ async fn main() {
       // HALT Command, all robots stop
       if referee.command == 0 {
         robot.cmd = robots_ws_data.get(&robot.robot_id).unwrap().command;
-        robot.cmd.state = 0;
+        // robot.cmd.state = 0;
 
       // STOP Command, all robots are only allowed to move with a max velocity of 1.5m/s and should avoid the ball with a clearance of 0.5m
       } else if referee.command == 1 {
         robot.cmd = robots_ws_data.get(&robot.robot_id).unwrap().command;
-        robot.cmd.state = 1;
+        // robot.cmd.state = 1;
 
       // Send the last command received by the interface
       } else {
@@ -183,7 +198,6 @@ async fn main() {
       data: robots.clone(),
     };
     network_sender.send_to_all_robots(&config).await;
-
     // So the next packet has a higher id
     packet_id += 1;
   }

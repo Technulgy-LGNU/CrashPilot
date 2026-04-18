@@ -7,7 +7,7 @@ pub fn create_multicast_socket(multicast: Ipv4Addr, port: u16) -> anyhow::Result
     Ok(std_socket) => std_socket,
     Err(err) => return Err(anyhow::Error::msg("Error during socket bind: ".to_owned() + &*err.to_string())),
   };
-  match std_socket.join_multicast_v4(&multicast, &Ipv4Addr::UNSPECIFIED) {
+  match std_socket.join_multicast_v4(&multicast, &Ipv4Addr::new(192, 168, 188, 113)) {
       Ok(_) => (),
       Err(err) => return Err(anyhow::Error::msg("Error during multicast join: ".to_owned() +  &*err.to_string())),
   };
