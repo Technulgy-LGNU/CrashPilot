@@ -75,7 +75,7 @@ async fn main() {
 
   println!("Starting robots...");
   // Data packets
-  let referee: proto::Referee = Default::default();
+  let mut referee: proto::Referee = Default::default();
   let mut ssl_wrapper: proto::TrackerWrapperPacket = Default::default();
 
   loop {
@@ -93,6 +93,9 @@ async fn main() {
 
     // Receive all packets and store them in the corresponding variables
     match event {
+      Event::Referee(packet) => {
+        referee = packet;
+      }
       Event::SslWrapper(packet) => {
         ssl_wrapper = packet;
       }
@@ -179,12 +182,12 @@ async fn main() {
       // HALT Command, all robots stop
       if referee.command == 0 {
         robot.cmd = robots_ws_data.get(&robot.robot_id).unwrap().command;
-        // robot.cmd.state = 0;
+        robot.cmd.state = 0;
 
       // STOP Command, all robots are only allowed to move with a max velocity of 1.5m/s and should avoid the ball with a clearance of 0.5m
       } else if referee.command == 1 {
         robot.cmd = robots_ws_data.get(&robot.robot_id).unwrap().command;
-        // robot.cmd.state = 1;
+        robot.cmd.state = 1;
 
       // Send the last command received by the interface
       } else {

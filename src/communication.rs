@@ -4,19 +4,20 @@ use std::sync::Arc;
 use tokio::sync::Mutex;
 use crate::config;
 use crate::interface::spawn_websocket;
-use crate::proto::{CpInterface, TrackerWrapperPacket};
+use crate::proto::{CpInterface, Referee, TrackerWrapperPacket};
 use crate::ssl_communication::get_ssl_data;
 
 #[derive(Debug)]
 pub enum Event {
   SslWrapper(TrackerWrapperPacket),
+  Referee(Referee),
   Websocket(CpInterface),
 }
 
-pub type EventShare = Arc<Mutex<(Option<TrackerWrapperPacket>, Option<CpInterface>)>>;
+pub type EventShare = Arc<Mutex<(Option<TrackerWrapperPacket>, Option<CpInterface>, Option<Referee>)>>;
 
 pub async fn communication_receiver(cfg: &config::Config) -> anyhow::Result<EventShare> {
-  let tx = Arc::new(Mutex::new((None, None)));
+  let tx = Arc::new(Mutex::new((None, None, None)));
 
   get_ssl_data(cfg, tx.clone()).await;
 
