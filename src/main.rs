@@ -47,6 +47,7 @@ async fn main() {
     },
   };
 
+
   // Robots Hashmap
   let mut packet_id = 0;
   let mut robots: HashMap<u32, proto::CpRobot> = HashMap::new();
@@ -77,7 +78,19 @@ async fn main() {
   let mut referee: proto::Referee = Default::default();
   let mut ssl_wrapper: proto::TrackerWrapperPacket = Default::default();
 
-  while let Some(event) = rx.recv().await {
+  loop {
+    let mut lock = rx.lock().await;
+
+    let event = lock.0.take().map(Event::SslWrapper).or_else(|| lock.1.take().map(Event::Websocket));
+
+    drop(lock);
+
+    let Some(event) = event else {
+      continue;
+    };
+
+
+
     // Receive all packets and store them in the corresponding variables
     match event {
       Event::Referee(packet) => {
@@ -86,10 +99,15 @@ async fn main() {
       Event::SslWrapper(packet) => {
         ssl_wrapper = packet;
       }
-      Event::Websocket(packet) => {
+      Event::Websocket(mut packet) => {
         println!("Received Websocket packet: {:?}", packet);
         // Check if robot exists in hashmap
         if robots_ws_data.contains_key(&packet.robot_id) {
+          packet.command.pos.as_mut().map(|pos| {
+            pos.x /= 1000.0;
+            pos.y /= 1000.0;
+          });
+
           robots_ws_data.insert(packet.robot_id, packet);
         }
       }
@@ -142,12 +160,13 @@ async fn main() {
           }
 
           // Balls
-          robot.ball.pos = Option::from(frame.balls[0].pos);
-          robot.ball.vel = frame.balls[0].vel;
+          if frame.balls.len() != 0 {
+            robot.ball.pos = Option::from(frame.balls[0].pos);
+            robot.ball.vel = frame.balls[0].vel;
+          }
 
           match frame.kicked_ball {
             Some(kicked_ball) => {
-              println!("Kicked ball: {:?}", kicked_ball);
               robot.kicked_ball.pos = kicked_ball.pos;
               robot.kicked_ball.vel = kicked_ball.vel;
               robot.kicked_ball.stop_pos = kicked_ball.stop_pos;
@@ -182,7 +201,6 @@ async fn main() {
       data: robots.clone(),
     };
     network_sender.send_to_all_robots(&config).await;
-
     // So the next packet has a higher id
     packet_id += 1;
   }

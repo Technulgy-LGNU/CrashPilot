@@ -24,6 +24,13 @@ impl RobotSender for NetworkSender<'_> {
     let mut buf = Vec::new(); // New buffer
     for robot in self.data.keys() {
       let robot_data = self.data.get(robot).unwrap();
+
+      if robot == &2 {
+        println!("==========================");
+        println!("{:?}", robot_data);
+        println!("==========================");
+      }
+
       match robot_data.encode(&mut buf) {
         Ok(_) => {
           if buf.is_empty() {

@@ -1,12 +1,11 @@
 use futures_util::StreamExt;
 use prost::Message;
 use tokio::net::TcpListener;
-use tokio::sync::mpsc::Sender;
+use crate::communication::EventShare;
 use crate::config;
 use crate::proto::CpInterface;
-use crate::ssl_communication::Event;
 
-pub async fn spawn_websocket(cfg: &config::Config, tx: Sender<Event>) {
+pub async fn spawn_websocket(cfg: &config::Config, tx: EventShare) {
   let addr = format!("{}:{}", cfg.server.websocket_host, cfg.server.websocket_port);
 
   // Create raw TCP Stream
@@ -50,9 +49,10 @@ pub async fn spawn_websocket(cfg: &config::Config, tx: Sender<Event>) {
 
               match CpInterface::decode(&*data) {
                 Ok(decoded) => {
-                  tx.send(Event::Websocket(decoded)).await.unwrap_or_else(|e| {
-                    eprintln!("Failed to send WebSocket event: {}", e);
-                  });
+
+                  let mut lock = tx.lock().await;
+
+                  lock.1 = Some(decoded);
                 }
                 Err(e) => {
                   eprintln!("Protobuf decode error: {}", e);
