@@ -14,14 +14,13 @@ message CP_Robot {
 
   // the ball data,
   required Ball ball = 4;
-  required CP_KickedBall kicked_ball = 5;
 
   // The robots, the robot can extract their own position easily, because you should now your own robot id.
-  repeated CP_TrackedRobot robots_yellow = 6;
-  repeated CP_TrackedRobot robots_blue = 7;
+  repeated CP_TrackedRobot robots_yellow = 5;
+  repeated CP_TrackedRobot robots_blue = 6;
 
   // The actual command
-  required CP_Command cmd = 8;
+  required CP_Command cmd = 7;
 }
 
 // The commands as enums and the fields are for stuff like drive to position and kick
@@ -30,9 +29,11 @@ message CP_Command {
   required CP_Task task = 2;
 
   optional Vector2 pos = 3;
-  optional float orientation = 4;
+  optional uint32 speed = 4;
+  optional float orientation = 5;
 
-  optional float kick_orient = 5;
+  optional float kick_orient = 6;
+  optional uint32 kick_speed = 7;
 }
 
 enum CP_State {
@@ -69,8 +70,6 @@ enum CP_Task {
   TASK_DRIBBLE = 6;
   // Get the ball and move it to the CP_Command::pos position
   TASK_PosBall = 7;
-  // Receive ball, so robot drives to ball and gets it
-  TASK_RecBall = 8;
   // This robot should do a kickoff, basically kick the ball in the CP_Command::kick_orient direction, but adhere to the kickoff rules
   STATE_KICKOFF = 9;
   // Free Kick, use the CP_Command::kick_orientation direction
