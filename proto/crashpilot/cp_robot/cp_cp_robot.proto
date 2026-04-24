@@ -2,7 +2,6 @@ syntax = "proto2";
 
 import "crashpilot/common.proto";
 import "google/protobuf/timestamp.proto";
-import "engine/ssl_gc_engine.proto";
 import "geom/ssl_gc_geometry.proto";
 
 // The message from the crash pilot to the robot
@@ -13,7 +12,7 @@ message CP_Robot {
   required uint32 packet_id = 3;
 
   // the ball data,
-  required Ball ball = 4;
+  required CP_Ball ball = 4;
 
   // The robots, the robot can extract their own position easily, because you should now your own robot id.
   repeated CP_TrackedRobot robots_yellow = 5;

@@ -3002,11 +3002,7 @@ pub struct CpTrackedRobot {
     #[prost(float, optional, tag="5")]
     pub vel_angular: ::core::option::Option<f32>,
 }
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct CpTracked {
-    #[prost(message, required, tag="1")]
-    pub robot: CpRobot,
-}
+
 /// The message from the crash pilot to the robot
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct CpRobot {
