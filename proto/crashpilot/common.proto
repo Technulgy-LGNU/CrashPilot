@@ -22,7 +22,7 @@ message CP_TrackedRobot {
 }
 
 message CP_Vector2 {
-  required uint32 x = 1;
-  required uint32 y = 2;
+  required int32 x = 1;
+  required int32 y = 2;
 }
 
