@@ -2969,19 +2969,14 @@ pub struct CiOutput {
     #[prost(message, optional, tag="1")]
     pub referee_msg: ::core::option::Option<Referee>,
 }
-/// From the tracked ssl vision packet, removed unnecessary fields
-/// A ball kicked by a robot, including predictions when the ball will come to a stop
-#[derive(Clone, Copy, PartialEq, ::prost::Message)]
-pub struct CpKickedBall {
-    /// The initial position \[m\] from which the ball was kicked
+#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct CpBall {
+    /// The position \[mm\] in the ssl-vision coordinate system
     #[prost(message, required, tag="1")]
-    pub pos: Vector2,
-    /// The initial velocity \[m/s\] with which the ball was kicked
-    #[prost(message, required, tag="2")]
-    pub vel: Vector3,
-    /// The predicted position \[m\] at which the ball will come to a stop
-    #[prost(message, optional, tag="5")]
-    pub stop_pos: ::core::option::Option<Vector2>,
+    pub pos: CpVector2,
+    /// The velocity \[mm/s\] in the ssl-vision coordinate system
+    #[prost(message, optional, tag="2")]
+    pub vel: ::core::option::Option<CpVector2>,
 }
 /// From the tracked ssl vision packet, removed unnecessary fields
 /// A single tracked robot
@@ -2989,60 +2984,65 @@ pub struct CpKickedBall {
 pub struct CpTrackedRobot {
     #[prost(uint32, required, tag="1")]
     pub robot_id: u32,
-    /// The position \[m\] in the ssl-vision coordinate system
+    /// The position \[m,\] in the ssl-vision coordinate system
     #[prost(message, required, tag="2")]
-    pub pos: Vector2,
+    pub pos: CpVector2,
     /// The orientation \[rad\] in the ssl-vision coordinate system
     #[prost(float, required, tag="3")]
     pub orientation: f32,
     /// The velocity \[m/s\] in the ssl-vision coordinate system
     #[prost(message, optional, tag="4")]
-    pub vel: ::core::option::Option<Vector2>,
-    /// The angular velocity \[rad/s\] in the ssl-vision coordinate system
-    #[prost(float, optional, tag="5")]
-    pub vel_angular: ::core::option::Option<f32>,
+    pub vel: ::core::option::Option<CpVector2>,
 }
-
+#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct CpVector2 {
+    #[prost(int32, required, tag="1")]
+    pub x: i32,
+    #[prost(int32, required, tag="2")]
+    pub y: i32,
+}
 /// The message from the crash pilot to the robot
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct CpRobot {
     /// Some fields to check stuff, drop all packets that are really late (for now 400ms) and the packet id should also be newer than the last one
     #[prost(uint32, required, tag="1")]
-    pub robot_id: u32,
+    pub robot_id: u8,
     #[prost(message, required, tag="2")]
     pub timestamp: ::prost_types::Timestamp,
     #[prost(uint32, required, tag="3")]
     pub packet_id: u32,
     /// the ball data,
     #[prost(message, required, tag="4")]
-    pub ball: Ball,
-    #[prost(message, required, tag="5")]
-    pub kicked_ball: CpKickedBall,
+    pub ball: CpBall,
     /// The robots, the robot can extract their own position easily, because you should now your own robot id.
-    #[prost(message, repeated, tag="6")]
+    #[prost(message, repeated, tag="5")]
     pub robots_yellow: ::prost::alloc::vec::Vec<CpTrackedRobot>,
-    #[prost(message, repeated, tag="7")]
+    #[prost(message, repeated, tag="6")]
     pub robots_blue: ::prost::alloc::vec::Vec<CpTrackedRobot>,
     /// The actual command
-    #[prost(message, required, tag="8")]
+    #[prost(message, required, tag="7")]
     pub cmd: CpCommand,
 }
 /// The commands as enums and the fields are for stuff like drive to position and kick
 #[derive(Clone, Copy, PartialEq, ::prost::Message)]
 pub struct CpCommand {
     #[prost(enumeration="CpState", required, tag="1")]
-    pub state: i32,
+    pub state: i16,
     #[prost(enumeration="CpTask", required, tag="2")]
-    pub task: i32,
+    pub task: i16,
     #[prost(message, optional, tag="3")]
     pub pos: ::core::option::Option<Vector2>,
-    #[prost(float, optional, tag="4")]
-    pub orientation: ::core::option::Option<f32>,
-    #[prost(float, optional, tag="5")]
-    pub kick_orient: ::core::option::Option<f32>,
+    #[prost(uint32, optional, tag="4")]
+    pub speed: ::core::option::Option<u16>,
+    #[prost(uint32, optional, tag="5")]
+    pub orientation: ::core::option::Option<u16>,
+    #[prost(uint32, optional, tag="6")]
+    pub kick_orient: ::core::option::Option<u16>,
+    #[prost(uint32, optional, tag="7")]
+    pub kick_speed: ::core::option::Option<u16>,
 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
-#[repr(i32)]
+#[repr(i16)]
 pub enum CpState {
     StateUnspecified = 0,
     /// The GameController Halt Command
@@ -3055,6 +3055,9 @@ pub enum CpState {
     StateFree = 3,
     /// This robot is the goalie, only listens to the GC_Task::Kick commands, to receive and kick the ball.
     StateGoalie = 4,
+    /// Drive to the substitution area and turn all motors  off (we need to define the exact position for each robot at the start, so they don't touch
+    /// when we call all our robots back)
+    StateSubstitute = 5,
 }
 impl CpState {
     /// String value of the enum field names used in the ProtoBuf definition.
@@ -3068,6 +3071,7 @@ impl CpState {
             Self::StateStop => "STATE_STOP",
             Self::StateFree => "STATE_FREE",
             Self::StateGoalie => "STATE_GOALIE",
+            Self::StateSubstitute => "STATE_SUBSTITUTE",
         }
     }
     /// Creates an enum from field names used in the ProtoBuf definition.
@@ -3078,12 +3082,13 @@ impl CpState {
             "STATE_STOP" => Some(Self::StateStop),
             "STATE_FREE" => Some(Self::StateFree),
             "STATE_GOALIE" => Some(Self::StateGoalie),
+            "STATE_SUBSTITUTE" => Some(Self::StateSubstitute),
             _ => None,
         }
     }
 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
-#[repr(i32)]
+#[repr(i16)]
 pub enum CpTask {
     TaskUnspecified = 0,
     /// Drive to that position, if CP_State::STOP, max velocity is 1.5m/s
@@ -3101,12 +3106,8 @@ pub enum CpTask {
     TaskDribble = 6,
     /// Get the ball and move it to the CP_Command::pos position
     TaskPosBall = 7,
-    /// Receive ball, so robot drives to ball and gets it
-    TaskRecBall = 8,
-    /// This robot should do a kickoff
+    /// This robot should do a kickoff, basically kick the ball in the CP_Command::kick_orient direction, but adhere to the kickoff rules
     StateKickoff = 9,
-    /// Do a ball placement, the end position is the position from CP_Command::pos
-    StateBallplacement = 10,
     /// Free Kick, use the CP_Command::kick_orientation direction
     StateFreekick = 11,
 }
@@ -3125,9 +3126,7 @@ impl CpTask {
             Self::TaskSteal => "TASK_STEAL",
             Self::TaskDribble => "TASK_DRIBBLE",
             Self::TaskPosBall => "TASK_PosBall",
-            Self::TaskRecBall => "TASK_RecBall",
             Self::StateKickoff => "STATE_KICKOFF",
-            Self::StateBallplacement => "STATE_BALLPLACEMENT",
             Self::StateFreekick => "STATE_FREEKICK",
         }
     }
@@ -3142,20 +3141,100 @@ impl CpTask {
             "TASK_STEAL" => Some(Self::TaskSteal),
             "TASK_DRIBBLE" => Some(Self::TaskDribble),
             "TASK_PosBall" => Some(Self::TaskPosBall),
-            "TASK_RecBall" => Some(Self::TaskRecBall),
             "STATE_KICKOFF" => Some(Self::StateKickoff),
-            "STATE_BALLPLACEMENT" => Some(Self::StateBallplacement),
             "STATE_FREEKICK" => Some(Self::StateFreekick),
             _ => None,
         }
     }
 }
-#[derive(Clone, Copy, PartialEq, ::prost::Message)]
-pub struct CpInterface {
-    #[prost(uint32, required, tag="1")]
-    pub robot_id: u32,
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct SslWrapperPacket {
+    #[prost(message, optional, tag="1")]
+    pub detection: ::core::option::Option<SslDetectionFrame>,
+    #[prost(message, optional, tag="2")]
+    pub geometry: ::core::option::Option<SslGeometryData>,
+    #[prost(enumeration="SslSource", optional, tag="3")]
+    pub source: ::core::option::Option<i32>,
+}
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
+#[repr(i32)]
+pub enum SslSource {
+    Unknown = 0,
+    Other = 1,
+    SslVision = 2,
+    VisionProcessor = 3,
+    Grsim = 4,
+    ErforceSim = 5,
+}
+impl SslSource {
+    /// String value of the enum field names used in the ProtoBuf definition.
+    ///
+    /// The values are not transformed in any way and thus are considered stable
+    /// (if the ProtoBuf definition does not change) and safe for programmatic use.
+    pub fn as_str_name(&self) -> &'static str {
+        match self {
+            Self::Unknown => "SSL_SOURCE_UNKNOWN",
+            Self::Other => "SSL_SOURCE_OTHER",
+            Self::SslVision => "SSL_SOURCE_SSL_VISION",
+            Self::VisionProcessor => "SSL_SOURCE_VISION_PROCESSOR",
+            Self::Grsim => "SSL_SOURCE_GRSIM",
+            Self::ErforceSim => "SSL_SOURCE_ERFORCE_SIM",
+        }
+    }
+    /// Creates an enum from field names used in the ProtoBuf definition.
+    pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
+        match value {
+            "SSL_SOURCE_UNKNOWN" => Some(Self::Unknown),
+            "SSL_SOURCE_OTHER" => Some(Self::Other),
+            "SSL_SOURCE_SSL_VISION" => Some(Self::SslVision),
+            "SSL_SOURCE_VISION_PROCESSOR" => Some(Self::VisionProcessor),
+            "SSL_SOURCE_GRSIM" => Some(Self::Grsim),
+            "SSL_SOURCE_ERFORCE_SIM" => Some(Self::ErforceSim),
+            _ => None,
+        }
+    }
+}
+/// buf:lint:ignore MESSAGE_PASCAL_CASE
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct CpInterfaceWrapper {
+    #[prost(message, optional, tag="1")]
+    pub vision_raw: ::core::option::Option<SslWrapperPacket>,
+    #[prost(message, optional, tag="2")]
+    pub vision_tracked: ::core::option::Option<TrackerWrapperPacket>,
+    #[prost(message, optional, tag="3")]
+    pub gc_data: ::core::option::Option<Referee>,
+    #[prost(message, repeated, tag="4")]
+    pub robot_commands: ::prost::alloc::vec::Vec<CpRobot>,
+}
+/// buf:lint:ignore MESSAGE_PASCAL_CASE
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct InterfaceWrapperCp {
+    #[prost(message, repeated, tag="1")]
+    pub robot_commands: ::prost::alloc::vec::Vec<InterfaceRobotCommandsCp>,
     #[prost(message, required, tag="2")]
-    pub command: CpCommand,
+    pub interface_command: InterfaceCommandCp,
+}
+/// buf:lint:ignore MESSAGE_PASCAL_CASE
+#[derive(Clone, Copy, PartialEq, ::prost::Message)]
+pub struct InterfaceRobotCommandsCp {
+    #[prost(uint32, optional, tag="1")]
+    pub robot_id: ::core::option::Option<u32>,
+    #[prost(message, optional, tag="2")]
+    pub command: ::core::option::Option<CpCommand>,
+}
+/// buf:lint:ignore MESSAGE_PASCAL_CASE
+#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct InterfaceCommandCp {
+    /// You can decide which quadrant the robot should use to test
+    /// 0: -x +y || 1: +x +y || 2: +x -y || 3: -x -y
+    #[prost(bool, required, tag="1")]
+    pub enable_testfield: bool,
+    #[prost(uint32, required, tag="2")]
+    pub testfield: u32,
+    /// You can tell CP to use the raw ball data with a simple consistency filter
+    /// The tracked vision doesn't work that good with multiple balls, so for testing we can switch to the raw vision
+    #[prost(bool, required, tag="3")]
+    pub ball_tracked: bool,
 }
 /// The packet the robot should send back
 #[derive(Clone, PartialEq, ::prost::Message)]
@@ -3568,53 +3647,6 @@ impl AdvantageChoice {
         match value {
             "STOP" => Some(Self::Stop),
             "CONTINUE" => Some(Self::Continue),
-            _ => None,
-        }
-    }
-}
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct SslWrapperPacket {
-    #[prost(message, optional, tag="1")]
-    pub detection: ::core::option::Option<SslDetectionFrame>,
-    #[prost(message, optional, tag="2")]
-    pub geometry: ::core::option::Option<SslGeometryData>,
-    #[prost(enumeration="SslSource", optional, tag="3")]
-    pub source: ::core::option::Option<i32>,
-}
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
-#[repr(i32)]
-pub enum SslSource {
-    Unknown = 0,
-    Other = 1,
-    SslVision = 2,
-    VisionProcessor = 3,
-    Grsim = 4,
-    ErforceSim = 5,
-}
-impl SslSource {
-    /// String value of the enum field names used in the ProtoBuf definition.
-    ///
-    /// The values are not transformed in any way and thus are considered stable
-    /// (if the ProtoBuf definition does not change) and safe for programmatic use.
-    pub fn as_str_name(&self) -> &'static str {
-        match self {
-            Self::Unknown => "SSL_SOURCE_UNKNOWN",
-            Self::Other => "SSL_SOURCE_OTHER",
-            Self::SslVision => "SSL_SOURCE_SSL_VISION",
-            Self::VisionProcessor => "SSL_SOURCE_VISION_PROCESSOR",
-            Self::Grsim => "SSL_SOURCE_GRSIM",
-            Self::ErforceSim => "SSL_SOURCE_ERFORCE_SIM",
-        }
-    }
-    /// Creates an enum from field names used in the ProtoBuf definition.
-    pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
-        match value {
-            "SSL_SOURCE_UNKNOWN" => Some(Self::Unknown),
-            "SSL_SOURCE_OTHER" => Some(Self::Other),
-            "SSL_SOURCE_SSL_VISION" => Some(Self::SslVision),
-            "SSL_SOURCE_VISION_PROCESSOR" => Some(Self::VisionProcessor),
-            "SSL_SOURCE_GRSIM" => Some(Self::Grsim),
-            "SSL_SOURCE_ERFORCE_SIM" => Some(Self::ErforceSim),
             _ => None,
         }
     }
