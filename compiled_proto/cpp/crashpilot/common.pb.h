@@ -30,6 +30,7 @@
 #include "google/protobuf/repeated_field.h"  // IWYU pragma: export
 #include "google/protobuf/extension_set.h"  // IWYU pragma: export
 #include "google/protobuf/unknown_field_set.h"
+#include "geom/ssl_gc_geometry.pb.h"
 // @@protoc_insertion_point(includes)
 
 // Must be included last.
@@ -53,18 +54,14 @@ struct TableStruct_crashpilot_2fcommon_2eproto {
 extern "C" {
 extern const ::google::protobuf::internal::DescriptorTable descriptor_table_crashpilot_2fcommon_2eproto;
 }  // extern "C"
-class CP_Ball;
-struct CP_BallDefaultTypeInternal;
-extern CP_BallDefaultTypeInternal _CP_Ball_default_instance_;
-extern const ::google::protobuf::internal::ClassDataFull CP_Ball_class_data_;
+class CP_KickedBall;
+struct CP_KickedBallDefaultTypeInternal;
+extern CP_KickedBallDefaultTypeInternal _CP_KickedBall_default_instance_;
+extern const ::google::protobuf::internal::ClassDataFull CP_KickedBall_class_data_;
 class CP_TrackedRobot;
 struct CP_TrackedRobotDefaultTypeInternal;
 extern CP_TrackedRobotDefaultTypeInternal _CP_TrackedRobot_default_instance_;
 extern const ::google::protobuf::internal::ClassDataFull CP_TrackedRobot_class_data_;
-class CP_Vector2;
-struct CP_Vector2DefaultTypeInternal;
-extern CP_Vector2DefaultTypeInternal _CP_Vector2_default_instance_;
-extern const ::google::protobuf::internal::ClassDataFull CP_Vector2_class_data_;
 namespace google {
 namespace protobuf {
 }  // namespace protobuf
@@ -74,223 +71,6 @@ namespace protobuf {
 // ===================================================================
 
 
-// -------------------------------------------------------------------
-
-class  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED CP_Vector2 final : public ::google::protobuf::Message
-/* @@protoc_insertion_point(class_definition:CP_Vector2) */ {
- public:
-  inline CP_Vector2() : CP_Vector2(nullptr) {}
-  ~CP_Vector2() PROTOBUF_FINAL;
-
-#if defined(PROTOBUF_CUSTOM_VTABLE)
-  void operator delete(CP_Vector2* PROTOBUF_NONNULL msg, ::std::destroying_delete_t) {
-    SharedDtor(*msg);
-    ::google::protobuf::internal::SizedDelete(msg, sizeof(CP_Vector2));
-  }
-#endif
-
-  template <typename = void>
-  explicit constexpr CP_Vector2(::google::protobuf::internal::ConstantInitialized);
-
-  inline CP_Vector2(const CP_Vector2& from) : CP_Vector2(nullptr, from) {}
-  inline CP_Vector2(CP_Vector2&& from) noexcept
-      : CP_Vector2(nullptr, ::std::move(from)) {}
-  inline CP_Vector2& operator=(const CP_Vector2& from) {
-    CopyFrom(from);
-    return *this;
-  }
-  inline CP_Vector2& operator=(CP_Vector2&& from) noexcept {
-    if (this == &from) return *this;
-    if (::google::protobuf::internal::CanMoveWithInternalSwap(GetArena(), from.GetArena())) {
-      InternalSwap(&from);
-    } else {
-      CopyFrom(from);
-    }
-    return *this;
-  }
-
-  [[nodiscard]] inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const
-      ABSL_ATTRIBUTE_LIFETIME_BOUND {
-    return _internal_metadata_.unknown_fields<::google::protobuf::UnknownFieldSet>(::google::protobuf::UnknownFieldSet::default_instance);
-  }
-  [[nodiscard]] inline ::google::protobuf::UnknownFieldSet* PROTOBUF_NONNULL
-  mutable_unknown_fields() ABSL_ATTRIBUTE_LIFETIME_BOUND {
-    return _internal_metadata_.mutable_unknown_fields<::google::protobuf::UnknownFieldSet>();
-  }
-
-  [[nodiscard]] static const ::google::protobuf::Descriptor* PROTOBUF_NONNULL descriptor() {
-    return GetDescriptor();
-  }
-  [[nodiscard]] static const ::google::protobuf::Descriptor* PROTOBUF_NONNULL
-  GetDescriptor() {
-    return default_instance().GetMetadata().descriptor;
-  }
-  [[nodiscard]] static const ::google::protobuf::Reflection* PROTOBUF_NONNULL GetReflection() {
-    return default_instance().GetMetadata().reflection;
-  }
-  [[nodiscard]] static const CP_Vector2& default_instance() {
-    return *reinterpret_cast<const CP_Vector2*>(
-        &_CP_Vector2_default_instance_);
-  }
-  static constexpr int kIndexInFileMessages = 2;
-  friend void swap(CP_Vector2& a, CP_Vector2& b) { a.Swap(&b); }
-  inline void Swap(CP_Vector2* PROTOBUF_NONNULL other) {
-    if (other == this) return;
-    if (::google::protobuf::internal::CanUseInternalSwap(GetArena(), other->GetArena())) {
-      InternalSwap(other);
-    } else {
-      ::google::protobuf::internal::GenericSwap(this, other);
-    }
-  }
-  void UnsafeArenaSwap(CP_Vector2* PROTOBUF_NONNULL other) {
-    if (other == this) return;
-    ABSL_DCHECK(GetArena() == other->GetArena());
-    InternalSwap(other);
-  }
-
-  // implements Message ----------------------------------------------
-
-  [[nodiscard]] CP_Vector2* PROTOBUF_NONNULL
-  New(::google::protobuf::Arena* PROTOBUF_NULLABLE arena = nullptr) const {
-    return ::google::protobuf::Message::DefaultConstruct<CP_Vector2>(arena);
-  }
-  using ::google::protobuf::Message::CopyFrom;
-  void CopyFrom(const CP_Vector2& from);
-  using ::google::protobuf::Message::MergeFrom;
-  void MergeFrom(const CP_Vector2& from) { CP_Vector2::MergeImpl(*this, from); }
-
-  private:
-  static void MergeImpl(::google::protobuf::MessageLite& to_msg,
-                        const ::google::protobuf::MessageLite& from_msg);
-
-  public:
-  [[nodiscard]] bool IsInitialized() const {
-    return IsInitializedImpl(*this);
-  }
-
-  private:
-  static bool IsInitializedImpl(const MessageLite& msg);
-
-  public:
-  ABSL_ATTRIBUTE_REINITIALIZES void Clear() PROTOBUF_FINAL;
-  #if defined(PROTOBUF_CUSTOM_VTABLE)
-  private:
-  [[nodiscard]] static ::size_t ByteSizeLong(const ::google::protobuf::MessageLite& msg);
-  [[nodiscard]] static ::uint8_t* PROTOBUF_NONNULL _InternalSerialize(
-      const ::google::protobuf::MessageLite& msg, ::uint8_t* PROTOBUF_NONNULL target,
-      ::google::protobuf::io::EpsCopyOutputStream* PROTOBUF_NONNULL stream);
-
-  public:
-  [[nodiscard]] ::size_t ByteSizeLong() const { return ByteSizeLong(*this); }
-  [[nodiscard]] ::uint8_t* PROTOBUF_NONNULL _InternalSerialize(
-      ::uint8_t* PROTOBUF_NONNULL target,
-      ::google::protobuf::io::EpsCopyOutputStream* PROTOBUF_NONNULL stream) const {
-    return _InternalSerialize(*this, target, stream);
-  }
-  #else   // PROTOBUF_CUSTOM_VTABLE
-  [[nodiscard]] ::size_t ByteSizeLong() const final;
-  [[nodiscard]] ::uint8_t* PROTOBUF_NONNULL _InternalSerialize(
-      ::uint8_t* PROTOBUF_NONNULL target,
-      ::google::protobuf::io::EpsCopyOutputStream* PROTOBUF_NONNULL stream) const final;
-  #endif  // PROTOBUF_CUSTOM_VTABLE
-  [[nodiscard]] int GetCachedSize() const {
-    return _impl_._cached_size_.Get();
-  }
-
-  private:
-  void SharedCtor(::google::protobuf::Arena* PROTOBUF_NULLABLE arena);
-  static void SharedDtor(MessageLite& self);
-  void InternalSwap(CP_Vector2* PROTOBUF_NONNULL other);
- private:
-  template <typename T>
-  friend ::absl::string_view(::google::protobuf::internal::GetAnyMessageName)();
-  static ::absl::string_view FullMessageName() { return "CP_Vector2"; }
-
-  explicit CP_Vector2(::google::protobuf::Arena* PROTOBUF_NULLABLE arena);
-  CP_Vector2(::google::protobuf::Arena* PROTOBUF_NULLABLE arena, const CP_Vector2& from);
-  CP_Vector2(
-      ::google::protobuf::Arena* PROTOBUF_NULLABLE arena, CP_Vector2&& from) noexcept
-      : CP_Vector2(arena) {
-    *this = ::std::move(from);
-  }
-  const ::google::protobuf::internal::ClassData* PROTOBUF_NONNULL GetClassData() const PROTOBUF_FINAL;
-  static void* PROTOBUF_NONNULL PlacementNew_(
-      const void* PROTOBUF_NONNULL, void* PROTOBUF_NONNULL mem,
-      ::google::protobuf::Arena* PROTOBUF_NULLABLE arena);
-  static constexpr auto InternalNewImpl_();
-
- public:
-  static constexpr auto InternalGenerateClassData_();
-
-  [[nodiscard]] ::google::protobuf::Metadata GetMetadata() const;
-  // nested types ----------------------------------------------------
-
-  // accessors -------------------------------------------------------
-  enum : int {
-    kXFieldNumber = 1,
-    kYFieldNumber = 2,
-  };
-  // required int32 x = 1 [json_name = "x"];
-  [[nodiscard]] bool has_x()
-      const;
-  void clear_x() ;
-  [[nodiscard]] ::int32_t x() const;
-  void set_x(::int32_t value);
-
-  private:
-  ::int32_t _internal_x() const;
-  void _internal_set_x(::int32_t value);
-
-  public:
-  // required int32 y = 2 [json_name = "y"];
-  [[nodiscard]] bool has_y()
-      const;
-  void clear_y() ;
-  [[nodiscard]] ::int32_t y() const;
-  void set_y(::int32_t value);
-
-  private:
-  ::int32_t _internal_y() const;
-  void _internal_set_y(::int32_t value);
-
-  public:
-  // @@protoc_insertion_point(class_scope:CP_Vector2)
- private:
-  class _Internal;
-  friend class ::google::protobuf::internal::TcParser;
-  static const ::google::protobuf::internal::TcParseTable<1, 2,
-                                   0, 0,
-                                   2>
-      _table_;
-
-  friend class ::google::protobuf::MessageLite;
-  friend class ::google::protobuf::Arena;
-  friend ::google::protobuf::internal::PrivateAccess;
-  template <typename T>
-  friend class ::google::protobuf::Arena::InternalHelper;
-  using InternalArenaConstructable_ = void;
-  using DestructorSkippable_ = void;
-  struct Impl_ {
-    inline explicit constexpr Impl_(::google::protobuf::internal::InternalVisibility visibility,
-                                    ::google::protobuf::internal::ConstantInitialized) noexcept;
-    inline explicit Impl_(
-        ::google::protobuf::internal::InternalVisibility visibility,
-        ::google::protobuf::Arena* PROTOBUF_NULLABLE arena);
-    inline explicit Impl_(
-        ::google::protobuf::internal::InternalVisibility visibility,
-        ::google::protobuf::Arena* PROTOBUF_NULLABLE arena, const Impl_& from,
-        const CP_Vector2& from_msg);
-    ::google::protobuf::internal::HasBits<1> _has_bits_;
-    ::google::protobuf::internal::CachedSize _cached_size_;
-    ::int32_t x_;
-    ::int32_t y_;
-    PROTOBUF_TSAN_DECLARE_MEMBER
-  };
-  union { Impl_ _impl_; };
-  friend struct ::TableStruct_crashpilot_2fcommon_2eproto;
-};
-
-extern const ::google::protobuf::internal::ClassDataFull CP_Vector2_class_data_;
 // -------------------------------------------------------------------
 
 class  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED CP_TrackedRobot final : public ::google::protobuf::Message
@@ -448,37 +228,38 @@ class  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED CP_TrackedRobot final : public ::go
     kVelFieldNumber = 4,
     kRobotIdFieldNumber = 1,
     kOrientationFieldNumber = 3,
+    kVelAngularFieldNumber = 5,
   };
-  // required .CP_Vector2 pos = 2 [json_name = "pos"];
+  // required .Vector2 pos = 2 [json_name = "pos"];
   [[nodiscard]] bool has_pos()
       const;
   void clear_pos() ;
-  [[nodiscard]] const ::CP_Vector2& pos() const;
-  [[nodiscard]] ::CP_Vector2* PROTOBUF_NULLABLE release_pos();
-  ::CP_Vector2* PROTOBUF_NONNULL mutable_pos();
-  void set_allocated_pos(::CP_Vector2* PROTOBUF_NULLABLE value);
-  void unsafe_arena_set_allocated_pos(::CP_Vector2* PROTOBUF_NULLABLE value);
-  ::CP_Vector2* PROTOBUF_NULLABLE unsafe_arena_release_pos();
+  [[nodiscard]] const ::Vector2& pos() const;
+  [[nodiscard]] ::Vector2* PROTOBUF_NULLABLE release_pos();
+  ::Vector2* PROTOBUF_NONNULL mutable_pos();
+  void set_allocated_pos(::Vector2* PROTOBUF_NULLABLE value);
+  void unsafe_arena_set_allocated_pos(::Vector2* PROTOBUF_NULLABLE value);
+  ::Vector2* PROTOBUF_NULLABLE unsafe_arena_release_pos();
 
   private:
-  const ::CP_Vector2& _internal_pos() const;
-  ::CP_Vector2* PROTOBUF_NONNULL _internal_mutable_pos();
+  const ::Vector2& _internal_pos() const;
+  ::Vector2* PROTOBUF_NONNULL _internal_mutable_pos();
 
   public:
-  // optional .CP_Vector2 vel = 4 [json_name = "vel"];
+  // optional .Vector2 vel = 4 [json_name = "vel"];
   [[nodiscard]] bool has_vel()
       const;
   void clear_vel() ;
-  [[nodiscard]] const ::CP_Vector2& vel() const;
-  [[nodiscard]] ::CP_Vector2* PROTOBUF_NULLABLE release_vel();
-  ::CP_Vector2* PROTOBUF_NONNULL mutable_vel();
-  void set_allocated_vel(::CP_Vector2* PROTOBUF_NULLABLE value);
-  void unsafe_arena_set_allocated_vel(::CP_Vector2* PROTOBUF_NULLABLE value);
-  ::CP_Vector2* PROTOBUF_NULLABLE unsafe_arena_release_vel();
+  [[nodiscard]] const ::Vector2& vel() const;
+  [[nodiscard]] ::Vector2* PROTOBUF_NULLABLE release_vel();
+  ::Vector2* PROTOBUF_NONNULL mutable_vel();
+  void set_allocated_vel(::Vector2* PROTOBUF_NULLABLE value);
+  void unsafe_arena_set_allocated_vel(::Vector2* PROTOBUF_NULLABLE value);
+  ::Vector2* PROTOBUF_NULLABLE unsafe_arena_release_vel();
 
   private:
-  const ::CP_Vector2& _internal_vel() const;
-  ::CP_Vector2* PROTOBUF_NONNULL _internal_mutable_vel();
+  const ::Vector2& _internal_vel() const;
+  ::Vector2* PROTOBUF_NONNULL _internal_mutable_vel();
 
   public:
   // required uint32 robot_id = 1 [json_name = "robotId"];
@@ -505,11 +286,23 @@ class  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED CP_TrackedRobot final : public ::go
   void _internal_set_orientation(float value);
 
   public:
+  // optional float vel_angular = 5 [json_name = "velAngular"];
+  [[nodiscard]] bool has_vel_angular()
+      const;
+  void clear_vel_angular() ;
+  [[nodiscard]] float vel_angular() const;
+  void set_vel_angular(float value);
+
+  private:
+  float _internal_vel_angular() const;
+  void _internal_set_vel_angular(float value);
+
+  public:
   // @@protoc_insertion_point(class_scope:CP_TrackedRobot)
  private:
   class _Internal;
   friend class ::google::protobuf::internal::TcParser;
-  static const ::google::protobuf::internal::TcParseTable<2, 4,
+  static const ::google::protobuf::internal::TcParseTable<3, 5,
                                    2, 0,
                                    2>
       _table_;
@@ -533,10 +326,11 @@ class  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED CP_TrackedRobot final : public ::go
         const CP_TrackedRobot& from_msg);
     ::google::protobuf::internal::HasBits<1> _has_bits_;
     ::google::protobuf::internal::CachedSize _cached_size_;
-    ::CP_Vector2* PROTOBUF_NULLABLE pos_;
-    ::CP_Vector2* PROTOBUF_NULLABLE vel_;
+    ::Vector2* PROTOBUF_NULLABLE pos_;
+    ::Vector2* PROTOBUF_NULLABLE vel_;
     ::uint32_t robot_id_;
     float orientation_;
+    float vel_angular_;
     PROTOBUF_TSAN_DECLARE_MEMBER
   };
   union { Impl_ _impl_; };
@@ -546,30 +340,30 @@ class  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED CP_TrackedRobot final : public ::go
 extern const ::google::protobuf::internal::ClassDataFull CP_TrackedRobot_class_data_;
 // -------------------------------------------------------------------
 
-class  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED CP_Ball final : public ::google::protobuf::Message
-/* @@protoc_insertion_point(class_definition:CP_Ball) */ {
+class  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED CP_KickedBall final : public ::google::protobuf::Message
+/* @@protoc_insertion_point(class_definition:CP_KickedBall) */ {
  public:
-  inline CP_Ball() : CP_Ball(nullptr) {}
-  ~CP_Ball() PROTOBUF_FINAL;
+  inline CP_KickedBall() : CP_KickedBall(nullptr) {}
+  ~CP_KickedBall() PROTOBUF_FINAL;
 
 #if defined(PROTOBUF_CUSTOM_VTABLE)
-  void operator delete(CP_Ball* PROTOBUF_NONNULL msg, ::std::destroying_delete_t) {
+  void operator delete(CP_KickedBall* PROTOBUF_NONNULL msg, ::std::destroying_delete_t) {
     SharedDtor(*msg);
-    ::google::protobuf::internal::SizedDelete(msg, sizeof(CP_Ball));
+    ::google::protobuf::internal::SizedDelete(msg, sizeof(CP_KickedBall));
   }
 #endif
 
   template <typename = void>
-  explicit constexpr CP_Ball(::google::protobuf::internal::ConstantInitialized);
+  explicit constexpr CP_KickedBall(::google::protobuf::internal::ConstantInitialized);
 
-  inline CP_Ball(const CP_Ball& from) : CP_Ball(nullptr, from) {}
-  inline CP_Ball(CP_Ball&& from) noexcept
-      : CP_Ball(nullptr, ::std::move(from)) {}
-  inline CP_Ball& operator=(const CP_Ball& from) {
+  inline CP_KickedBall(const CP_KickedBall& from) : CP_KickedBall(nullptr, from) {}
+  inline CP_KickedBall(CP_KickedBall&& from) noexcept
+      : CP_KickedBall(nullptr, ::std::move(from)) {}
+  inline CP_KickedBall& operator=(const CP_KickedBall& from) {
     CopyFrom(from);
     return *this;
   }
-  inline CP_Ball& operator=(CP_Ball&& from) noexcept {
+  inline CP_KickedBall& operator=(CP_KickedBall&& from) noexcept {
     if (this == &from) return *this;
     if (::google::protobuf::internal::CanMoveWithInternalSwap(GetArena(), from.GetArena())) {
       InternalSwap(&from);
@@ -598,13 +392,13 @@ class  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED CP_Ball final : public ::google::pr
   [[nodiscard]] static const ::google::protobuf::Reflection* PROTOBUF_NONNULL GetReflection() {
     return default_instance().GetMetadata().reflection;
   }
-  [[nodiscard]] static const CP_Ball& default_instance() {
-    return *reinterpret_cast<const CP_Ball*>(
-        &_CP_Ball_default_instance_);
+  [[nodiscard]] static const CP_KickedBall& default_instance() {
+    return *reinterpret_cast<const CP_KickedBall*>(
+        &_CP_KickedBall_default_instance_);
   }
   static constexpr int kIndexInFileMessages = 0;
-  friend void swap(CP_Ball& a, CP_Ball& b) { a.Swap(&b); }
-  inline void Swap(CP_Ball* PROTOBUF_NONNULL other) {
+  friend void swap(CP_KickedBall& a, CP_KickedBall& b) { a.Swap(&b); }
+  inline void Swap(CP_KickedBall* PROTOBUF_NONNULL other) {
     if (other == this) return;
     if (::google::protobuf::internal::CanUseInternalSwap(GetArena(), other->GetArena())) {
       InternalSwap(other);
@@ -612,7 +406,7 @@ class  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED CP_Ball final : public ::google::pr
       ::google::protobuf::internal::GenericSwap(this, other);
     }
   }
-  void UnsafeArenaSwap(CP_Ball* PROTOBUF_NONNULL other) {
+  void UnsafeArenaSwap(CP_KickedBall* PROTOBUF_NONNULL other) {
     if (other == this) return;
     ABSL_DCHECK(GetArena() == other->GetArena());
     InternalSwap(other);
@@ -620,14 +414,14 @@ class  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED CP_Ball final : public ::google::pr
 
   // implements Message ----------------------------------------------
 
-  [[nodiscard]] CP_Ball* PROTOBUF_NONNULL
+  [[nodiscard]] CP_KickedBall* PROTOBUF_NONNULL
   New(::google::protobuf::Arena* PROTOBUF_NULLABLE arena = nullptr) const {
-    return ::google::protobuf::Message::DefaultConstruct<CP_Ball>(arena);
+    return ::google::protobuf::Message::DefaultConstruct<CP_KickedBall>(arena);
   }
   using ::google::protobuf::Message::CopyFrom;
-  void CopyFrom(const CP_Ball& from);
+  void CopyFrom(const CP_KickedBall& from);
   using ::google::protobuf::Message::MergeFrom;
-  void MergeFrom(const CP_Ball& from) { CP_Ball::MergeImpl(*this, from); }
+  void MergeFrom(const CP_KickedBall& from) { CP_KickedBall::MergeImpl(*this, from); }
 
   private:
   static void MergeImpl(::google::protobuf::MessageLite& to_msg,
@@ -670,17 +464,17 @@ class  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED CP_Ball final : public ::google::pr
   private:
   void SharedCtor(::google::protobuf::Arena* PROTOBUF_NULLABLE arena);
   static void SharedDtor(MessageLite& self);
-  void InternalSwap(CP_Ball* PROTOBUF_NONNULL other);
+  void InternalSwap(CP_KickedBall* PROTOBUF_NONNULL other);
  private:
   template <typename T>
   friend ::absl::string_view(::google::protobuf::internal::GetAnyMessageName)();
-  static ::absl::string_view FullMessageName() { return "CP_Ball"; }
+  static ::absl::string_view FullMessageName() { return "CP_KickedBall"; }
 
-  explicit CP_Ball(::google::protobuf::Arena* PROTOBUF_NULLABLE arena);
-  CP_Ball(::google::protobuf::Arena* PROTOBUF_NULLABLE arena, const CP_Ball& from);
-  CP_Ball(
-      ::google::protobuf::Arena* PROTOBUF_NULLABLE arena, CP_Ball&& from) noexcept
-      : CP_Ball(arena) {
+  explicit CP_KickedBall(::google::protobuf::Arena* PROTOBUF_NULLABLE arena);
+  CP_KickedBall(::google::protobuf::Arena* PROTOBUF_NULLABLE arena, const CP_KickedBall& from);
+  CP_KickedBall(
+      ::google::protobuf::Arena* PROTOBUF_NULLABLE arena, CP_KickedBall&& from) noexcept
+      : CP_KickedBall(arena) {
     *this = ::std::move(from);
   }
   const ::google::protobuf::internal::ClassData* PROTOBUF_NONNULL GetClassData() const PROTOBUF_FINAL;
@@ -699,45 +493,62 @@ class  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED CP_Ball final : public ::google::pr
   enum : int {
     kPosFieldNumber = 1,
     kVelFieldNumber = 2,
+    kStopPosFieldNumber = 5,
   };
-  // required .CP_Vector2 pos = 1 [json_name = "pos"];
+  // required .Vector2 pos = 1 [json_name = "pos"];
   [[nodiscard]] bool has_pos()
       const;
   void clear_pos() ;
-  [[nodiscard]] const ::CP_Vector2& pos() const;
-  [[nodiscard]] ::CP_Vector2* PROTOBUF_NULLABLE release_pos();
-  ::CP_Vector2* PROTOBUF_NONNULL mutable_pos();
-  void set_allocated_pos(::CP_Vector2* PROTOBUF_NULLABLE value);
-  void unsafe_arena_set_allocated_pos(::CP_Vector2* PROTOBUF_NULLABLE value);
-  ::CP_Vector2* PROTOBUF_NULLABLE unsafe_arena_release_pos();
+  [[nodiscard]] const ::Vector2& pos() const;
+  [[nodiscard]] ::Vector2* PROTOBUF_NULLABLE release_pos();
+  ::Vector2* PROTOBUF_NONNULL mutable_pos();
+  void set_allocated_pos(::Vector2* PROTOBUF_NULLABLE value);
+  void unsafe_arena_set_allocated_pos(::Vector2* PROTOBUF_NULLABLE value);
+  ::Vector2* PROTOBUF_NULLABLE unsafe_arena_release_pos();
 
   private:
-  const ::CP_Vector2& _internal_pos() const;
-  ::CP_Vector2* PROTOBUF_NONNULL _internal_mutable_pos();
+  const ::Vector2& _internal_pos() const;
+  ::Vector2* PROTOBUF_NONNULL _internal_mutable_pos();
 
   public:
-  // optional .CP_Vector2 vel = 2 [json_name = "vel"];
+  // required .Vector3 vel = 2 [json_name = "vel"];
   [[nodiscard]] bool has_vel()
       const;
   void clear_vel() ;
-  [[nodiscard]] const ::CP_Vector2& vel() const;
-  [[nodiscard]] ::CP_Vector2* PROTOBUF_NULLABLE release_vel();
-  ::CP_Vector2* PROTOBUF_NONNULL mutable_vel();
-  void set_allocated_vel(::CP_Vector2* PROTOBUF_NULLABLE value);
-  void unsafe_arena_set_allocated_vel(::CP_Vector2* PROTOBUF_NULLABLE value);
-  ::CP_Vector2* PROTOBUF_NULLABLE unsafe_arena_release_vel();
+  [[nodiscard]] const ::Vector3& vel() const;
+  [[nodiscard]] ::Vector3* PROTOBUF_NULLABLE release_vel();
+  ::Vector3* PROTOBUF_NONNULL mutable_vel();
+  void set_allocated_vel(::Vector3* PROTOBUF_NULLABLE value);
+  void unsafe_arena_set_allocated_vel(::Vector3* PROTOBUF_NULLABLE value);
+  ::Vector3* PROTOBUF_NULLABLE unsafe_arena_release_vel();
 
   private:
-  const ::CP_Vector2& _internal_vel() const;
-  ::CP_Vector2* PROTOBUF_NONNULL _internal_mutable_vel();
+  const ::Vector3& _internal_vel() const;
+  ::Vector3* PROTOBUF_NONNULL _internal_mutable_vel();
 
   public:
-  // @@protoc_insertion_point(class_scope:CP_Ball)
+  // optional .Vector2 stop_pos = 5 [json_name = "stopPos"];
+  [[nodiscard]] bool has_stop_pos()
+      const;
+  void clear_stop_pos() ;
+  [[nodiscard]] const ::Vector2& stop_pos() const;
+  [[nodiscard]] ::Vector2* PROTOBUF_NULLABLE release_stop_pos();
+  ::Vector2* PROTOBUF_NONNULL mutable_stop_pos();
+  void set_allocated_stop_pos(::Vector2* PROTOBUF_NULLABLE value);
+  void unsafe_arena_set_allocated_stop_pos(::Vector2* PROTOBUF_NULLABLE value);
+  ::Vector2* PROTOBUF_NULLABLE unsafe_arena_release_stop_pos();
+
+  private:
+  const ::Vector2& _internal_stop_pos() const;
+  ::Vector2* PROTOBUF_NONNULL _internal_mutable_stop_pos();
+
+  public:
+  // @@protoc_insertion_point(class_scope:CP_KickedBall)
  private:
   class _Internal;
   friend class ::google::protobuf::internal::TcParser;
-  static const ::google::protobuf::internal::TcParseTable<1, 2,
-                                   2, 0,
+  static const ::google::protobuf::internal::TcParseTable<1, 3,
+                                   3, 0,
                                    2>
       _table_;
 
@@ -757,18 +568,19 @@ class  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED CP_Ball final : public ::google::pr
     inline explicit Impl_(
         ::google::protobuf::internal::InternalVisibility visibility,
         ::google::protobuf::Arena* PROTOBUF_NULLABLE arena, const Impl_& from,
-        const CP_Ball& from_msg);
+        const CP_KickedBall& from_msg);
     ::google::protobuf::internal::HasBits<1> _has_bits_;
     ::google::protobuf::internal::CachedSize _cached_size_;
-    ::CP_Vector2* PROTOBUF_NULLABLE pos_;
-    ::CP_Vector2* PROTOBUF_NULLABLE vel_;
+    ::Vector2* PROTOBUF_NULLABLE pos_;
+    ::Vector3* PROTOBUF_NULLABLE vel_;
+    ::Vector2* PROTOBUF_NULLABLE stop_pos_;
     PROTOBUF_TSAN_DECLARE_MEMBER
   };
   union { Impl_ _impl_; };
   friend struct ::TableStruct_crashpilot_2fcommon_2eproto;
 };
 
-extern const ::google::protobuf::internal::ClassDataFull CP_Ball_class_data_;
+extern const ::google::protobuf::internal::ClassDataFull CP_KickedBall_class_data_;
 
 // ===================================================================
 
@@ -784,48 +596,42 @@ extern const ::google::protobuf::internal::ClassDataFull CP_Ball_class_data_;
 #endif  // __GNUC__
 // -------------------------------------------------------------------
 
-// CP_Ball
+// CP_KickedBall
 
-// required .CP_Vector2 pos = 1 [json_name = "pos"];
-inline bool CP_Ball::has_pos() const {
+// required .Vector2 pos = 1 [json_name = "pos"];
+inline bool CP_KickedBall::has_pos() const {
   bool value = CheckHasBit(_impl_._has_bits_[0], 0x00000001U);
   PROTOBUF_ASSUME(!value || _impl_.pos_ != nullptr);
   return value;
 }
-inline void CP_Ball::clear_pos() {
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-  if (_impl_.pos_ != nullptr) _impl_.pos_->Clear();
-  ClearHasBit(_impl_._has_bits_[0],
-                  0x00000001U);
-}
-inline const ::CP_Vector2& CP_Ball::_internal_pos() const {
+inline const ::Vector2& CP_KickedBall::_internal_pos() const {
   ::google::protobuf::internal::TSanRead(&_impl_);
-  const ::CP_Vector2* p = _impl_.pos_;
-  return p != nullptr ? *p : reinterpret_cast<const ::CP_Vector2&>(::_CP_Vector2_default_instance_);
+  const ::Vector2* p = _impl_.pos_;
+  return p != nullptr ? *p : reinterpret_cast<const ::Vector2&>(::_Vector2_default_instance_);
 }
-inline const ::CP_Vector2& CP_Ball::pos() const ABSL_ATTRIBUTE_LIFETIME_BOUND {
-  // @@protoc_insertion_point(field_get:CP_Ball.pos)
+inline const ::Vector2& CP_KickedBall::pos() const ABSL_ATTRIBUTE_LIFETIME_BOUND {
+  // @@protoc_insertion_point(field_get:CP_KickedBall.pos)
   return _internal_pos();
 }
-inline void CP_Ball::unsafe_arena_set_allocated_pos(
-    ::CP_Vector2* PROTOBUF_NULLABLE value) {
+inline void CP_KickedBall::unsafe_arena_set_allocated_pos(
+    ::Vector2* PROTOBUF_NULLABLE value) {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   if (GetArena() == nullptr) {
     delete reinterpret_cast<::google::protobuf::MessageLite*>(_impl_.pos_);
   }
-  _impl_.pos_ = reinterpret_cast<::CP_Vector2*>(value);
+  _impl_.pos_ = reinterpret_cast<::Vector2*>(value);
   if (value != nullptr) {
     SetHasBit(_impl_._has_bits_[0], 0x00000001U);
   } else {
     ClearHasBit(_impl_._has_bits_[0], 0x00000001U);
   }
-  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:CP_Ball.pos)
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:CP_KickedBall.pos)
 }
-inline ::CP_Vector2* PROTOBUF_NULLABLE CP_Ball::release_pos() {
+inline ::Vector2* PROTOBUF_NULLABLE CP_KickedBall::release_pos() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
 
   ClearHasBit(_impl_._has_bits_[0], 0x00000001U);
-  ::CP_Vector2* released = _impl_.pos_;
+  ::Vector2* released = _impl_.pos_;
   _impl_.pos_ = nullptr;
   if (::google::protobuf::internal::DebugHardenForceCopyInRelease()) {
     auto* old = reinterpret_cast<::google::protobuf::MessageLite*>(released);
@@ -840,31 +646,31 @@ inline ::CP_Vector2* PROTOBUF_NULLABLE CP_Ball::release_pos() {
   }
   return released;
 }
-inline ::CP_Vector2* PROTOBUF_NULLABLE CP_Ball::unsafe_arena_release_pos() {
+inline ::Vector2* PROTOBUF_NULLABLE CP_KickedBall::unsafe_arena_release_pos() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
-  // @@protoc_insertion_point(field_release:CP_Ball.pos)
+  // @@protoc_insertion_point(field_release:CP_KickedBall.pos)
 
   ClearHasBit(_impl_._has_bits_[0], 0x00000001U);
-  ::CP_Vector2* temp = _impl_.pos_;
+  ::Vector2* temp = _impl_.pos_;
   _impl_.pos_ = nullptr;
   return temp;
 }
-inline ::CP_Vector2* PROTOBUF_NONNULL CP_Ball::_internal_mutable_pos() {
+inline ::Vector2* PROTOBUF_NONNULL CP_KickedBall::_internal_mutable_pos() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   if (_impl_.pos_ == nullptr) {
-    auto* p = ::google::protobuf::Message::DefaultConstruct<::CP_Vector2>(GetArena());
-    _impl_.pos_ = reinterpret_cast<::CP_Vector2*>(p);
+    auto* p = ::google::protobuf::Message::DefaultConstruct<::Vector2>(GetArena());
+    _impl_.pos_ = reinterpret_cast<::Vector2*>(p);
   }
   return _impl_.pos_;
 }
-inline ::CP_Vector2* PROTOBUF_NONNULL CP_Ball::mutable_pos()
+inline ::Vector2* PROTOBUF_NONNULL CP_KickedBall::mutable_pos()
     ABSL_ATTRIBUTE_LIFETIME_BOUND {
   SetHasBit(_impl_._has_bits_[0], 0x00000001U);
-  ::CP_Vector2* _msg = _internal_mutable_pos();
-  // @@protoc_insertion_point(field_mutable:CP_Ball.pos)
+  ::Vector2* _msg = _internal_mutable_pos();
+  // @@protoc_insertion_point(field_mutable:CP_KickedBall.pos)
   return _msg;
 }
-inline void CP_Ball::set_allocated_pos(::CP_Vector2* PROTOBUF_NULLABLE value) {
+inline void CP_KickedBall::set_allocated_pos(::Vector2* PROTOBUF_NULLABLE value) {
   ::google::protobuf::Arena* message_arena = GetArena();
   ::google::protobuf::internal::TSanWrite(&_impl_);
   if (message_arena == nullptr) {
@@ -872,7 +678,7 @@ inline void CP_Ball::set_allocated_pos(::CP_Vector2* PROTOBUF_NULLABLE value) {
   }
 
   if (value != nullptr) {
-    ::google::protobuf::Arena* submessage_arena = value->GetArena();
+    ::google::protobuf::Arena* submessage_arena = reinterpret_cast<::google::protobuf::Message*>(value)->GetArena();
     if (message_arena != submessage_arena) {
       value = ::google::protobuf::internal::GetOwnedMessage(message_arena, value, submessage_arena);
     }
@@ -881,50 +687,44 @@ inline void CP_Ball::set_allocated_pos(::CP_Vector2* PROTOBUF_NULLABLE value) {
     ClearHasBit(_impl_._has_bits_[0], 0x00000001U);
   }
 
-  _impl_.pos_ = reinterpret_cast<::CP_Vector2*>(value);
-  // @@protoc_insertion_point(field_set_allocated:CP_Ball.pos)
+  _impl_.pos_ = reinterpret_cast<::Vector2*>(value);
+  // @@protoc_insertion_point(field_set_allocated:CP_KickedBall.pos)
 }
 
-// optional .CP_Vector2 vel = 2 [json_name = "vel"];
-inline bool CP_Ball::has_vel() const {
+// required .Vector3 vel = 2 [json_name = "vel"];
+inline bool CP_KickedBall::has_vel() const {
   bool value = CheckHasBit(_impl_._has_bits_[0], 0x00000002U);
   PROTOBUF_ASSUME(!value || _impl_.vel_ != nullptr);
   return value;
 }
-inline void CP_Ball::clear_vel() {
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-  if (_impl_.vel_ != nullptr) _impl_.vel_->Clear();
-  ClearHasBit(_impl_._has_bits_[0],
-                  0x00000002U);
-}
-inline const ::CP_Vector2& CP_Ball::_internal_vel() const {
+inline const ::Vector3& CP_KickedBall::_internal_vel() const {
   ::google::protobuf::internal::TSanRead(&_impl_);
-  const ::CP_Vector2* p = _impl_.vel_;
-  return p != nullptr ? *p : reinterpret_cast<const ::CP_Vector2&>(::_CP_Vector2_default_instance_);
+  const ::Vector3* p = _impl_.vel_;
+  return p != nullptr ? *p : reinterpret_cast<const ::Vector3&>(::_Vector3_default_instance_);
 }
-inline const ::CP_Vector2& CP_Ball::vel() const ABSL_ATTRIBUTE_LIFETIME_BOUND {
-  // @@protoc_insertion_point(field_get:CP_Ball.vel)
+inline const ::Vector3& CP_KickedBall::vel() const ABSL_ATTRIBUTE_LIFETIME_BOUND {
+  // @@protoc_insertion_point(field_get:CP_KickedBall.vel)
   return _internal_vel();
 }
-inline void CP_Ball::unsafe_arena_set_allocated_vel(
-    ::CP_Vector2* PROTOBUF_NULLABLE value) {
+inline void CP_KickedBall::unsafe_arena_set_allocated_vel(
+    ::Vector3* PROTOBUF_NULLABLE value) {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   if (GetArena() == nullptr) {
     delete reinterpret_cast<::google::protobuf::MessageLite*>(_impl_.vel_);
   }
-  _impl_.vel_ = reinterpret_cast<::CP_Vector2*>(value);
+  _impl_.vel_ = reinterpret_cast<::Vector3*>(value);
   if (value != nullptr) {
     SetHasBit(_impl_._has_bits_[0], 0x00000002U);
   } else {
     ClearHasBit(_impl_._has_bits_[0], 0x00000002U);
   }
-  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:CP_Ball.vel)
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:CP_KickedBall.vel)
 }
-inline ::CP_Vector2* PROTOBUF_NULLABLE CP_Ball::release_vel() {
+inline ::Vector3* PROTOBUF_NULLABLE CP_KickedBall::release_vel() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
 
   ClearHasBit(_impl_._has_bits_[0], 0x00000002U);
-  ::CP_Vector2* released = _impl_.vel_;
+  ::Vector3* released = _impl_.vel_;
   _impl_.vel_ = nullptr;
   if (::google::protobuf::internal::DebugHardenForceCopyInRelease()) {
     auto* old = reinterpret_cast<::google::protobuf::MessageLite*>(released);
@@ -939,31 +739,31 @@ inline ::CP_Vector2* PROTOBUF_NULLABLE CP_Ball::release_vel() {
   }
   return released;
 }
-inline ::CP_Vector2* PROTOBUF_NULLABLE CP_Ball::unsafe_arena_release_vel() {
+inline ::Vector3* PROTOBUF_NULLABLE CP_KickedBall::unsafe_arena_release_vel() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
-  // @@protoc_insertion_point(field_release:CP_Ball.vel)
+  // @@protoc_insertion_point(field_release:CP_KickedBall.vel)
 
   ClearHasBit(_impl_._has_bits_[0], 0x00000002U);
-  ::CP_Vector2* temp = _impl_.vel_;
+  ::Vector3* temp = _impl_.vel_;
   _impl_.vel_ = nullptr;
   return temp;
 }
-inline ::CP_Vector2* PROTOBUF_NONNULL CP_Ball::_internal_mutable_vel() {
+inline ::Vector3* PROTOBUF_NONNULL CP_KickedBall::_internal_mutable_vel() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   if (_impl_.vel_ == nullptr) {
-    auto* p = ::google::protobuf::Message::DefaultConstruct<::CP_Vector2>(GetArena());
-    _impl_.vel_ = reinterpret_cast<::CP_Vector2*>(p);
+    auto* p = ::google::protobuf::Message::DefaultConstruct<::Vector3>(GetArena());
+    _impl_.vel_ = reinterpret_cast<::Vector3*>(p);
   }
   return _impl_.vel_;
 }
-inline ::CP_Vector2* PROTOBUF_NONNULL CP_Ball::mutable_vel()
+inline ::Vector3* PROTOBUF_NONNULL CP_KickedBall::mutable_vel()
     ABSL_ATTRIBUTE_LIFETIME_BOUND {
   SetHasBit(_impl_._has_bits_[0], 0x00000002U);
-  ::CP_Vector2* _msg = _internal_mutable_vel();
-  // @@protoc_insertion_point(field_mutable:CP_Ball.vel)
+  ::Vector3* _msg = _internal_mutable_vel();
+  // @@protoc_insertion_point(field_mutable:CP_KickedBall.vel)
   return _msg;
 }
-inline void CP_Ball::set_allocated_vel(::CP_Vector2* PROTOBUF_NULLABLE value) {
+inline void CP_KickedBall::set_allocated_vel(::Vector3* PROTOBUF_NULLABLE value) {
   ::google::protobuf::Arena* message_arena = GetArena();
   ::google::protobuf::internal::TSanWrite(&_impl_);
   if (message_arena == nullptr) {
@@ -971,7 +771,7 @@ inline void CP_Ball::set_allocated_vel(::CP_Vector2* PROTOBUF_NULLABLE value) {
   }
 
   if (value != nullptr) {
-    ::google::protobuf::Arena* submessage_arena = value->GetArena();
+    ::google::protobuf::Arena* submessage_arena = reinterpret_cast<::google::protobuf::Message*>(value)->GetArena();
     if (message_arena != submessage_arena) {
       value = ::google::protobuf::internal::GetOwnedMessage(message_arena, value, submessage_arena);
     }
@@ -980,8 +780,101 @@ inline void CP_Ball::set_allocated_vel(::CP_Vector2* PROTOBUF_NULLABLE value) {
     ClearHasBit(_impl_._has_bits_[0], 0x00000002U);
   }
 
-  _impl_.vel_ = reinterpret_cast<::CP_Vector2*>(value);
-  // @@protoc_insertion_point(field_set_allocated:CP_Ball.vel)
+  _impl_.vel_ = reinterpret_cast<::Vector3*>(value);
+  // @@protoc_insertion_point(field_set_allocated:CP_KickedBall.vel)
+}
+
+// optional .Vector2 stop_pos = 5 [json_name = "stopPos"];
+inline bool CP_KickedBall::has_stop_pos() const {
+  bool value = CheckHasBit(_impl_._has_bits_[0], 0x00000004U);
+  PROTOBUF_ASSUME(!value || _impl_.stop_pos_ != nullptr);
+  return value;
+}
+inline const ::Vector2& CP_KickedBall::_internal_stop_pos() const {
+  ::google::protobuf::internal::TSanRead(&_impl_);
+  const ::Vector2* p = _impl_.stop_pos_;
+  return p != nullptr ? *p : reinterpret_cast<const ::Vector2&>(::_Vector2_default_instance_);
+}
+inline const ::Vector2& CP_KickedBall::stop_pos() const ABSL_ATTRIBUTE_LIFETIME_BOUND {
+  // @@protoc_insertion_point(field_get:CP_KickedBall.stop_pos)
+  return _internal_stop_pos();
+}
+inline void CP_KickedBall::unsafe_arena_set_allocated_stop_pos(
+    ::Vector2* PROTOBUF_NULLABLE value) {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  if (GetArena() == nullptr) {
+    delete reinterpret_cast<::google::protobuf::MessageLite*>(_impl_.stop_pos_);
+  }
+  _impl_.stop_pos_ = reinterpret_cast<::Vector2*>(value);
+  if (value != nullptr) {
+    SetHasBit(_impl_._has_bits_[0], 0x00000004U);
+  } else {
+    ClearHasBit(_impl_._has_bits_[0], 0x00000004U);
+  }
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:CP_KickedBall.stop_pos)
+}
+inline ::Vector2* PROTOBUF_NULLABLE CP_KickedBall::release_stop_pos() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+
+  ClearHasBit(_impl_._has_bits_[0], 0x00000004U);
+  ::Vector2* released = _impl_.stop_pos_;
+  _impl_.stop_pos_ = nullptr;
+  if (::google::protobuf::internal::DebugHardenForceCopyInRelease()) {
+    auto* old = reinterpret_cast<::google::protobuf::MessageLite*>(released);
+    released = ::google::protobuf::internal::DuplicateIfNonNull(released);
+    if (GetArena() == nullptr) {
+      delete old;
+    }
+  } else {
+    if (GetArena() != nullptr) {
+      released = ::google::protobuf::internal::DuplicateIfNonNull(released);
+    }
+  }
+  return released;
+}
+inline ::Vector2* PROTOBUF_NULLABLE CP_KickedBall::unsafe_arena_release_stop_pos() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  // @@protoc_insertion_point(field_release:CP_KickedBall.stop_pos)
+
+  ClearHasBit(_impl_._has_bits_[0], 0x00000004U);
+  ::Vector2* temp = _impl_.stop_pos_;
+  _impl_.stop_pos_ = nullptr;
+  return temp;
+}
+inline ::Vector2* PROTOBUF_NONNULL CP_KickedBall::_internal_mutable_stop_pos() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  if (_impl_.stop_pos_ == nullptr) {
+    auto* p = ::google::protobuf::Message::DefaultConstruct<::Vector2>(GetArena());
+    _impl_.stop_pos_ = reinterpret_cast<::Vector2*>(p);
+  }
+  return _impl_.stop_pos_;
+}
+inline ::Vector2* PROTOBUF_NONNULL CP_KickedBall::mutable_stop_pos()
+    ABSL_ATTRIBUTE_LIFETIME_BOUND {
+  SetHasBit(_impl_._has_bits_[0], 0x00000004U);
+  ::Vector2* _msg = _internal_mutable_stop_pos();
+  // @@protoc_insertion_point(field_mutable:CP_KickedBall.stop_pos)
+  return _msg;
+}
+inline void CP_KickedBall::set_allocated_stop_pos(::Vector2* PROTOBUF_NULLABLE value) {
+  ::google::protobuf::Arena* message_arena = GetArena();
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  if (message_arena == nullptr) {
+    delete reinterpret_cast<::google::protobuf::MessageLite*>(_impl_.stop_pos_);
+  }
+
+  if (value != nullptr) {
+    ::google::protobuf::Arena* submessage_arena = reinterpret_cast<::google::protobuf::Message*>(value)->GetArena();
+    if (message_arena != submessage_arena) {
+      value = ::google::protobuf::internal::GetOwnedMessage(message_arena, value, submessage_arena);
+    }
+    SetHasBit(_impl_._has_bits_[0], 0x00000004U);
+  } else {
+    ClearHasBit(_impl_._has_bits_[0], 0x00000004U);
+  }
+
+  _impl_.stop_pos_ = reinterpret_cast<::Vector2*>(value);
+  // @@protoc_insertion_point(field_set_allocated:CP_KickedBall.stop_pos)
 }
 
 // -------------------------------------------------------------------
@@ -1017,34 +910,28 @@ inline void CP_TrackedRobot::_internal_set_robot_id(::uint32_t value) {
   _impl_.robot_id_ = value;
 }
 
-// required .CP_Vector2 pos = 2 [json_name = "pos"];
+// required .Vector2 pos = 2 [json_name = "pos"];
 inline bool CP_TrackedRobot::has_pos() const {
   bool value = CheckHasBit(_impl_._has_bits_[0], 0x00000001U);
   PROTOBUF_ASSUME(!value || _impl_.pos_ != nullptr);
   return value;
 }
-inline void CP_TrackedRobot::clear_pos() {
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-  if (_impl_.pos_ != nullptr) _impl_.pos_->Clear();
-  ClearHasBit(_impl_._has_bits_[0],
-                  0x00000001U);
-}
-inline const ::CP_Vector2& CP_TrackedRobot::_internal_pos() const {
+inline const ::Vector2& CP_TrackedRobot::_internal_pos() const {
   ::google::protobuf::internal::TSanRead(&_impl_);
-  const ::CP_Vector2* p = _impl_.pos_;
-  return p != nullptr ? *p : reinterpret_cast<const ::CP_Vector2&>(::_CP_Vector2_default_instance_);
+  const ::Vector2* p = _impl_.pos_;
+  return p != nullptr ? *p : reinterpret_cast<const ::Vector2&>(::_Vector2_default_instance_);
 }
-inline const ::CP_Vector2& CP_TrackedRobot::pos() const ABSL_ATTRIBUTE_LIFETIME_BOUND {
+inline const ::Vector2& CP_TrackedRobot::pos() const ABSL_ATTRIBUTE_LIFETIME_BOUND {
   // @@protoc_insertion_point(field_get:CP_TrackedRobot.pos)
   return _internal_pos();
 }
 inline void CP_TrackedRobot::unsafe_arena_set_allocated_pos(
-    ::CP_Vector2* PROTOBUF_NULLABLE value) {
+    ::Vector2* PROTOBUF_NULLABLE value) {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   if (GetArena() == nullptr) {
     delete reinterpret_cast<::google::protobuf::MessageLite*>(_impl_.pos_);
   }
-  _impl_.pos_ = reinterpret_cast<::CP_Vector2*>(value);
+  _impl_.pos_ = reinterpret_cast<::Vector2*>(value);
   if (value != nullptr) {
     SetHasBit(_impl_._has_bits_[0], 0x00000001U);
   } else {
@@ -1052,11 +939,11 @@ inline void CP_TrackedRobot::unsafe_arena_set_allocated_pos(
   }
   // @@protoc_insertion_point(field_unsafe_arena_set_allocated:CP_TrackedRobot.pos)
 }
-inline ::CP_Vector2* PROTOBUF_NULLABLE CP_TrackedRobot::release_pos() {
+inline ::Vector2* PROTOBUF_NULLABLE CP_TrackedRobot::release_pos() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
 
   ClearHasBit(_impl_._has_bits_[0], 0x00000001U);
-  ::CP_Vector2* released = _impl_.pos_;
+  ::Vector2* released = _impl_.pos_;
   _impl_.pos_ = nullptr;
   if (::google::protobuf::internal::DebugHardenForceCopyInRelease()) {
     auto* old = reinterpret_cast<::google::protobuf::MessageLite*>(released);
@@ -1071,31 +958,31 @@ inline ::CP_Vector2* PROTOBUF_NULLABLE CP_TrackedRobot::release_pos() {
   }
   return released;
 }
-inline ::CP_Vector2* PROTOBUF_NULLABLE CP_TrackedRobot::unsafe_arena_release_pos() {
+inline ::Vector2* PROTOBUF_NULLABLE CP_TrackedRobot::unsafe_arena_release_pos() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   // @@protoc_insertion_point(field_release:CP_TrackedRobot.pos)
 
   ClearHasBit(_impl_._has_bits_[0], 0x00000001U);
-  ::CP_Vector2* temp = _impl_.pos_;
+  ::Vector2* temp = _impl_.pos_;
   _impl_.pos_ = nullptr;
   return temp;
 }
-inline ::CP_Vector2* PROTOBUF_NONNULL CP_TrackedRobot::_internal_mutable_pos() {
+inline ::Vector2* PROTOBUF_NONNULL CP_TrackedRobot::_internal_mutable_pos() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   if (_impl_.pos_ == nullptr) {
-    auto* p = ::google::protobuf::Message::DefaultConstruct<::CP_Vector2>(GetArena());
-    _impl_.pos_ = reinterpret_cast<::CP_Vector2*>(p);
+    auto* p = ::google::protobuf::Message::DefaultConstruct<::Vector2>(GetArena());
+    _impl_.pos_ = reinterpret_cast<::Vector2*>(p);
   }
   return _impl_.pos_;
 }
-inline ::CP_Vector2* PROTOBUF_NONNULL CP_TrackedRobot::mutable_pos()
+inline ::Vector2* PROTOBUF_NONNULL CP_TrackedRobot::mutable_pos()
     ABSL_ATTRIBUTE_LIFETIME_BOUND {
   SetHasBit(_impl_._has_bits_[0], 0x00000001U);
-  ::CP_Vector2* _msg = _internal_mutable_pos();
+  ::Vector2* _msg = _internal_mutable_pos();
   // @@protoc_insertion_point(field_mutable:CP_TrackedRobot.pos)
   return _msg;
 }
-inline void CP_TrackedRobot::set_allocated_pos(::CP_Vector2* PROTOBUF_NULLABLE value) {
+inline void CP_TrackedRobot::set_allocated_pos(::Vector2* PROTOBUF_NULLABLE value) {
   ::google::protobuf::Arena* message_arena = GetArena();
   ::google::protobuf::internal::TSanWrite(&_impl_);
   if (message_arena == nullptr) {
@@ -1103,7 +990,7 @@ inline void CP_TrackedRobot::set_allocated_pos(::CP_Vector2* PROTOBUF_NULLABLE v
   }
 
   if (value != nullptr) {
-    ::google::protobuf::Arena* submessage_arena = value->GetArena();
+    ::google::protobuf::Arena* submessage_arena = reinterpret_cast<::google::protobuf::Message*>(value)->GetArena();
     if (message_arena != submessage_arena) {
       value = ::google::protobuf::internal::GetOwnedMessage(message_arena, value, submessage_arena);
     }
@@ -1112,7 +999,7 @@ inline void CP_TrackedRobot::set_allocated_pos(::CP_Vector2* PROTOBUF_NULLABLE v
     ClearHasBit(_impl_._has_bits_[0], 0x00000001U);
   }
 
-  _impl_.pos_ = reinterpret_cast<::CP_Vector2*>(value);
+  _impl_.pos_ = reinterpret_cast<::Vector2*>(value);
   // @@protoc_insertion_point(field_set_allocated:CP_TrackedRobot.pos)
 }
 
@@ -1145,34 +1032,28 @@ inline void CP_TrackedRobot::_internal_set_orientation(float value) {
   _impl_.orientation_ = value;
 }
 
-// optional .CP_Vector2 vel = 4 [json_name = "vel"];
+// optional .Vector2 vel = 4 [json_name = "vel"];
 inline bool CP_TrackedRobot::has_vel() const {
   bool value = CheckHasBit(_impl_._has_bits_[0], 0x00000002U);
   PROTOBUF_ASSUME(!value || _impl_.vel_ != nullptr);
   return value;
 }
-inline void CP_TrackedRobot::clear_vel() {
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-  if (_impl_.vel_ != nullptr) _impl_.vel_->Clear();
-  ClearHasBit(_impl_._has_bits_[0],
-                  0x00000002U);
-}
-inline const ::CP_Vector2& CP_TrackedRobot::_internal_vel() const {
+inline const ::Vector2& CP_TrackedRobot::_internal_vel() const {
   ::google::protobuf::internal::TSanRead(&_impl_);
-  const ::CP_Vector2* p = _impl_.vel_;
-  return p != nullptr ? *p : reinterpret_cast<const ::CP_Vector2&>(::_CP_Vector2_default_instance_);
+  const ::Vector2* p = _impl_.vel_;
+  return p != nullptr ? *p : reinterpret_cast<const ::Vector2&>(::_Vector2_default_instance_);
 }
-inline const ::CP_Vector2& CP_TrackedRobot::vel() const ABSL_ATTRIBUTE_LIFETIME_BOUND {
+inline const ::Vector2& CP_TrackedRobot::vel() const ABSL_ATTRIBUTE_LIFETIME_BOUND {
   // @@protoc_insertion_point(field_get:CP_TrackedRobot.vel)
   return _internal_vel();
 }
 inline void CP_TrackedRobot::unsafe_arena_set_allocated_vel(
-    ::CP_Vector2* PROTOBUF_NULLABLE value) {
+    ::Vector2* PROTOBUF_NULLABLE value) {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   if (GetArena() == nullptr) {
     delete reinterpret_cast<::google::protobuf::MessageLite*>(_impl_.vel_);
   }
-  _impl_.vel_ = reinterpret_cast<::CP_Vector2*>(value);
+  _impl_.vel_ = reinterpret_cast<::Vector2*>(value);
   if (value != nullptr) {
     SetHasBit(_impl_._has_bits_[0], 0x00000002U);
   } else {
@@ -1180,11 +1061,11 @@ inline void CP_TrackedRobot::unsafe_arena_set_allocated_vel(
   }
   // @@protoc_insertion_point(field_unsafe_arena_set_allocated:CP_TrackedRobot.vel)
 }
-inline ::CP_Vector2* PROTOBUF_NULLABLE CP_TrackedRobot::release_vel() {
+inline ::Vector2* PROTOBUF_NULLABLE CP_TrackedRobot::release_vel() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
 
   ClearHasBit(_impl_._has_bits_[0], 0x00000002U);
-  ::CP_Vector2* released = _impl_.vel_;
+  ::Vector2* released = _impl_.vel_;
   _impl_.vel_ = nullptr;
   if (::google::protobuf::internal::DebugHardenForceCopyInRelease()) {
     auto* old = reinterpret_cast<::google::protobuf::MessageLite*>(released);
@@ -1199,31 +1080,31 @@ inline ::CP_Vector2* PROTOBUF_NULLABLE CP_TrackedRobot::release_vel() {
   }
   return released;
 }
-inline ::CP_Vector2* PROTOBUF_NULLABLE CP_TrackedRobot::unsafe_arena_release_vel() {
+inline ::Vector2* PROTOBUF_NULLABLE CP_TrackedRobot::unsafe_arena_release_vel() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   // @@protoc_insertion_point(field_release:CP_TrackedRobot.vel)
 
   ClearHasBit(_impl_._has_bits_[0], 0x00000002U);
-  ::CP_Vector2* temp = _impl_.vel_;
+  ::Vector2* temp = _impl_.vel_;
   _impl_.vel_ = nullptr;
   return temp;
 }
-inline ::CP_Vector2* PROTOBUF_NONNULL CP_TrackedRobot::_internal_mutable_vel() {
+inline ::Vector2* PROTOBUF_NONNULL CP_TrackedRobot::_internal_mutable_vel() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   if (_impl_.vel_ == nullptr) {
-    auto* p = ::google::protobuf::Message::DefaultConstruct<::CP_Vector2>(GetArena());
-    _impl_.vel_ = reinterpret_cast<::CP_Vector2*>(p);
+    auto* p = ::google::protobuf::Message::DefaultConstruct<::Vector2>(GetArena());
+    _impl_.vel_ = reinterpret_cast<::Vector2*>(p);
   }
   return _impl_.vel_;
 }
-inline ::CP_Vector2* PROTOBUF_NONNULL CP_TrackedRobot::mutable_vel()
+inline ::Vector2* PROTOBUF_NONNULL CP_TrackedRobot::mutable_vel()
     ABSL_ATTRIBUTE_LIFETIME_BOUND {
   SetHasBit(_impl_._has_bits_[0], 0x00000002U);
-  ::CP_Vector2* _msg = _internal_mutable_vel();
+  ::Vector2* _msg = _internal_mutable_vel();
   // @@protoc_insertion_point(field_mutable:CP_TrackedRobot.vel)
   return _msg;
 }
-inline void CP_TrackedRobot::set_allocated_vel(::CP_Vector2* PROTOBUF_NULLABLE value) {
+inline void CP_TrackedRobot::set_allocated_vel(::Vector2* PROTOBUF_NULLABLE value) {
   ::google::protobuf::Arena* message_arena = GetArena();
   ::google::protobuf::internal::TSanWrite(&_impl_);
   if (message_arena == nullptr) {
@@ -1231,7 +1112,7 @@ inline void CP_TrackedRobot::set_allocated_vel(::CP_Vector2* PROTOBUF_NULLABLE v
   }
 
   if (value != nullptr) {
-    ::google::protobuf::Arena* submessage_arena = value->GetArena();
+    ::google::protobuf::Arena* submessage_arena = reinterpret_cast<::google::protobuf::Message*>(value)->GetArena();
     if (message_arena != submessage_arena) {
       value = ::google::protobuf::internal::GetOwnedMessage(message_arena, value, submessage_arena);
     }
@@ -1240,70 +1121,37 @@ inline void CP_TrackedRobot::set_allocated_vel(::CP_Vector2* PROTOBUF_NULLABLE v
     ClearHasBit(_impl_._has_bits_[0], 0x00000002U);
   }
 
-  _impl_.vel_ = reinterpret_cast<::CP_Vector2*>(value);
+  _impl_.vel_ = reinterpret_cast<::Vector2*>(value);
   // @@protoc_insertion_point(field_set_allocated:CP_TrackedRobot.vel)
 }
 
-// -------------------------------------------------------------------
-
-// CP_Vector2
-
-// required int32 x = 1 [json_name = "x"];
-inline bool CP_Vector2::has_x() const {
-  bool value = CheckHasBit(_impl_._has_bits_[0], 0x00000001U);
+// optional float vel_angular = 5 [json_name = "velAngular"];
+inline bool CP_TrackedRobot::has_vel_angular() const {
+  bool value = CheckHasBit(_impl_._has_bits_[0], 0x00000010U);
   return value;
 }
-inline void CP_Vector2::clear_x() {
+inline void CP_TrackedRobot::clear_vel_angular() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
-  _impl_.x_ = 0;
+  _impl_.vel_angular_ = 0;
   ClearHasBit(_impl_._has_bits_[0],
-                  0x00000001U);
+                  0x00000010U);
 }
-inline ::int32_t CP_Vector2::x() const {
-  // @@protoc_insertion_point(field_get:CP_Vector2.x)
-  return _internal_x();
+inline float CP_TrackedRobot::vel_angular() const {
+  // @@protoc_insertion_point(field_get:CP_TrackedRobot.vel_angular)
+  return _internal_vel_angular();
 }
-inline void CP_Vector2::set_x(::int32_t value) {
-  _internal_set_x(value);
-  SetHasBit(_impl_._has_bits_[0], 0x00000001U);
-  // @@protoc_insertion_point(field_set:CP_Vector2.x)
+inline void CP_TrackedRobot::set_vel_angular(float value) {
+  _internal_set_vel_angular(value);
+  SetHasBit(_impl_._has_bits_[0], 0x00000010U);
+  // @@protoc_insertion_point(field_set:CP_TrackedRobot.vel_angular)
 }
-inline ::int32_t CP_Vector2::_internal_x() const {
+inline float CP_TrackedRobot::_internal_vel_angular() const {
   ::google::protobuf::internal::TSanRead(&_impl_);
-  return _impl_.x_;
+  return _impl_.vel_angular_;
 }
-inline void CP_Vector2::_internal_set_x(::int32_t value) {
+inline void CP_TrackedRobot::_internal_set_vel_angular(float value) {
   ::google::protobuf::internal::TSanWrite(&_impl_);
-  _impl_.x_ = value;
-}
-
-// required int32 y = 2 [json_name = "y"];
-inline bool CP_Vector2::has_y() const {
-  bool value = CheckHasBit(_impl_._has_bits_[0], 0x00000002U);
-  return value;
-}
-inline void CP_Vector2::clear_y() {
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-  _impl_.y_ = 0;
-  ClearHasBit(_impl_._has_bits_[0],
-                  0x00000002U);
-}
-inline ::int32_t CP_Vector2::y() const {
-  // @@protoc_insertion_point(field_get:CP_Vector2.y)
-  return _internal_y();
-}
-inline void CP_Vector2::set_y(::int32_t value) {
-  _internal_set_y(value);
-  SetHasBit(_impl_._has_bits_[0], 0x00000002U);
-  // @@protoc_insertion_point(field_set:CP_Vector2.y)
-}
-inline ::int32_t CP_Vector2::_internal_y() const {
-  ::google::protobuf::internal::TSanRead(&_impl_);
-  return _impl_.y_;
-}
-inline void CP_Vector2::_internal_set_y(::int32_t value) {
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-  _impl_.y_ = value;
+  _impl_.vel_angular_ = value;
 }
 
 #ifdef __GNUC__

@@ -26,33 +26,6 @@ namespace _pb = ::google::protobuf;
 namespace _pbi = ::google::protobuf::internal;
 namespace _fl = ::google::protobuf::internal::field_layout;
 
-inline constexpr CP_Vector2::Impl_::Impl_(
-    [[maybe_unused]] ::google::protobuf::internal::InternalVisibility visibility,
-    ::_pbi::ConstantInitialized) noexcept
-      : _cached_size_{0},
-        x_{0},
-        y_{0} {}
-
-template <typename>
-constexpr CP_Vector2::CP_Vector2(::_pbi::ConstantInitialized)
-#if defined(PROTOBUF_CUSTOM_VTABLE)
-    : ::google::protobuf::Message(CP_Vector2_class_data_.base()),
-#else   // PROTOBUF_CUSTOM_VTABLE
-    : ::google::protobuf::Message(),
-#endif  // PROTOBUF_CUSTOM_VTABLE
-      _impl_(internal_visibility(), ::_pbi::ConstantInitialized()) {
-}
-struct CP_Vector2DefaultTypeInternal {
-  constexpr CP_Vector2DefaultTypeInternal() : _instance(::_pbi::ConstantInitialized{}) {}
-  ~CP_Vector2DefaultTypeInternal() {}
-  union {
-    CP_Vector2 _instance;
-  };
-};
-
-PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT
-    PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 CP_Vector2DefaultTypeInternal _CP_Vector2_default_instance_;
-
 inline constexpr CP_TrackedRobot::Impl_::Impl_(
     [[maybe_unused]] ::google::protobuf::internal::InternalVisibility visibility,
     ::_pbi::ConstantInitialized) noexcept
@@ -60,7 +33,8 @@ inline constexpr CP_TrackedRobot::Impl_::Impl_(
         pos_{nullptr},
         vel_{nullptr},
         robot_id_{0u},
-        orientation_{0} {}
+        orientation_{0},
+        vel_angular_{0} {}
 
 template <typename>
 constexpr CP_TrackedRobot::CP_TrackedRobot(::_pbi::ConstantInitialized)
@@ -82,32 +56,33 @@ struct CP_TrackedRobotDefaultTypeInternal {
 PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT
     PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 CP_TrackedRobotDefaultTypeInternal _CP_TrackedRobot_default_instance_;
 
-inline constexpr CP_Ball::Impl_::Impl_(
+inline constexpr CP_KickedBall::Impl_::Impl_(
     [[maybe_unused]] ::google::protobuf::internal::InternalVisibility visibility,
     ::_pbi::ConstantInitialized) noexcept
       : _cached_size_{0},
         pos_{nullptr},
-        vel_{nullptr} {}
+        vel_{nullptr},
+        stop_pos_{nullptr} {}
 
 template <typename>
-constexpr CP_Ball::CP_Ball(::_pbi::ConstantInitialized)
+constexpr CP_KickedBall::CP_KickedBall(::_pbi::ConstantInitialized)
 #if defined(PROTOBUF_CUSTOM_VTABLE)
-    : ::google::protobuf::Message(CP_Ball_class_data_.base()),
+    : ::google::protobuf::Message(CP_KickedBall_class_data_.base()),
 #else   // PROTOBUF_CUSTOM_VTABLE
     : ::google::protobuf::Message(),
 #endif  // PROTOBUF_CUSTOM_VTABLE
       _impl_(internal_visibility(), ::_pbi::ConstantInitialized()) {
 }
-struct CP_BallDefaultTypeInternal {
-  constexpr CP_BallDefaultTypeInternal() : _instance(::_pbi::ConstantInitialized{}) {}
-  ~CP_BallDefaultTypeInternal() {}
+struct CP_KickedBallDefaultTypeInternal {
+  constexpr CP_KickedBallDefaultTypeInternal() : _instance(::_pbi::ConstantInitialized{}) {}
+  ~CP_KickedBallDefaultTypeInternal() {}
   union {
-    CP_Ball _instance;
+    CP_KickedBall _instance;
   };
 };
 
 PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT
-    PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 CP_BallDefaultTypeInternal _CP_Ball_default_instance_;
+    PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 CP_KickedBallDefaultTypeInternal _CP_KickedBall_default_instance_;
 static constexpr const ::_pb::EnumDescriptor* PROTOBUF_NONNULL* PROTOBUF_NULLABLE
     file_level_enum_descriptors_crashpilot_2fcommon_2eproto = nullptr;
 static constexpr const ::_pb::ServiceDescriptor* PROTOBUF_NONNULL* PROTOBUF_NULLABLE
@@ -116,65 +91,65 @@ const ::uint32_t
     TableStruct_crashpilot_2fcommon_2eproto::offsets[] ABSL_ATTRIBUTE_SECTION_VARIABLE(
         protodesc_cold) = {
         0x081, // bitmap
-        PROTOBUF_FIELD_OFFSET(::CP_Ball, _impl_._has_bits_),
-        5, // hasbit index offset
-        PROTOBUF_FIELD_OFFSET(::CP_Ball, _impl_.pos_),
-        PROTOBUF_FIELD_OFFSET(::CP_Ball, _impl_.vel_),
+        PROTOBUF_FIELD_OFFSET(::CP_KickedBall, _impl_._has_bits_),
+        6, // hasbit index offset
+        PROTOBUF_FIELD_OFFSET(::CP_KickedBall, _impl_.pos_),
+        PROTOBUF_FIELD_OFFSET(::CP_KickedBall, _impl_.vel_),
+        PROTOBUF_FIELD_OFFSET(::CP_KickedBall, _impl_.stop_pos_),
         0,
         1,
+        2,
         0x081, // bitmap
         PROTOBUF_FIELD_OFFSET(::CP_TrackedRobot, _impl_._has_bits_),
-        7, // hasbit index offset
+        8, // hasbit index offset
         PROTOBUF_FIELD_OFFSET(::CP_TrackedRobot, _impl_.robot_id_),
         PROTOBUF_FIELD_OFFSET(::CP_TrackedRobot, _impl_.pos_),
         PROTOBUF_FIELD_OFFSET(::CP_TrackedRobot, _impl_.orientation_),
         PROTOBUF_FIELD_OFFSET(::CP_TrackedRobot, _impl_.vel_),
+        PROTOBUF_FIELD_OFFSET(::CP_TrackedRobot, _impl_.vel_angular_),
         2,
         0,
         3,
         1,
-        0x081, // bitmap
-        PROTOBUF_FIELD_OFFSET(::CP_Vector2, _impl_._has_bits_),
-        5, // hasbit index offset
-        PROTOBUF_FIELD_OFFSET(::CP_Vector2, _impl_.x_),
-        PROTOBUF_FIELD_OFFSET(::CP_Vector2, _impl_.y_),
-        0,
-        1,
+        4,
 };
 
 static const ::_pbi::MigrationSchema
     schemas[] ABSL_ATTRIBUTE_SECTION_VARIABLE(protodesc_cold) = {
-        {0, sizeof(::CP_Ball)},
-        {7, sizeof(::CP_TrackedRobot)},
-        {18, sizeof(::CP_Vector2)},
+        {0, sizeof(::CP_KickedBall)},
+        {9, sizeof(::CP_TrackedRobot)},
 };
 static const ::_pb::Message* PROTOBUF_NONNULL const file_default_instances[] = {
-    &::_CP_Ball_default_instance_._instance,
+    &::_CP_KickedBall_default_instance_._instance,
     &::_CP_TrackedRobot_default_instance_._instance,
-    &::_CP_Vector2_default_instance_._instance,
 };
 const char descriptor_table_protodef_crashpilot_2fcommon_2eproto[] ABSL_ATTRIBUTE_SECTION_VARIABLE(
     protodesc_cold) = {
-    "\n\027crashpilot/common.proto\"G\n\007CP_Ball\022\035\n\003"
-    "pos\030\001 \002(\0132\013.CP_Vector2R\003pos\022\035\n\003vel\030\002 \001(\013"
-    "2\013.CP_Vector2R\003vel\"\214\001\n\017CP_TrackedRobot\022\031"
-    "\n\010robot_id\030\001 \002(\rR\007robotId\022\035\n\003pos\030\002 \002(\0132\013"
-    ".CP_Vector2R\003pos\022 \n\013orientation\030\003 \002(\002R\013o"
-    "rientation\022\035\n\003vel\030\004 \001(\0132\013.CP_Vector2R\003ve"
-    "l\"(\n\nCP_Vector2\022\014\n\001x\030\001 \002(\005R\001x\022\014\n\001y\030\002 \002(\005"
-    "R\001yB\017B\013CommonProtoP\001"
+    "\n\027crashpilot/common.proto\032\032geom/ssl_gc_g"
+    "eometry.proto\"l\n\rCP_KickedBall\022\032\n\003pos\030\001 "
+    "\002(\0132\010.Vector2R\003pos\022\032\n\003vel\030\002 \002(\0132\010.Vector"
+    "3R\003vel\022#\n\010stop_pos\030\005 \001(\0132\010.Vector2R\007stop"
+    "Pos\"\247\001\n\017CP_TrackedRobot\022\031\n\010robot_id\030\001 \002("
+    "\rR\007robotId\022\032\n\003pos\030\002 \002(\0132\010.Vector2R\003pos\022 "
+    "\n\013orientation\030\003 \002(\002R\013orientation\022\032\n\003vel\030"
+    "\004 \001(\0132\010.Vector2R\003vel\022\037\n\013vel_angular\030\005 \001("
+    "\002R\nvelAngularB\017B\013CommonProtoP\001"
+};
+static const ::_pbi::DescriptorTable* PROTOBUF_NONNULL const
+    descriptor_table_crashpilot_2fcommon_2eproto_deps[1] = {
+        &::descriptor_table_geom_2fssl_5fgc_5fgeometry_2eproto,
 };
 static ::absl::once_flag descriptor_table_crashpilot_2fcommon_2eproto_once;
 PROTOBUF_CONSTINIT const ::_pbi::DescriptorTable descriptor_table_crashpilot_2fcommon_2eproto = {
     false,
     false,
-    300,
+    350,
     descriptor_table_protodef_crashpilot_2fcommon_2eproto,
     "crashpilot/common.proto",
     &descriptor_table_crashpilot_2fcommon_2eproto_once,
-    nullptr,
-    0,
-    3,
+    descriptor_table_crashpilot_2fcommon_2eproto_deps,
+    1,
+    2,
     schemas,
     file_default_instances,
     TableStruct_crashpilot_2fcommon_2eproto::offsets,
@@ -183,42 +158,60 @@ PROTOBUF_CONSTINIT const ::_pbi::DescriptorTable descriptor_table_crashpilot_2fc
 };
 // ===================================================================
 
-class CP_Ball::_Internal {
+class CP_KickedBall::_Internal {
  public:
   using HasBits =
-      decltype(::std::declval<CP_Ball>()._impl_._has_bits_);
+      decltype(::std::declval<CP_KickedBall>()._impl_._has_bits_);
   static constexpr ::int32_t kHasBitsOffset =
-      8 * PROTOBUF_FIELD_OFFSET(CP_Ball, _impl_._has_bits_);
+      8 * PROTOBUF_FIELD_OFFSET(CP_KickedBall, _impl_._has_bits_);
   static bool MissingRequiredFields(const HasBits& has_bits) {
-    return ((has_bits[0] & 0x00000001) ^ 0x00000001) != 0;
+    return ((has_bits[0] & 0x00000003) ^ 0x00000003) != 0;
   }
 };
 
-CP_Ball::CP_Ball(::google::protobuf::Arena* PROTOBUF_NULLABLE arena)
+void CP_KickedBall::clear_pos() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  if (_impl_.pos_ != nullptr) _impl_.pos_->Clear();
+  ClearHasBit(_impl_._has_bits_[0],
+                  0x00000001U);
+}
+void CP_KickedBall::clear_vel() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  if (_impl_.vel_ != nullptr) _impl_.vel_->Clear();
+  ClearHasBit(_impl_._has_bits_[0],
+                  0x00000002U);
+}
+void CP_KickedBall::clear_stop_pos() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  if (_impl_.stop_pos_ != nullptr) _impl_.stop_pos_->Clear();
+  ClearHasBit(_impl_._has_bits_[0],
+                  0x00000004U);
+}
+CP_KickedBall::CP_KickedBall(::google::protobuf::Arena* PROTOBUF_NULLABLE arena)
 #if defined(PROTOBUF_CUSTOM_VTABLE)
-    : ::google::protobuf::Message(arena, CP_Ball_class_data_.base()) {
+    : ::google::protobuf::Message(arena, CP_KickedBall_class_data_.base()) {
 #else   // PROTOBUF_CUSTOM_VTABLE
     : ::google::protobuf::Message(arena) {
 #endif  // PROTOBUF_CUSTOM_VTABLE
   SharedCtor(arena);
-  // @@protoc_insertion_point(arena_constructor:CP_Ball)
+  // @@protoc_insertion_point(arena_constructor:CP_KickedBall)
 }
-PROTOBUF_NDEBUG_INLINE CP_Ball::Impl_::Impl_(
+PROTOBUF_NDEBUG_INLINE CP_KickedBall::Impl_::Impl_(
     [[maybe_unused]] ::google::protobuf::internal::InternalVisibility visibility,
     [[maybe_unused]] ::google::protobuf::Arena* PROTOBUF_NULLABLE arena, const Impl_& from,
-    [[maybe_unused]] const ::CP_Ball& from_msg)
+    [[maybe_unused]] const ::CP_KickedBall& from_msg)
       : _has_bits_{from._has_bits_},
         _cached_size_{0} {}
 
-CP_Ball::CP_Ball(
+CP_KickedBall::CP_KickedBall(
     ::google::protobuf::Arena* PROTOBUF_NULLABLE arena,
-    const CP_Ball& from)
+    const CP_KickedBall& from)
 #if defined(PROTOBUF_CUSTOM_VTABLE)
-    : ::google::protobuf::Message(arena, CP_Ball_class_data_.base()) {
+    : ::google::protobuf::Message(arena, CP_KickedBall_class_data_.base()) {
 #else   // PROTOBUF_CUSTOM_VTABLE
     : ::google::protobuf::Message(arena) {
 #endif  // PROTOBUF_CUSTOM_VTABLE
-  CP_Ball* const _this = this;
+  CP_KickedBall* const _this = this;
   (void)_this;
   _internal_metadata_.MergeFrom<::google::protobuf::UnknownFieldSet>(
       from._internal_metadata_);
@@ -230,29 +223,32 @@ CP_Ball::CP_Ball(
   _impl_.vel_ = (CheckHasBit(cached_has_bits, 0x00000002U))
                 ? ::google::protobuf::Message::CopyConstruct(arena, *from._impl_.vel_)
                 : nullptr;
+  _impl_.stop_pos_ = (CheckHasBit(cached_has_bits, 0x00000004U))
+                ? ::google::protobuf::Message::CopyConstruct(arena, *from._impl_.stop_pos_)
+                : nullptr;
 
-  // @@protoc_insertion_point(copy_constructor:CP_Ball)
+  // @@protoc_insertion_point(copy_constructor:CP_KickedBall)
 }
-PROTOBUF_NDEBUG_INLINE CP_Ball::Impl_::Impl_(
+PROTOBUF_NDEBUG_INLINE CP_KickedBall::Impl_::Impl_(
     [[maybe_unused]] ::google::protobuf::internal::InternalVisibility visibility,
     [[maybe_unused]] ::google::protobuf::Arena* PROTOBUF_NULLABLE arena)
       : _cached_size_{0} {}
 
-inline void CP_Ball::SharedCtor(::_pb::Arena* PROTOBUF_NULLABLE arena) {
+inline void CP_KickedBall::SharedCtor(::_pb::Arena* PROTOBUF_NULLABLE arena) {
   new (&_impl_) Impl_(internal_visibility(), arena);
   ::memset(reinterpret_cast<char*>(&_impl_) +
                offsetof(Impl_, pos_),
            0,
-           offsetof(Impl_, vel_) -
+           offsetof(Impl_, stop_pos_) -
                offsetof(Impl_, pos_) +
-               sizeof(Impl_::vel_));
+               sizeof(Impl_::stop_pos_));
 }
-CP_Ball::~CP_Ball() {
-  // @@protoc_insertion_point(destructor:CP_Ball)
+CP_KickedBall::~CP_KickedBall() {
+  // @@protoc_insertion_point(destructor:CP_KickedBall)
   SharedDtor(*this);
 }
-inline void CP_Ball::SharedDtor(MessageLite& self) {
-  CP_Ball& this_ = static_cast<CP_Ball&>(self);
+inline void CP_KickedBall::SharedDtor(MessageLite& self) {
+  CP_KickedBall& this_ = static_cast<CP_KickedBall&>(self);
   if constexpr (::_pbi::DebugHardenCheckHasBitConsistency()) {
     this_.CheckHasBitConsistency();
   }
@@ -260,102 +256,106 @@ inline void CP_Ball::SharedDtor(MessageLite& self) {
   ABSL_DCHECK(this_.GetArena() == nullptr);
   delete this_._impl_.pos_;
   delete this_._impl_.vel_;
+  delete this_._impl_.stop_pos_;
   this_._impl_.~Impl_();
 }
 
-inline void* PROTOBUF_NONNULL CP_Ball::PlacementNew_(
+inline void* PROTOBUF_NONNULL CP_KickedBall::PlacementNew_(
     const void* PROTOBUF_NONNULL, void* PROTOBUF_NONNULL mem,
     ::google::protobuf::Arena* PROTOBUF_NULLABLE arena) {
-  return ::new (mem) CP_Ball(arena);
+  return ::new (mem) CP_KickedBall(arena);
 }
-constexpr auto CP_Ball::InternalNewImpl_() {
-  return ::google::protobuf::internal::MessageCreator::ZeroInit(sizeof(CP_Ball),
-                                            alignof(CP_Ball));
+constexpr auto CP_KickedBall::InternalNewImpl_() {
+  return ::google::protobuf::internal::MessageCreator::ZeroInit(sizeof(CP_KickedBall),
+                                            alignof(CP_KickedBall));
 }
-constexpr auto CP_Ball::InternalGenerateClassData_() {
+constexpr auto CP_KickedBall::InternalGenerateClassData_() {
   return ::google::protobuf::internal::ClassDataFull{
       ::google::protobuf::internal::ClassData{
-          &_CP_Ball_default_instance_._instance,
+          &_CP_KickedBall_default_instance_._instance,
           &_table_.header,
-          CP_Ball::IsInitializedImpl,
-          &CP_Ball::MergeImpl,
-          ::google::protobuf::Message::GetNewImpl<CP_Ball>(),
+          CP_KickedBall::IsInitializedImpl,
+          &CP_KickedBall::MergeImpl,
+          ::google::protobuf::Message::GetNewImpl<CP_KickedBall>(),
 #if defined(PROTOBUF_CUSTOM_VTABLE)
-          &CP_Ball::SharedDtor,
-          ::google::protobuf::Message::GetClearImpl<CP_Ball>(), &CP_Ball::ByteSizeLong,
-              &CP_Ball::_InternalSerialize,
+          &CP_KickedBall::SharedDtor,
+          ::google::protobuf::Message::GetClearImpl<CP_KickedBall>(), &CP_KickedBall::ByteSizeLong,
+              &CP_KickedBall::_InternalSerialize,
 #endif  // PROTOBUF_CUSTOM_VTABLE
-          PROTOBUF_FIELD_OFFSET(CP_Ball, _impl_._cached_size_),
+          PROTOBUF_FIELD_OFFSET(CP_KickedBall, _impl_._cached_size_),
           false,
       },
-      &CP_Ball::kDescriptorMethods,
+      &CP_KickedBall::kDescriptorMethods,
       &descriptor_table_crashpilot_2fcommon_2eproto,
       nullptr,  // tracker
   };
 }
 
 PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 const
-    ::google::protobuf::internal::ClassDataFull CP_Ball_class_data_ =
-        CP_Ball::InternalGenerateClassData_();
+    ::google::protobuf::internal::ClassDataFull CP_KickedBall_class_data_ =
+        CP_KickedBall::InternalGenerateClassData_();
 
 PROTOBUF_ATTRIBUTE_WEAK const ::google::protobuf::internal::ClassData* PROTOBUF_NONNULL
-CP_Ball::GetClassData() const {
-  ::google::protobuf::internal::PrefetchToLocalCache(&CP_Ball_class_data_);
-  ::google::protobuf::internal::PrefetchToLocalCache(CP_Ball_class_data_.tc_table);
-  return CP_Ball_class_data_.base();
+CP_KickedBall::GetClassData() const {
+  ::google::protobuf::internal::PrefetchToLocalCache(&CP_KickedBall_class_data_);
+  ::google::protobuf::internal::PrefetchToLocalCache(CP_KickedBall_class_data_.tc_table);
+  return CP_KickedBall_class_data_.base();
 }
 PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1
-const ::_pbi::TcParseTable<1, 2, 2, 0, 2>
-CP_Ball::_table_ = {
+const ::_pbi::TcParseTable<1, 3, 3, 0, 2>
+CP_KickedBall::_table_ = {
   {
-    PROTOBUF_FIELD_OFFSET(CP_Ball, _impl_._has_bits_),
+    PROTOBUF_FIELD_OFFSET(CP_KickedBall, _impl_._has_bits_),
     0, // no _extensions_
-    2, 8,  // max_field_number, fast_idx_mask
+    5, 8,  // max_field_number, fast_idx_mask
     offsetof(decltype(_table_), field_lookup_table),
-    4294967292,  // skipmap
+    4294967276,  // skipmap
     offsetof(decltype(_table_), field_entries),
-    2,  // num_field_entries
-    2,  // num_aux_entries
+    3,  // num_field_entries
+    3,  // num_aux_entries
     offsetof(decltype(_table_), aux_entries),
-    CP_Ball_class_data_.base(),
+    CP_KickedBall_class_data_.base(),
     nullptr,  // post_loop_handler
     ::_pbi::TcParser::GenericFallback,  // fallback
     #ifdef PROTOBUF_PREFETCH_PARSE_TABLE
-    ::_pbi::TcParser::GetTable<::CP_Ball>(),  // to_prefetch
+    ::_pbi::TcParser::GetTable<::CP_KickedBall>(),  // to_prefetch
     #endif  // PROTOBUF_PREFETCH_PARSE_TABLE
   }, {{
-    // optional .CP_Vector2 vel = 2 [json_name = "vel"];
+    // required .Vector3 vel = 2 [json_name = "vel"];
     {::_pbi::TcParser::FastMtS1,
      {18, 1, 1,
-      PROTOBUF_FIELD_OFFSET(CP_Ball, _impl_.vel_)}},
-    // required .CP_Vector2 pos = 1 [json_name = "pos"];
+      PROTOBUF_FIELD_OFFSET(CP_KickedBall, _impl_.vel_)}},
+    // required .Vector2 pos = 1 [json_name = "pos"];
     {::_pbi::TcParser::FastMtS1,
      {10, 0, 0,
-      PROTOBUF_FIELD_OFFSET(CP_Ball, _impl_.pos_)}},
+      PROTOBUF_FIELD_OFFSET(CP_KickedBall, _impl_.pos_)}},
   }}, {{
     65535, 65535
   }}, {{
-    // required .CP_Vector2 pos = 1 [json_name = "pos"];
-    {PROTOBUF_FIELD_OFFSET(CP_Ball, _impl_.pos_), _Internal::kHasBitsOffset + 0, 0, (0 | ::_fl::kFcOptional | ::_fl::kMessage | ::_fl::kTvTable)},
-    // optional .CP_Vector2 vel = 2 [json_name = "vel"];
-    {PROTOBUF_FIELD_OFFSET(CP_Ball, _impl_.vel_), _Internal::kHasBitsOffset + 1, 1, (0 | ::_fl::kFcOptional | ::_fl::kMessage | ::_fl::kTvTable)},
+    // required .Vector2 pos = 1 [json_name = "pos"];
+    {PROTOBUF_FIELD_OFFSET(CP_KickedBall, _impl_.pos_), _Internal::kHasBitsOffset + 0, 0, (0 | ::_fl::kFcOptional | ::_fl::kMessage | ::_fl::kTvTable)},
+    // required .Vector3 vel = 2 [json_name = "vel"];
+    {PROTOBUF_FIELD_OFFSET(CP_KickedBall, _impl_.vel_), _Internal::kHasBitsOffset + 1, 1, (0 | ::_fl::kFcOptional | ::_fl::kMessage | ::_fl::kTvTable)},
+    // optional .Vector2 stop_pos = 5 [json_name = "stopPos"];
+    {PROTOBUF_FIELD_OFFSET(CP_KickedBall, _impl_.stop_pos_), _Internal::kHasBitsOffset + 2, 2, (0 | ::_fl::kFcOptional | ::_fl::kMessage | ::_fl::kTvTable)},
   }},
   {{
-      {::_pbi::TcParser::GetTable<::CP_Vector2>()},
-      {::_pbi::TcParser::GetTable<::CP_Vector2>()},
+      {::_pbi::TcParser::GetTable<::Vector2>()},
+      {::_pbi::TcParser::GetTable<::Vector3>()},
+      {::_pbi::TcParser::GetTable<::Vector2>()},
   }},
   {{
   }},
 };
-PROTOBUF_NOINLINE void CP_Ball::Clear() {
-// @@protoc_insertion_point(message_clear_start:CP_Ball)
+PROTOBUF_NOINLINE void CP_KickedBall::Clear() {
+// @@protoc_insertion_point(message_clear_start:CP_KickedBall)
   ::google::protobuf::internal::TSanWrite(&_impl_);
   ::uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
   cached_has_bits = _impl_._has_bits_[0];
-  if (BatchCheckHasBit(cached_has_bits, 0x00000003U)) {
+  if (BatchCheckHasBit(cached_has_bits, 0x00000007U)) {
     if (CheckHasBit(cached_has_bits, 0x00000001U)) {
       ABSL_DCHECK(_impl_.pos_ != nullptr);
       _impl_.pos_->Clear();
@@ -364,41 +364,52 @@ PROTOBUF_NOINLINE void CP_Ball::Clear() {
       ABSL_DCHECK(_impl_.vel_ != nullptr);
       _impl_.vel_->Clear();
     }
+    if (CheckHasBit(cached_has_bits, 0x00000004U)) {
+      ABSL_DCHECK(_impl_.stop_pos_ != nullptr);
+      _impl_.stop_pos_->Clear();
+    }
   }
   _impl_._has_bits_.Clear();
   _internal_metadata_.Clear<::google::protobuf::UnknownFieldSet>();
 }
 
 #if defined(PROTOBUF_CUSTOM_VTABLE)
-::uint8_t* PROTOBUF_NONNULL CP_Ball::_InternalSerialize(
+::uint8_t* PROTOBUF_NONNULL CP_KickedBall::_InternalSerialize(
     const ::google::protobuf::MessageLite& base, ::uint8_t* PROTOBUF_NONNULL target,
     ::google::protobuf::io::EpsCopyOutputStream* PROTOBUF_NONNULL stream) {
-  const CP_Ball& this_ = static_cast<const CP_Ball&>(base);
+  const CP_KickedBall& this_ = static_cast<const CP_KickedBall&>(base);
 #else   // PROTOBUF_CUSTOM_VTABLE
-::uint8_t* PROTOBUF_NONNULL CP_Ball::_InternalSerialize(
+::uint8_t* PROTOBUF_NONNULL CP_KickedBall::_InternalSerialize(
     ::uint8_t* PROTOBUF_NONNULL target,
     ::google::protobuf::io::EpsCopyOutputStream* PROTOBUF_NONNULL stream) const {
-  const CP_Ball& this_ = *this;
+  const CP_KickedBall& this_ = *this;
 #endif  // PROTOBUF_CUSTOM_VTABLE
   if constexpr (::_pbi::DebugHardenCheckHasBitConsistency()) {
     this_.CheckHasBitConsistency();
   }
-  // @@protoc_insertion_point(serialize_to_array_start:CP_Ball)
+  // @@protoc_insertion_point(serialize_to_array_start:CP_KickedBall)
   ::uint32_t cached_has_bits = 0;
   (void)cached_has_bits;
 
   cached_has_bits = this_._impl_._has_bits_[0];
-  // required .CP_Vector2 pos = 1 [json_name = "pos"];
+  // required .Vector2 pos = 1 [json_name = "pos"];
   if (CheckHasBit(cached_has_bits, 0x00000001U)) {
     target = ::google::protobuf::internal::WireFormatLite::InternalWriteMessage(
         1, *this_._impl_.pos_, this_._impl_.pos_->GetCachedSize(), target,
         stream);
   }
 
-  // optional .CP_Vector2 vel = 2 [json_name = "vel"];
+  // required .Vector3 vel = 2 [json_name = "vel"];
   if (CheckHasBit(cached_has_bits, 0x00000002U)) {
     target = ::google::protobuf::internal::WireFormatLite::InternalWriteMessage(
         2, *this_._impl_.vel_, this_._impl_.vel_->GetCachedSize(), target,
+        stream);
+  }
+
+  // optional .Vector2 stop_pos = 5 [json_name = "stopPos"];
+  if (CheckHasBit(cached_has_bits, 0x00000004U)) {
+    target = ::google::protobuf::internal::WireFormatLite::InternalWriteMessage(
+        5, *this_._impl_.stop_pos_, this_._impl_.stop_pos_->GetCachedSize(), target,
         stream);
   }
 
@@ -407,18 +418,18 @@ PROTOBUF_NOINLINE void CP_Ball::Clear() {
         ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
             this_._internal_metadata_.unknown_fields<::google::protobuf::UnknownFieldSet>(::google::protobuf::UnknownFieldSet::default_instance), target, stream);
   }
-  // @@protoc_insertion_point(serialize_to_array_end:CP_Ball)
+  // @@protoc_insertion_point(serialize_to_array_end:CP_KickedBall)
   return target;
 }
 
 #if defined(PROTOBUF_CUSTOM_VTABLE)
-::size_t CP_Ball::ByteSizeLong(const MessageLite& base) {
-  const CP_Ball& this_ = static_cast<const CP_Ball&>(base);
+::size_t CP_KickedBall::ByteSizeLong(const MessageLite& base) {
+  const CP_KickedBall& this_ = static_cast<const CP_KickedBall&>(base);
 #else   // PROTOBUF_CUSTOM_VTABLE
-::size_t CP_Ball::ByteSizeLong() const {
-  const CP_Ball& this_ = *this;
+::size_t CP_KickedBall::ByteSizeLong() const {
+  const CP_KickedBall& this_ = *this;
 #endif  // PROTOBUF_CUSTOM_VTABLE
-  // @@protoc_insertion_point(message_byte_size_start:CP_Ball)
+  // @@protoc_insertion_point(message_byte_size_start:CP_KickedBall)
   ::size_t total_size = 0;
 
   ::uint32_t cached_has_bits = 0;
@@ -426,41 +437,46 @@ PROTOBUF_NOINLINE void CP_Ball::Clear() {
   (void)cached_has_bits;
 
   ::_pbi::Prefetch5LinesFrom7Lines(&this_);
-   {
-    // required .CP_Vector2 pos = 1 [json_name = "pos"];
-    cached_has_bits = this_._impl_._has_bits_[0];
+  cached_has_bits = this_._impl_._has_bits_[0];
+  if (BatchCheckHasBit(cached_has_bits, 0x00000003U)) {
+    // required .Vector2 pos = 1 [json_name = "pos"];
     if (CheckHasBit(cached_has_bits, 0x00000001U)) {
       total_size += 1 +
                     ::google::protobuf::internal::WireFormatLite::MessageSize(*this_._impl_.pos_);
     }
-  }
-   {
-    // optional .CP_Vector2 vel = 2 [json_name = "vel"];
+    // required .Vector3 vel = 2 [json_name = "vel"];
     if (CheckHasBit(cached_has_bits, 0x00000002U)) {
       total_size += 1 +
                     ::google::protobuf::internal::WireFormatLite::MessageSize(*this_._impl_.vel_);
+    }
+  }
+   {
+    // optional .Vector2 stop_pos = 5 [json_name = "stopPos"];
+    if (CheckHasBit(cached_has_bits, 0x00000004U)) {
+      total_size += 1 +
+                    ::google::protobuf::internal::WireFormatLite::MessageSize(*this_._impl_.stop_pos_);
     }
   }
   return this_.MaybeComputeUnknownFieldsSize(total_size,
                                              &this_._impl_._cached_size_);
 }
 
-void CP_Ball::MergeImpl(::google::protobuf::MessageLite& to_msg,
+void CP_KickedBall::MergeImpl(::google::protobuf::MessageLite& to_msg,
                             const ::google::protobuf::MessageLite& from_msg) {
    auto* const _this =
-      static_cast<CP_Ball*>(&to_msg);
-  auto& from = static_cast<const CP_Ball&>(from_msg);
+      static_cast<CP_KickedBall*>(&to_msg);
+  auto& from = static_cast<const CP_KickedBall&>(from_msg);
   if constexpr (::_pbi::DebugHardenCheckHasBitConsistency()) {
     from.CheckHasBitConsistency();
   }
   ::google::protobuf::Arena* arena = _this->GetArena();
-  // @@protoc_insertion_point(class_specific_merge_from_start:CP_Ball)
+  // @@protoc_insertion_point(class_specific_merge_from_start:CP_KickedBall)
   ABSL_DCHECK_NE(&from, _this);
   ::uint32_t cached_has_bits = 0;
   (void)cached_has_bits;
 
   cached_has_bits = from._impl_._has_bits_[0];
-  if (BatchCheckHasBit(cached_has_bits, 0x00000003U)) {
+  if (BatchCheckHasBit(cached_has_bits, 0x00000007U)) {
     if (CheckHasBit(cached_has_bits, 0x00000001U)) {
       ABSL_DCHECK(from._impl_.pos_ != nullptr);
       if (_this->_impl_.pos_ == nullptr) {
@@ -477,22 +493,30 @@ void CP_Ball::MergeImpl(::google::protobuf::MessageLite& to_msg,
         _this->_impl_.vel_->MergeFrom(*from._impl_.vel_);
       }
     }
+    if (CheckHasBit(cached_has_bits, 0x00000004U)) {
+      ABSL_DCHECK(from._impl_.stop_pos_ != nullptr);
+      if (_this->_impl_.stop_pos_ == nullptr) {
+        _this->_impl_.stop_pos_ = ::google::protobuf::Message::CopyConstruct(arena, *from._impl_.stop_pos_);
+      } else {
+        _this->_impl_.stop_pos_->MergeFrom(*from._impl_.stop_pos_);
+      }
+    }
   }
   _this->_impl_._has_bits_[0] |= cached_has_bits;
   _this->_internal_metadata_.MergeFrom<::google::protobuf::UnknownFieldSet>(
       from._internal_metadata_);
 }
 
-void CP_Ball::CopyFrom(const CP_Ball& from) {
-  // @@protoc_insertion_point(class_specific_copy_from_start:CP_Ball)
+void CP_KickedBall::CopyFrom(const CP_KickedBall& from) {
+  // @@protoc_insertion_point(class_specific_copy_from_start:CP_KickedBall)
   if (&from == this) return;
   Clear();
   MergeFrom(from);
 }
 
-PROTOBUF_NOINLINE bool CP_Ball::IsInitializedImpl(
+PROTOBUF_NOINLINE bool CP_KickedBall::IsInitializedImpl(
     const MessageLite& msg) {
-  auto& this_ = static_cast<const CP_Ball&>(msg);
+  auto& this_ = static_cast<const CP_KickedBall&>(msg);
   if (_Internal::MissingRequiredFields(this_._impl_._has_bits_)) {
     return false;
   }
@@ -502,22 +526,25 @@ PROTOBUF_NOINLINE bool CP_Ball::IsInitializedImpl(
   if (CheckHasBit(this_._impl_._has_bits_[0], 0x00000002U)) {
     if (!this_._impl_.vel_->IsInitialized()) return false;
   }
+  if (CheckHasBit(this_._impl_._has_bits_[0], 0x00000004U)) {
+    if (!this_._impl_.stop_pos_->IsInitialized()) return false;
+  }
   return true;
 }
 
-void CP_Ball::InternalSwap(CP_Ball* PROTOBUF_RESTRICT PROTOBUF_NONNULL other) {
+void CP_KickedBall::InternalSwap(CP_KickedBall* PROTOBUF_RESTRICT PROTOBUF_NONNULL other) {
   using ::std::swap;
   _internal_metadata_.InternalSwap(&other->_internal_metadata_);
   swap(_impl_._has_bits_[0], other->_impl_._has_bits_[0]);
   ::google::protobuf::internal::memswap<
-      PROTOBUF_FIELD_OFFSET(CP_Ball, _impl_.vel_)
-      + sizeof(CP_Ball::_impl_.vel_)
-      - PROTOBUF_FIELD_OFFSET(CP_Ball, _impl_.pos_)>(
+      PROTOBUF_FIELD_OFFSET(CP_KickedBall, _impl_.stop_pos_)
+      + sizeof(CP_KickedBall::_impl_.stop_pos_)
+      - PROTOBUF_FIELD_OFFSET(CP_KickedBall, _impl_.pos_)>(
           reinterpret_cast<char*>(&_impl_.pos_),
           reinterpret_cast<char*>(&other->_impl_.pos_));
 }
 
-::google::protobuf::Metadata CP_Ball::GetMetadata() const {
+::google::protobuf::Metadata CP_KickedBall::GetMetadata() const {
   return ::google::protobuf::Message::GetMetadataImpl(GetClassData()->full());
 }
 // ===================================================================
@@ -533,6 +560,18 @@ class CP_TrackedRobot::_Internal {
   }
 };
 
+void CP_TrackedRobot::clear_pos() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  if (_impl_.pos_ != nullptr) _impl_.pos_->Clear();
+  ClearHasBit(_impl_._has_bits_[0],
+                  0x00000001U);
+}
+void CP_TrackedRobot::clear_vel() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  if (_impl_.vel_ != nullptr) _impl_.vel_->Clear();
+  ClearHasBit(_impl_._has_bits_[0],
+                  0x00000002U);
+}
 CP_TrackedRobot::CP_TrackedRobot(::google::protobuf::Arena* PROTOBUF_NULLABLE arena)
 #if defined(PROTOBUF_CUSTOM_VTABLE)
     : ::google::protobuf::Message(arena, CP_TrackedRobot_class_data_.base()) {
@@ -573,9 +612,9 @@ CP_TrackedRobot::CP_TrackedRobot(
                offsetof(Impl_, robot_id_),
            reinterpret_cast<const char*>(&from._impl_) +
                offsetof(Impl_, robot_id_),
-           offsetof(Impl_, orientation_) -
+           offsetof(Impl_, vel_angular_) -
                offsetof(Impl_, robot_id_) +
-               sizeof(Impl_::orientation_));
+               sizeof(Impl_::vel_angular_));
 
   // @@protoc_insertion_point(copy_constructor:CP_TrackedRobot)
 }
@@ -589,9 +628,9 @@ inline void CP_TrackedRobot::SharedCtor(::_pb::Arena* PROTOBUF_NULLABLE arena) {
   ::memset(reinterpret_cast<char*>(&_impl_) +
                offsetof(Impl_, pos_),
            0,
-           offsetof(Impl_, orientation_) -
+           offsetof(Impl_, vel_angular_) -
                offsetof(Impl_, pos_) +
-               sizeof(Impl_::orientation_));
+               sizeof(Impl_::vel_angular_));
 }
 CP_TrackedRobot::~CP_TrackedRobot() {
   // @@protoc_insertion_point(destructor:CP_TrackedRobot)
@@ -651,16 +690,16 @@ CP_TrackedRobot::GetClassData() const {
   return CP_TrackedRobot_class_data_.base();
 }
 PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1
-const ::_pbi::TcParseTable<2, 4, 2, 0, 2>
+const ::_pbi::TcParseTable<3, 5, 2, 0, 2>
 CP_TrackedRobot::_table_ = {
   {
     PROTOBUF_FIELD_OFFSET(CP_TrackedRobot, _impl_._has_bits_),
     0, // no _extensions_
-    4, 24,  // max_field_number, fast_idx_mask
+    5, 56,  // max_field_number, fast_idx_mask
     offsetof(decltype(_table_), field_lookup_table),
-    4294967280,  // skipmap
+    4294967264,  // skipmap
     offsetof(decltype(_table_), field_entries),
-    4,  // num_field_entries
+    5,  // num_field_entries
     2,  // num_aux_entries
     offsetof(decltype(_table_), aux_entries),
     CP_TrackedRobot_class_data_.base(),
@@ -670,15 +709,12 @@ CP_TrackedRobot::_table_ = {
     ::_pbi::TcParser::GetTable<::CP_TrackedRobot>(),  // to_prefetch
     #endif  // PROTOBUF_PREFETCH_PARSE_TABLE
   }, {{
-    // optional .CP_Vector2 vel = 4 [json_name = "vel"];
-    {::_pbi::TcParser::FastMtS1,
-     {34, 1, 1,
-      PROTOBUF_FIELD_OFFSET(CP_TrackedRobot, _impl_.vel_)}},
+    {::_pbi::TcParser::MiniParse, {}},
     // required uint32 robot_id = 1 [json_name = "robotId"];
     {::_pbi::TcParser::SingularVarintNoZag1<::uint32_t, offsetof(CP_TrackedRobot, _impl_.robot_id_), 2>(),
      {8, 2, 0,
       PROTOBUF_FIELD_OFFSET(CP_TrackedRobot, _impl_.robot_id_)}},
-    // required .CP_Vector2 pos = 2 [json_name = "pos"];
+    // required .Vector2 pos = 2 [json_name = "pos"];
     {::_pbi::TcParser::FastMtS1,
      {18, 0, 0,
       PROTOBUF_FIELD_OFFSET(CP_TrackedRobot, _impl_.pos_)}},
@@ -686,21 +722,33 @@ CP_TrackedRobot::_table_ = {
     {::_pbi::TcParser::FastF32S1,
      {29, 3, 0,
       PROTOBUF_FIELD_OFFSET(CP_TrackedRobot, _impl_.orientation_)}},
+    // optional .Vector2 vel = 4 [json_name = "vel"];
+    {::_pbi::TcParser::FastMtS1,
+     {34, 1, 1,
+      PROTOBUF_FIELD_OFFSET(CP_TrackedRobot, _impl_.vel_)}},
+    // optional float vel_angular = 5 [json_name = "velAngular"];
+    {::_pbi::TcParser::FastF32S1,
+     {45, 4, 0,
+      PROTOBUF_FIELD_OFFSET(CP_TrackedRobot, _impl_.vel_angular_)}},
+    {::_pbi::TcParser::MiniParse, {}},
+    {::_pbi::TcParser::MiniParse, {}},
   }}, {{
     65535, 65535
   }}, {{
     // required uint32 robot_id = 1 [json_name = "robotId"];
     {PROTOBUF_FIELD_OFFSET(CP_TrackedRobot, _impl_.robot_id_), _Internal::kHasBitsOffset + 2, 0, (0 | ::_fl::kFcOptional | ::_fl::kUInt32)},
-    // required .CP_Vector2 pos = 2 [json_name = "pos"];
+    // required .Vector2 pos = 2 [json_name = "pos"];
     {PROTOBUF_FIELD_OFFSET(CP_TrackedRobot, _impl_.pos_), _Internal::kHasBitsOffset + 0, 0, (0 | ::_fl::kFcOptional | ::_fl::kMessage | ::_fl::kTvTable)},
     // required float orientation = 3 [json_name = "orientation"];
     {PROTOBUF_FIELD_OFFSET(CP_TrackedRobot, _impl_.orientation_), _Internal::kHasBitsOffset + 3, 0, (0 | ::_fl::kFcOptional | ::_fl::kFloat)},
-    // optional .CP_Vector2 vel = 4 [json_name = "vel"];
+    // optional .Vector2 vel = 4 [json_name = "vel"];
     {PROTOBUF_FIELD_OFFSET(CP_TrackedRobot, _impl_.vel_), _Internal::kHasBitsOffset + 1, 1, (0 | ::_fl::kFcOptional | ::_fl::kMessage | ::_fl::kTvTable)},
+    // optional float vel_angular = 5 [json_name = "velAngular"];
+    {PROTOBUF_FIELD_OFFSET(CP_TrackedRobot, _impl_.vel_angular_), _Internal::kHasBitsOffset + 4, 0, (0 | ::_fl::kFcOptional | ::_fl::kFloat)},
   }},
   {{
-      {::_pbi::TcParser::GetTable<::CP_Vector2>()},
-      {::_pbi::TcParser::GetTable<::CP_Vector2>()},
+      {::_pbi::TcParser::GetTable<::Vector2>()},
+      {::_pbi::TcParser::GetTable<::Vector2>()},
   }},
   {{
   }},
@@ -723,10 +771,10 @@ PROTOBUF_NOINLINE void CP_TrackedRobot::Clear() {
       _impl_.vel_->Clear();
     }
   }
-  if (BatchCheckHasBit(cached_has_bits, 0x0000000cU)) {
+  if (BatchCheckHasBit(cached_has_bits, 0x0000001cU)) {
     ::memset(&_impl_.robot_id_, 0, static_cast<::size_t>(
-        reinterpret_cast<char*>(&_impl_.orientation_) -
-        reinterpret_cast<char*>(&_impl_.robot_id_)) + sizeof(_impl_.orientation_));
+        reinterpret_cast<char*>(&_impl_.vel_angular_) -
+        reinterpret_cast<char*>(&_impl_.robot_id_)) + sizeof(_impl_.vel_angular_));
   }
   _impl_._has_bits_.Clear();
   _internal_metadata_.Clear<::google::protobuf::UnknownFieldSet>();
@@ -758,7 +806,7 @@ PROTOBUF_NOINLINE void CP_TrackedRobot::Clear() {
         1, this_._internal_robot_id(), target);
   }
 
-  // required .CP_Vector2 pos = 2 [json_name = "pos"];
+  // required .Vector2 pos = 2 [json_name = "pos"];
   if (CheckHasBit(cached_has_bits, 0x00000001U)) {
     target = ::google::protobuf::internal::WireFormatLite::InternalWriteMessage(
         2, *this_._impl_.pos_, this_._impl_.pos_->GetCachedSize(), target,
@@ -772,11 +820,18 @@ PROTOBUF_NOINLINE void CP_TrackedRobot::Clear() {
         3, this_._internal_orientation(), target);
   }
 
-  // optional .CP_Vector2 vel = 4 [json_name = "vel"];
+  // optional .Vector2 vel = 4 [json_name = "vel"];
   if (CheckHasBit(cached_has_bits, 0x00000002U)) {
     target = ::google::protobuf::internal::WireFormatLite::InternalWriteMessage(
         4, *this_._impl_.vel_, this_._impl_.vel_->GetCachedSize(), target,
         stream);
+  }
+
+  // optional float vel_angular = 5 [json_name = "velAngular"];
+  if (CheckHasBit(cached_has_bits, 0x00000010U)) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteFloatToArray(
+        5, this_._internal_vel_angular(), target);
   }
 
   if (ABSL_PREDICT_FALSE(this_._internal_metadata_.have_unknown_fields())) {
@@ -804,16 +859,16 @@ PROTOBUF_NOINLINE void CP_TrackedRobot::Clear() {
 
   ::_pbi::Prefetch5LinesFrom7Lines(&this_);
   cached_has_bits = this_._impl_._has_bits_[0];
-  total_size += static_cast<bool>(0x00000008U & cached_has_bits) * 5;
+  total_size += ::absl::popcount(0x00000018U & cached_has_bits) * 5;
    {
-    // required .CP_Vector2 pos = 2 [json_name = "pos"];
+    // required .Vector2 pos = 2 [json_name = "pos"];
     if (CheckHasBit(cached_has_bits, 0x00000001U)) {
       total_size += 1 +
                     ::google::protobuf::internal::WireFormatLite::MessageSize(*this_._impl_.pos_);
     }
   }
    {
-    // optional .CP_Vector2 vel = 4 [json_name = "vel"];
+    // optional .Vector2 vel = 4 [json_name = "vel"];
     if (CheckHasBit(cached_has_bits, 0x00000002U)) {
       total_size += 1 +
                     ::google::protobuf::internal::WireFormatLite::MessageSize(*this_._impl_.vel_);
@@ -845,7 +900,7 @@ void CP_TrackedRobot::MergeImpl(::google::protobuf::MessageLite& to_msg,
   (void)cached_has_bits;
 
   cached_has_bits = from._impl_._has_bits_[0];
-  if (BatchCheckHasBit(cached_has_bits, 0x0000000fU)) {
+  if (BatchCheckHasBit(cached_has_bits, 0x0000001fU)) {
     if (CheckHasBit(cached_has_bits, 0x00000001U)) {
       ABSL_DCHECK(from._impl_.pos_ != nullptr);
       if (_this->_impl_.pos_ == nullptr) {
@@ -867,6 +922,9 @@ void CP_TrackedRobot::MergeImpl(::google::protobuf::MessageLite& to_msg,
     }
     if (CheckHasBit(cached_has_bits, 0x00000008U)) {
       _this->_impl_.orientation_ = from._impl_.orientation_;
+    }
+    if (CheckHasBit(cached_has_bits, 0x00000010U)) {
+      _this->_impl_.vel_angular_ = from._impl_.vel_angular_;
     }
   }
   _this->_impl_._has_bits_[0] |= cached_has_bits;
@@ -901,305 +959,14 @@ void CP_TrackedRobot::InternalSwap(CP_TrackedRobot* PROTOBUF_RESTRICT PROTOBUF_N
   _internal_metadata_.InternalSwap(&other->_internal_metadata_);
   swap(_impl_._has_bits_[0], other->_impl_._has_bits_[0]);
   ::google::protobuf::internal::memswap<
-      PROTOBUF_FIELD_OFFSET(CP_TrackedRobot, _impl_.orientation_)
-      + sizeof(CP_TrackedRobot::_impl_.orientation_)
+      PROTOBUF_FIELD_OFFSET(CP_TrackedRobot, _impl_.vel_angular_)
+      + sizeof(CP_TrackedRobot::_impl_.vel_angular_)
       - PROTOBUF_FIELD_OFFSET(CP_TrackedRobot, _impl_.pos_)>(
           reinterpret_cast<char*>(&_impl_.pos_),
           reinterpret_cast<char*>(&other->_impl_.pos_));
 }
 
 ::google::protobuf::Metadata CP_TrackedRobot::GetMetadata() const {
-  return ::google::protobuf::Message::GetMetadataImpl(GetClassData()->full());
-}
-// ===================================================================
-
-class CP_Vector2::_Internal {
- public:
-  using HasBits =
-      decltype(::std::declval<CP_Vector2>()._impl_._has_bits_);
-  static constexpr ::int32_t kHasBitsOffset =
-      8 * PROTOBUF_FIELD_OFFSET(CP_Vector2, _impl_._has_bits_);
-  static bool MissingRequiredFields(const HasBits& has_bits) {
-    return ((has_bits[0] & 0x00000003) ^ 0x00000003) != 0;
-  }
-};
-
-CP_Vector2::CP_Vector2(::google::protobuf::Arena* PROTOBUF_NULLABLE arena)
-#if defined(PROTOBUF_CUSTOM_VTABLE)
-    : ::google::protobuf::Message(arena, CP_Vector2_class_data_.base()) {
-#else   // PROTOBUF_CUSTOM_VTABLE
-    : ::google::protobuf::Message(arena) {
-#endif  // PROTOBUF_CUSTOM_VTABLE
-  SharedCtor(arena);
-  // @@protoc_insertion_point(arena_constructor:CP_Vector2)
-}
-CP_Vector2::CP_Vector2(
-    ::google::protobuf::Arena* PROTOBUF_NULLABLE arena, const CP_Vector2& from)
-#if defined(PROTOBUF_CUSTOM_VTABLE)
-    : ::google::protobuf::Message(arena, CP_Vector2_class_data_.base()),
-#else   // PROTOBUF_CUSTOM_VTABLE
-    : ::google::protobuf::Message(arena),
-#endif  // PROTOBUF_CUSTOM_VTABLE
-      _impl_(from._impl_) {
-  _internal_metadata_.MergeFrom<::google::protobuf::UnknownFieldSet>(
-      from._internal_metadata_);
-}
-PROTOBUF_NDEBUG_INLINE CP_Vector2::Impl_::Impl_(
-    [[maybe_unused]] ::google::protobuf::internal::InternalVisibility visibility,
-    [[maybe_unused]] ::google::protobuf::Arena* PROTOBUF_NULLABLE arena)
-      : _cached_size_{0} {}
-
-inline void CP_Vector2::SharedCtor(::_pb::Arena* PROTOBUF_NULLABLE arena) {
-  new (&_impl_) Impl_(internal_visibility(), arena);
-  ::memset(reinterpret_cast<char*>(&_impl_) +
-               offsetof(Impl_, x_),
-           0,
-           offsetof(Impl_, y_) -
-               offsetof(Impl_, x_) +
-               sizeof(Impl_::y_));
-}
-CP_Vector2::~CP_Vector2() {
-  // @@protoc_insertion_point(destructor:CP_Vector2)
-  SharedDtor(*this);
-}
-inline void CP_Vector2::SharedDtor(MessageLite& self) {
-  CP_Vector2& this_ = static_cast<CP_Vector2&>(self);
-  if constexpr (::_pbi::DebugHardenCheckHasBitConsistency()) {
-    this_.CheckHasBitConsistency();
-  }
-  this_._internal_metadata_.Delete<::google::protobuf::UnknownFieldSet>();
-  ABSL_DCHECK(this_.GetArena() == nullptr);
-  this_._impl_.~Impl_();
-}
-
-inline void* PROTOBUF_NONNULL CP_Vector2::PlacementNew_(
-    const void* PROTOBUF_NONNULL, void* PROTOBUF_NONNULL mem,
-    ::google::protobuf::Arena* PROTOBUF_NULLABLE arena) {
-  return ::new (mem) CP_Vector2(arena);
-}
-constexpr auto CP_Vector2::InternalNewImpl_() {
-  return ::google::protobuf::internal::MessageCreator::ZeroInit(sizeof(CP_Vector2),
-                                            alignof(CP_Vector2));
-}
-constexpr auto CP_Vector2::InternalGenerateClassData_() {
-  return ::google::protobuf::internal::ClassDataFull{
-      ::google::protobuf::internal::ClassData{
-          &_CP_Vector2_default_instance_._instance,
-          &_table_.header,
-          CP_Vector2::IsInitializedImpl,
-          &CP_Vector2::MergeImpl,
-          ::google::protobuf::Message::GetNewImpl<CP_Vector2>(),
-#if defined(PROTOBUF_CUSTOM_VTABLE)
-          &CP_Vector2::SharedDtor,
-          ::google::protobuf::Message::GetClearImpl<CP_Vector2>(), &CP_Vector2::ByteSizeLong,
-              &CP_Vector2::_InternalSerialize,
-#endif  // PROTOBUF_CUSTOM_VTABLE
-          PROTOBUF_FIELD_OFFSET(CP_Vector2, _impl_._cached_size_),
-          false,
-      },
-      &CP_Vector2::kDescriptorMethods,
-      &descriptor_table_crashpilot_2fcommon_2eproto,
-      nullptr,  // tracker
-  };
-}
-
-PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 const
-    ::google::protobuf::internal::ClassDataFull CP_Vector2_class_data_ =
-        CP_Vector2::InternalGenerateClassData_();
-
-PROTOBUF_ATTRIBUTE_WEAK const ::google::protobuf::internal::ClassData* PROTOBUF_NONNULL
-CP_Vector2::GetClassData() const {
-  ::google::protobuf::internal::PrefetchToLocalCache(&CP_Vector2_class_data_);
-  ::google::protobuf::internal::PrefetchToLocalCache(CP_Vector2_class_data_.tc_table);
-  return CP_Vector2_class_data_.base();
-}
-PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1
-const ::_pbi::TcParseTable<1, 2, 0, 0, 2>
-CP_Vector2::_table_ = {
-  {
-    PROTOBUF_FIELD_OFFSET(CP_Vector2, _impl_._has_bits_),
-    0, // no _extensions_
-    2, 8,  // max_field_number, fast_idx_mask
-    offsetof(decltype(_table_), field_lookup_table),
-    4294967292,  // skipmap
-    offsetof(decltype(_table_), field_entries),
-    2,  // num_field_entries
-    0,  // num_aux_entries
-    offsetof(decltype(_table_), field_names),  // no aux_entries
-    CP_Vector2_class_data_.base(),
-    nullptr,  // post_loop_handler
-    ::_pbi::TcParser::GenericFallback,  // fallback
-    #ifdef PROTOBUF_PREFETCH_PARSE_TABLE
-    ::_pbi::TcParser::GetTable<::CP_Vector2>(),  // to_prefetch
-    #endif  // PROTOBUF_PREFETCH_PARSE_TABLE
-  }, {{
-    // required int32 y = 2 [json_name = "y"];
-    {::_pbi::TcParser::SingularVarintNoZag1<::uint32_t, offsetof(CP_Vector2, _impl_.y_), 1>(),
-     {16, 1, 0,
-      PROTOBUF_FIELD_OFFSET(CP_Vector2, _impl_.y_)}},
-    // required int32 x = 1 [json_name = "x"];
-    {::_pbi::TcParser::SingularVarintNoZag1<::uint32_t, offsetof(CP_Vector2, _impl_.x_), 0>(),
-     {8, 0, 0,
-      PROTOBUF_FIELD_OFFSET(CP_Vector2, _impl_.x_)}},
-  }}, {{
-    65535, 65535
-  }}, {{
-    // required int32 x = 1 [json_name = "x"];
-    {PROTOBUF_FIELD_OFFSET(CP_Vector2, _impl_.x_), _Internal::kHasBitsOffset + 0, 0, (0 | ::_fl::kFcOptional | ::_fl::kInt32)},
-    // required int32 y = 2 [json_name = "y"];
-    {PROTOBUF_FIELD_OFFSET(CP_Vector2, _impl_.y_), _Internal::kHasBitsOffset + 1, 0, (0 | ::_fl::kFcOptional | ::_fl::kInt32)},
-  }},
-  // no aux_entries
-  {{
-  }},
-};
-PROTOBUF_NOINLINE void CP_Vector2::Clear() {
-// @@protoc_insertion_point(message_clear_start:CP_Vector2)
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-  ::uint32_t cached_has_bits = 0;
-  // Prevent compiler warnings about cached_has_bits being unused
-  (void) cached_has_bits;
-
-  cached_has_bits = _impl_._has_bits_[0];
-  if (BatchCheckHasBit(cached_has_bits, 0x00000003U)) {
-    ::memset(&_impl_.x_, 0, static_cast<::size_t>(
-        reinterpret_cast<char*>(&_impl_.y_) -
-        reinterpret_cast<char*>(&_impl_.x_)) + sizeof(_impl_.y_));
-  }
-  _impl_._has_bits_.Clear();
-  _internal_metadata_.Clear<::google::protobuf::UnknownFieldSet>();
-}
-
-#if defined(PROTOBUF_CUSTOM_VTABLE)
-::uint8_t* PROTOBUF_NONNULL CP_Vector2::_InternalSerialize(
-    const ::google::protobuf::MessageLite& base, ::uint8_t* PROTOBUF_NONNULL target,
-    ::google::protobuf::io::EpsCopyOutputStream* PROTOBUF_NONNULL stream) {
-  const CP_Vector2& this_ = static_cast<const CP_Vector2&>(base);
-#else   // PROTOBUF_CUSTOM_VTABLE
-::uint8_t* PROTOBUF_NONNULL CP_Vector2::_InternalSerialize(
-    ::uint8_t* PROTOBUF_NONNULL target,
-    ::google::protobuf::io::EpsCopyOutputStream* PROTOBUF_NONNULL stream) const {
-  const CP_Vector2& this_ = *this;
-#endif  // PROTOBUF_CUSTOM_VTABLE
-  if constexpr (::_pbi::DebugHardenCheckHasBitConsistency()) {
-    this_.CheckHasBitConsistency();
-  }
-  // @@protoc_insertion_point(serialize_to_array_start:CP_Vector2)
-  ::uint32_t cached_has_bits = 0;
-  (void)cached_has_bits;
-
-  cached_has_bits = this_._impl_._has_bits_[0];
-  // required int32 x = 1 [json_name = "x"];
-  if (CheckHasBit(cached_has_bits, 0x00000001U)) {
-    target =
-        ::google::protobuf::internal::WireFormatLite::WriteInt32ToArrayWithField<1>(
-            stream, this_._internal_x(), target);
-  }
-
-  // required int32 y = 2 [json_name = "y"];
-  if (CheckHasBit(cached_has_bits, 0x00000002U)) {
-    target =
-        ::google::protobuf::internal::WireFormatLite::WriteInt32ToArrayWithField<2>(
-            stream, this_._internal_y(), target);
-  }
-
-  if (ABSL_PREDICT_FALSE(this_._internal_metadata_.have_unknown_fields())) {
-    target =
-        ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
-            this_._internal_metadata_.unknown_fields<::google::protobuf::UnknownFieldSet>(::google::protobuf::UnknownFieldSet::default_instance), target, stream);
-  }
-  // @@protoc_insertion_point(serialize_to_array_end:CP_Vector2)
-  return target;
-}
-
-#if defined(PROTOBUF_CUSTOM_VTABLE)
-::size_t CP_Vector2::ByteSizeLong(const MessageLite& base) {
-  const CP_Vector2& this_ = static_cast<const CP_Vector2&>(base);
-#else   // PROTOBUF_CUSTOM_VTABLE
-::size_t CP_Vector2::ByteSizeLong() const {
-  const CP_Vector2& this_ = *this;
-#endif  // PROTOBUF_CUSTOM_VTABLE
-  // @@protoc_insertion_point(message_byte_size_start:CP_Vector2)
-  ::size_t total_size = 0;
-
-  ::uint32_t cached_has_bits = 0;
-  // Prevent compiler warnings about cached_has_bits being unused
-  (void)cached_has_bits;
-
-  ::_pbi::Prefetch5LinesFrom7Lines(&this_);
-  cached_has_bits = this_._impl_._has_bits_[0];
-  if (BatchCheckHasBit(cached_has_bits, 0x00000003U)) {
-    // required int32 x = 1 [json_name = "x"];
-    if (CheckHasBit(cached_has_bits, 0x00000001U)) {
-      total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(
-          this_._internal_x());
-    }
-    // required int32 y = 2 [json_name = "y"];
-    if (CheckHasBit(cached_has_bits, 0x00000002U)) {
-      total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(
-          this_._internal_y());
-    }
-  }
-  return this_.MaybeComputeUnknownFieldsSize(total_size,
-                                             &this_._impl_._cached_size_);
-}
-
-void CP_Vector2::MergeImpl(::google::protobuf::MessageLite& to_msg,
-                            const ::google::protobuf::MessageLite& from_msg) {
-   auto* const _this =
-      static_cast<CP_Vector2*>(&to_msg);
-  auto& from = static_cast<const CP_Vector2&>(from_msg);
-  if constexpr (::_pbi::DebugHardenCheckHasBitConsistency()) {
-    from.CheckHasBitConsistency();
-  }
-  // @@protoc_insertion_point(class_specific_merge_from_start:CP_Vector2)
-  ABSL_DCHECK_NE(&from, _this);
-  ::uint32_t cached_has_bits = 0;
-  (void)cached_has_bits;
-
-  cached_has_bits = from._impl_._has_bits_[0];
-  if (BatchCheckHasBit(cached_has_bits, 0x00000003U)) {
-    if (CheckHasBit(cached_has_bits, 0x00000001U)) {
-      _this->_impl_.x_ = from._impl_.x_;
-    }
-    if (CheckHasBit(cached_has_bits, 0x00000002U)) {
-      _this->_impl_.y_ = from._impl_.y_;
-    }
-  }
-  _this->_impl_._has_bits_[0] |= cached_has_bits;
-  _this->_internal_metadata_.MergeFrom<::google::protobuf::UnknownFieldSet>(
-      from._internal_metadata_);
-}
-
-void CP_Vector2::CopyFrom(const CP_Vector2& from) {
-  // @@protoc_insertion_point(class_specific_copy_from_start:CP_Vector2)
-  if (&from == this) return;
-  Clear();
-  MergeFrom(from);
-}
-
-PROTOBUF_NOINLINE bool CP_Vector2::IsInitializedImpl(
-    const MessageLite& msg) {
-  auto& this_ = static_cast<const CP_Vector2&>(msg);
-  if (_Internal::MissingRequiredFields(this_._impl_._has_bits_)) {
-    return false;
-  }
-  return true;
-}
-
-void CP_Vector2::InternalSwap(CP_Vector2* PROTOBUF_RESTRICT PROTOBUF_NONNULL other) {
-  using ::std::swap;
-  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
-  swap(_impl_._has_bits_[0], other->_impl_._has_bits_[0]);
-  ::google::protobuf::internal::memswap<
-      PROTOBUF_FIELD_OFFSET(CP_Vector2, _impl_.y_)
-      + sizeof(CP_Vector2::_impl_.y_)
-      - PROTOBUF_FIELD_OFFSET(CP_Vector2, _impl_.x_)>(
-          reinterpret_cast<char*>(&_impl_.x_),
-          reinterpret_cast<char*>(&other->_impl_.x_));
-}
-
-::google::protobuf::Metadata CP_Vector2::GetMetadata() const {
   return ::google::protobuf::Message::GetMetadataImpl(GetClassData()->full());
 }
 // @@protoc_insertion_point(namespace_scope)

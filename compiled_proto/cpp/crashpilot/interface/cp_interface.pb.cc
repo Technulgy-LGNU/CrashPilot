@@ -26,35 +26,7 @@ namespace _pb = ::google::protobuf;
 namespace _pbi = ::google::protobuf::internal;
 namespace _fl = ::google::protobuf::internal::field_layout;
 
-inline constexpr InterfaceCommand_CP::Impl_::Impl_(
-    [[maybe_unused]] ::google::protobuf::internal::InternalVisibility visibility,
-    ::_pbi::ConstantInitialized) noexcept
-      : _cached_size_{0},
-        testfield_{0u},
-        enable_testfield_{false},
-        ball_tracked_{false} {}
-
-template <typename>
-constexpr InterfaceCommand_CP::InterfaceCommand_CP(::_pbi::ConstantInitialized)
-#if defined(PROTOBUF_CUSTOM_VTABLE)
-    : ::google::protobuf::Message(InterfaceCommand_CP_class_data_.base()),
-#else   // PROTOBUF_CUSTOM_VTABLE
-    : ::google::protobuf::Message(),
-#endif  // PROTOBUF_CUSTOM_VTABLE
-      _impl_(internal_visibility(), ::_pbi::ConstantInitialized()) {
-}
-struct InterfaceCommand_CPDefaultTypeInternal {
-  constexpr InterfaceCommand_CPDefaultTypeInternal() : _instance(::_pbi::ConstantInitialized{}) {}
-  ~InterfaceCommand_CPDefaultTypeInternal() {}
-  union {
-    InterfaceCommand_CP _instance;
-  };
-};
-
-PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT
-    PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 InterfaceCommand_CPDefaultTypeInternal _InterfaceCommand_CP_default_instance_;
-
-inline constexpr InterfaceRobotCommands_CP::Impl_::Impl_(
+inline constexpr CP_Interface::Impl_::Impl_(
     [[maybe_unused]] ::google::protobuf::internal::InternalVisibility visibility,
     ::_pbi::ConstantInitialized) noexcept
       : _cached_size_{0},
@@ -62,96 +34,24 @@ inline constexpr InterfaceRobotCommands_CP::Impl_::Impl_(
         robot_id_{0u} {}
 
 template <typename>
-constexpr InterfaceRobotCommands_CP::InterfaceRobotCommands_CP(::_pbi::ConstantInitialized)
+constexpr CP_Interface::CP_Interface(::_pbi::ConstantInitialized)
 #if defined(PROTOBUF_CUSTOM_VTABLE)
-    : ::google::protobuf::Message(InterfaceRobotCommands_CP_class_data_.base()),
+    : ::google::protobuf::Message(CP_Interface_class_data_.base()),
 #else   // PROTOBUF_CUSTOM_VTABLE
     : ::google::protobuf::Message(),
 #endif  // PROTOBUF_CUSTOM_VTABLE
       _impl_(internal_visibility(), ::_pbi::ConstantInitialized()) {
 }
-struct InterfaceRobotCommands_CPDefaultTypeInternal {
-  constexpr InterfaceRobotCommands_CPDefaultTypeInternal() : _instance(::_pbi::ConstantInitialized{}) {}
-  ~InterfaceRobotCommands_CPDefaultTypeInternal() {}
+struct CP_InterfaceDefaultTypeInternal {
+  constexpr CP_InterfaceDefaultTypeInternal() : _instance(::_pbi::ConstantInitialized{}) {}
+  ~CP_InterfaceDefaultTypeInternal() {}
   union {
-    InterfaceRobotCommands_CP _instance;
+    CP_Interface _instance;
   };
 };
 
 PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT
-    PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 InterfaceRobotCommands_CPDefaultTypeInternal _InterfaceRobotCommands_CP_default_instance_;
-
-inline constexpr InterfaceWrapper_CP::Impl_::Impl_(
-    [[maybe_unused]] ::google::protobuf::internal::InternalVisibility visibility,
-    ::_pbi::ConstantInitialized) noexcept
-      : _cached_size_{0},
-        #ifdef PROTOBUF_INTERNAL_REMOVE_ARENA_PTRS_REPEATED_PTR_FIELD
-        robot_commands_{visibility, ::_pbi::InternalMetadataOffset::Build<
-            ::InterfaceWrapper_CP,
-            PROTOBUF_FIELD_OFFSET(::InterfaceWrapper_CP, _impl_.robot_commands_)>()
-        }
-        #else  // !PROTOBUF_INTERNAL_REMOVE_ARENA_PTRS_REPEATED_PTR_FIELD
-        robot_commands_ {}
-        #endif
-        ,
-        interface_command_{nullptr} {}
-
-template <typename>
-constexpr InterfaceWrapper_CP::InterfaceWrapper_CP(::_pbi::ConstantInitialized)
-#if defined(PROTOBUF_CUSTOM_VTABLE)
-    : ::google::protobuf::Message(InterfaceWrapper_CP_class_data_.base()),
-#else   // PROTOBUF_CUSTOM_VTABLE
-    : ::google::protobuf::Message(),
-#endif  // PROTOBUF_CUSTOM_VTABLE
-      _impl_(internal_visibility(), ::_pbi::ConstantInitialized()) {
-}
-struct InterfaceWrapper_CPDefaultTypeInternal {
-  constexpr InterfaceWrapper_CPDefaultTypeInternal() : _instance(::_pbi::ConstantInitialized{}) {}
-  ~InterfaceWrapper_CPDefaultTypeInternal() {}
-  union {
-    InterfaceWrapper_CP _instance;
-  };
-};
-
-PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT
-    PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 InterfaceWrapper_CPDefaultTypeInternal _InterfaceWrapper_CP_default_instance_;
-
-inline constexpr CP_InterfaceWrapper::Impl_::Impl_(
-    [[maybe_unused]] ::google::protobuf::internal::InternalVisibility visibility,
-    ::_pbi::ConstantInitialized) noexcept
-      : _cached_size_{0},
-        #ifdef PROTOBUF_INTERNAL_REMOVE_ARENA_PTRS_REPEATED_PTR_FIELD
-        robot_commands_{visibility, ::_pbi::InternalMetadataOffset::Build<
-            ::CP_InterfaceWrapper,
-            PROTOBUF_FIELD_OFFSET(::CP_InterfaceWrapper, _impl_.robot_commands_)>()
-        }
-        #else  // !PROTOBUF_INTERNAL_REMOVE_ARENA_PTRS_REPEATED_PTR_FIELD
-        robot_commands_ {}
-        #endif
-        ,
-        vision_raw_{nullptr},
-        vision_tracked_{nullptr},
-        gc_data_{nullptr} {}
-
-template <typename>
-constexpr CP_InterfaceWrapper::CP_InterfaceWrapper(::_pbi::ConstantInitialized)
-#if defined(PROTOBUF_CUSTOM_VTABLE)
-    : ::google::protobuf::Message(CP_InterfaceWrapper_class_data_.base()),
-#else   // PROTOBUF_CUSTOM_VTABLE
-    : ::google::protobuf::Message(),
-#endif  // PROTOBUF_CUSTOM_VTABLE
-      _impl_(internal_visibility(), ::_pbi::ConstantInitialized()) {
-}
-struct CP_InterfaceWrapperDefaultTypeInternal {
-  constexpr CP_InterfaceWrapperDefaultTypeInternal() : _instance(::_pbi::ConstantInitialized{}) {}
-  ~CP_InterfaceWrapperDefaultTypeInternal() {}
-  union {
-    CP_InterfaceWrapper _instance;
-  };
-};
-
-PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT
-    PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 CP_InterfaceWrapperDefaultTypeInternal _CP_InterfaceWrapper_default_instance_;
+    PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 CP_InterfaceDefaultTypeInternal _CP_Interface_default_instance_;
 static constexpr const ::_pb::EnumDescriptor* PROTOBUF_NONNULL* PROTOBUF_NULLABLE
     file_level_enum_descriptors_crashpilot_2finterface_2fcp_5finterface_2eproto = nullptr;
 static constexpr const ::_pb::ServiceDescriptor* PROTOBUF_NONNULL* PROTOBUF_NULLABLE
@@ -160,97 +60,44 @@ const ::uint32_t
     TableStruct_crashpilot_2finterface_2fcp_5finterface_2eproto::offsets[] ABSL_ATTRIBUTE_SECTION_VARIABLE(
         protodesc_cold) = {
         0x081, // bitmap
-        PROTOBUF_FIELD_OFFSET(::CP_InterfaceWrapper, _impl_._has_bits_),
-        7, // hasbit index offset
-        PROTOBUF_FIELD_OFFSET(::CP_InterfaceWrapper, _impl_.vision_raw_),
-        PROTOBUF_FIELD_OFFSET(::CP_InterfaceWrapper, _impl_.vision_tracked_),
-        PROTOBUF_FIELD_OFFSET(::CP_InterfaceWrapper, _impl_.gc_data_),
-        PROTOBUF_FIELD_OFFSET(::CP_InterfaceWrapper, _impl_.robot_commands_),
-        1,
-        2,
-        3,
-        0,
-        0x081, // bitmap
-        PROTOBUF_FIELD_OFFSET(::InterfaceWrapper_CP, _impl_._has_bits_),
+        PROTOBUF_FIELD_OFFSET(::CP_Interface, _impl_._has_bits_),
         5, // hasbit index offset
-        PROTOBUF_FIELD_OFFSET(::InterfaceWrapper_CP, _impl_.robot_commands_),
-        PROTOBUF_FIELD_OFFSET(::InterfaceWrapper_CP, _impl_.interface_command_),
-        0,
-        1,
-        0x081, // bitmap
-        PROTOBUF_FIELD_OFFSET(::InterfaceRobotCommands_CP, _impl_._has_bits_),
-        5, // hasbit index offset
-        PROTOBUF_FIELD_OFFSET(::InterfaceRobotCommands_CP, _impl_.robot_id_),
-        PROTOBUF_FIELD_OFFSET(::InterfaceRobotCommands_CP, _impl_.command_),
+        PROTOBUF_FIELD_OFFSET(::CP_Interface, _impl_.robot_id_),
+        PROTOBUF_FIELD_OFFSET(::CP_Interface, _impl_.command_),
         1,
         0,
-        0x081, // bitmap
-        PROTOBUF_FIELD_OFFSET(::InterfaceCommand_CP, _impl_._has_bits_),
-        6, // hasbit index offset
-        PROTOBUF_FIELD_OFFSET(::InterfaceCommand_CP, _impl_.enable_testfield_),
-        PROTOBUF_FIELD_OFFSET(::InterfaceCommand_CP, _impl_.testfield_),
-        PROTOBUF_FIELD_OFFSET(::InterfaceCommand_CP, _impl_.ball_tracked_),
-        1,
-        0,
-        2,
 };
 
 static const ::_pbi::MigrationSchema
     schemas[] ABSL_ATTRIBUTE_SECTION_VARIABLE(protodesc_cold) = {
-        {0, sizeof(::CP_InterfaceWrapper)},
-        {11, sizeof(::InterfaceWrapper_CP)},
-        {18, sizeof(::InterfaceRobotCommands_CP)},
-        {25, sizeof(::InterfaceCommand_CP)},
+        {0, sizeof(::CP_Interface)},
 };
 static const ::_pb::Message* PROTOBUF_NONNULL const file_default_instances[] = {
-    &::_CP_InterfaceWrapper_default_instance_._instance,
-    &::_InterfaceWrapper_CP_default_instance_._instance,
-    &::_InterfaceRobotCommands_CP_default_instance_._instance,
-    &::_InterfaceCommand_CP_default_instance_._instance,
+    &::_CP_Interface_default_instance_._instance,
 };
 const char descriptor_table_protodef_crashpilot_2finterface_2fcp_5finterface_2eproto[] ABSL_ATTRIBUTE_SECTION_VARIABLE(
     protodesc_cold) = {
     "\n\'crashpilot/interface/cp_interface.prot"
     "o\032%crashpilot/cp_robot/cp_cp_robot.proto"
-    "\032\"state/ssl_gc_referee_message.proto\0329vi"
-    "sion_tracked/messages_robocup_ssl_wrappe"
-    "r_tracked.proto\0321vision_tracked/messages"
-    "_robocup_ssl_wrapper.proto\"\333\001\n\023CP_Interf"
-    "aceWrapper\0221\n\nvision_raw\030\001 \001(\0132\022.SSL_Wra"
-    "pperPacketR\tvisionRaw\022<\n\016vision_tracked\030"
-    "\002 \001(\0132\025.TrackerWrapperPacketR\rvisionTrac"
-    "ked\022!\n\007gc_data\030\003 \001(\0132\010.RefereeR\006gcData\0220"
-    "\n\016robot_commands\030\004 \003(\0132\t.CP_RobotR\rrobot"
-    "Commands\"\233\001\n\023InterfaceWrapper_CP\022A\n\016robo"
-    "t_commands\030\001 \003(\0132\032.InterfaceRobotCommand"
-    "s_CPR\rrobotCommands\022A\n\021interface_command"
-    "\030\002 \002(\0132\024.InterfaceCommand_CPR\020interfaceC"
-    "ommand\"]\n\031InterfaceRobotCommands_CP\022\031\n\010r"
-    "obot_id\030\001 \001(\rR\007robotId\022%\n\007command\030\002 \001(\0132"
-    "\013.CP_CommandR\007command\"\201\001\n\023InterfaceComma"
-    "nd_CP\022)\n\020enable_testfield\030\001 \002(\010R\017enableT"
-    "estfield\022\034\n\ttestfield\030\002 \002(\rR\ttestfield\022!"
-    "\n\014ball_tracked\030\003 \002(\010R\013ballTrackedB\024B\020CpI"
-    "nterfaceProtoP\001"
+    "\"P\n\014CP_Interface\022\031\n\010robot_id\030\001 \002(\rR\007robo"
+    "tId\022%\n\007command\030\002 \002(\0132\013.CP_CommandR\007comma"
+    "ndB\024B\020CpInterfaceProtoP\001"
 };
 static const ::_pbi::DescriptorTable* PROTOBUF_NONNULL const
-    descriptor_table_crashpilot_2finterface_2fcp_5finterface_2eproto_deps[4] = {
+    descriptor_table_crashpilot_2finterface_2fcp_5finterface_2eproto_deps[1] = {
         &::descriptor_table_crashpilot_2fcp_5frobot_2fcp_5fcp_5frobot_2eproto,
-        &::descriptor_table_state_2fssl_5fgc_5freferee_5fmessage_2eproto,
-        &::descriptor_table_vision_5ftracked_2fmessages_5frobocup_5fssl_5fwrapper_2eproto,
-        &::descriptor_table_vision_5ftracked_2fmessages_5frobocup_5fssl_5fwrapper_5ftracked_2eproto,
 };
 static ::absl::once_flag descriptor_table_crashpilot_2finterface_2fcp_5finterface_2eproto_once;
 PROTOBUF_CONSTINIT const ::_pbi::DescriptorTable descriptor_table_crashpilot_2finterface_2fcp_5finterface_2eproto = {
     false,
     false,
-    855,
+    184,
     descriptor_table_protodef_crashpilot_2finterface_2fcp_5finterface_2eproto,
     "crashpilot/interface/cp_interface.proto",
     &descriptor_table_crashpilot_2finterface_2fcp_5finterface_2eproto_once,
     descriptor_table_crashpilot_2finterface_2fcp_5finterface_2eproto_deps,
-    4,
-    4,
+    1,
+    1,
     schemas,
     file_default_instances,
     TableStruct_crashpilot_2finterface_2fcp_5finterface_2eproto::offsets,
@@ -259,879 +106,48 @@ PROTOBUF_CONSTINIT const ::_pbi::DescriptorTable descriptor_table_crashpilot_2fi
 };
 // ===================================================================
 
-class CP_InterfaceWrapper::_Internal {
+class CP_Interface::_Internal {
  public:
   using HasBits =
-      decltype(::std::declval<CP_InterfaceWrapper>()._impl_._has_bits_);
+      decltype(::std::declval<CP_Interface>()._impl_._has_bits_);
   static constexpr ::int32_t kHasBitsOffset =
-      8 * PROTOBUF_FIELD_OFFSET(CP_InterfaceWrapper, _impl_._has_bits_);
-};
-
-void CP_InterfaceWrapper::clear_vision_raw() {
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-  if (_impl_.vision_raw_ != nullptr) _impl_.vision_raw_->Clear();
-  ClearHasBit(_impl_._has_bits_[0],
-                  0x00000002U);
-}
-void CP_InterfaceWrapper::clear_vision_tracked() {
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-  if (_impl_.vision_tracked_ != nullptr) _impl_.vision_tracked_->Clear();
-  ClearHasBit(_impl_._has_bits_[0],
-                  0x00000004U);
-}
-void CP_InterfaceWrapper::clear_gc_data() {
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-  if (_impl_.gc_data_ != nullptr) _impl_.gc_data_->Clear();
-  ClearHasBit(_impl_._has_bits_[0],
-                  0x00000008U);
-}
-void CP_InterfaceWrapper::clear_robot_commands() {
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-  _impl_.robot_commands_.Clear();
-  ClearHasBitForRepeated(_impl_._has_bits_[0],
-                  0x00000001U);
-}
-CP_InterfaceWrapper::CP_InterfaceWrapper(::google::protobuf::Arena* PROTOBUF_NULLABLE arena)
-#if defined(PROTOBUF_CUSTOM_VTABLE)
-    : ::google::protobuf::Message(arena, CP_InterfaceWrapper_class_data_.base()) {
-#else   // PROTOBUF_CUSTOM_VTABLE
-    : ::google::protobuf::Message(arena) {
-#endif  // PROTOBUF_CUSTOM_VTABLE
-  SharedCtor(arena);
-  // @@protoc_insertion_point(arena_constructor:CP_InterfaceWrapper)
-}
-PROTOBUF_NDEBUG_INLINE CP_InterfaceWrapper::Impl_::Impl_(
-    [[maybe_unused]] ::google::protobuf::internal::InternalVisibility visibility,
-    [[maybe_unused]] ::google::protobuf::Arena* PROTOBUF_NULLABLE arena, const Impl_& from,
-    [[maybe_unused]] const ::CP_InterfaceWrapper& from_msg)
-      : _has_bits_{from._has_bits_},
-        _cached_size_{0},
-        #ifdef PROTOBUF_INTERNAL_REMOVE_ARENA_PTRS_REPEATED_PTR_FIELD
-        robot_commands_{visibility, ::_pbi::InternalMetadataOffset::Build<
-            ::CP_InterfaceWrapper,
-            PROTOBUF_FIELD_OFFSET(::CP_InterfaceWrapper, _impl_.robot_commands_)>()
-        , from.robot_commands_}
-        #else
-        robot_commands_ { visibility, arena, from.robot_commands_ }
-        #endif
-     {}
-
-CP_InterfaceWrapper::CP_InterfaceWrapper(
-    ::google::protobuf::Arena* PROTOBUF_NULLABLE arena,
-    const CP_InterfaceWrapper& from)
-#if defined(PROTOBUF_CUSTOM_VTABLE)
-    : ::google::protobuf::Message(arena, CP_InterfaceWrapper_class_data_.base()) {
-#else   // PROTOBUF_CUSTOM_VTABLE
-    : ::google::protobuf::Message(arena) {
-#endif  // PROTOBUF_CUSTOM_VTABLE
-  CP_InterfaceWrapper* const _this = this;
-  (void)_this;
-  _internal_metadata_.MergeFrom<::google::protobuf::UnknownFieldSet>(
-      from._internal_metadata_);
-  new (&_impl_) Impl_(internal_visibility(), arena, from._impl_, from);
-  ::uint32_t cached_has_bits = _impl_._has_bits_[0];
-  _impl_.vision_raw_ = (CheckHasBit(cached_has_bits, 0x00000002U))
-                ? ::google::protobuf::Message::CopyConstruct(arena, *from._impl_.vision_raw_)
-                : nullptr;
-  _impl_.vision_tracked_ = (CheckHasBit(cached_has_bits, 0x00000004U))
-                ? ::google::protobuf::Message::CopyConstruct(arena, *from._impl_.vision_tracked_)
-                : nullptr;
-  _impl_.gc_data_ = (CheckHasBit(cached_has_bits, 0x00000008U))
-                ? ::google::protobuf::Message::CopyConstruct(arena, *from._impl_.gc_data_)
-                : nullptr;
-
-  // @@protoc_insertion_point(copy_constructor:CP_InterfaceWrapper)
-}
-PROTOBUF_NDEBUG_INLINE CP_InterfaceWrapper::Impl_::Impl_(
-    [[maybe_unused]] ::google::protobuf::internal::InternalVisibility visibility,
-    [[maybe_unused]] ::google::protobuf::Arena* PROTOBUF_NULLABLE arena)
-      : _cached_size_{0},
-        #ifdef PROTOBUF_INTERNAL_REMOVE_ARENA_PTRS_REPEATED_PTR_FIELD
-        robot_commands_{visibility, ::_pbi::InternalMetadataOffset::Build<
-            ::CP_InterfaceWrapper,
-            PROTOBUF_FIELD_OFFSET(::CP_InterfaceWrapper, _impl_.robot_commands_)>()
-        }
-        #else
-        robot_commands_ { visibility, arena }
-        #endif
-     {}
-
-inline void CP_InterfaceWrapper::SharedCtor(::_pb::Arena* PROTOBUF_NULLABLE arena) {
-  new (&_impl_) Impl_(internal_visibility(), arena);
-  ::memset(reinterpret_cast<char*>(&_impl_) +
-               offsetof(Impl_, vision_raw_),
-           0,
-           offsetof(Impl_, gc_data_) -
-               offsetof(Impl_, vision_raw_) +
-               sizeof(Impl_::gc_data_));
-}
-CP_InterfaceWrapper::~CP_InterfaceWrapper() {
-  // @@protoc_insertion_point(destructor:CP_InterfaceWrapper)
-  SharedDtor(*this);
-}
-inline void CP_InterfaceWrapper::SharedDtor(MessageLite& self) {
-  CP_InterfaceWrapper& this_ = static_cast<CP_InterfaceWrapper&>(self);
-  if constexpr (::_pbi::DebugHardenCheckHasBitConsistency()) {
-    this_.CheckHasBitConsistency();
-  }
-  this_._internal_metadata_.Delete<::google::protobuf::UnknownFieldSet>();
-  ABSL_DCHECK(this_.GetArena() == nullptr);
-  delete this_._impl_.vision_raw_;
-  delete this_._impl_.vision_tracked_;
-  delete this_._impl_.gc_data_;
-  this_._impl_.~Impl_();
-}
-
-inline void* PROTOBUF_NONNULL CP_InterfaceWrapper::PlacementNew_(
-    const void* PROTOBUF_NONNULL, void* PROTOBUF_NONNULL mem,
-    ::google::protobuf::Arena* PROTOBUF_NULLABLE arena) {
-  return ::new (mem) CP_InterfaceWrapper(arena);
-}
-#ifdef PROTOBUF_INTERNAL_REMOVE_ARENA_PTRS_REPEATED_PTR_FIELD
-constexpr auto CP_InterfaceWrapper::InternalNewImpl_() {
-  return ::google::protobuf::internal::MessageCreator::CopyInit(sizeof(CP_InterfaceWrapper),
-                                            alignof(CP_InterfaceWrapper));
-}
-#else  // !PROTOBUF_INTERNAL_REMOVE_ARENA_PTRS_REPEATED_PTR_FIELD
-constexpr auto CP_InterfaceWrapper::InternalNewImpl_() {
-  constexpr auto arena_bits = ::google::protobuf::internal::EncodePlacementArenaOffsets({
-      PROTOBUF_FIELD_OFFSET(CP_InterfaceWrapper, _impl_.robot_commands_) +
-          decltype(CP_InterfaceWrapper::_impl_.robot_commands_)::
-              InternalGetArenaOffset(
-                  ::google::protobuf::Message::internal_visibility()),
-  });
-  if (arena_bits.has_value()) {
-    return ::google::protobuf::internal::MessageCreator::ZeroInit(
-        sizeof(CP_InterfaceWrapper), alignof(CP_InterfaceWrapper), *arena_bits);
-  } else {
-    return ::google::protobuf::internal::MessageCreator(&CP_InterfaceWrapper::PlacementNew_,
-                                 sizeof(CP_InterfaceWrapper),
-                                 alignof(CP_InterfaceWrapper));
-  }
-}
-#endif
-constexpr auto CP_InterfaceWrapper::InternalGenerateClassData_() {
-  return ::google::protobuf::internal::ClassDataFull{
-      ::google::protobuf::internal::ClassData{
-          &_CP_InterfaceWrapper_default_instance_._instance,
-          &_table_.header,
-          CP_InterfaceWrapper::IsInitializedImpl,
-          &CP_InterfaceWrapper::MergeImpl,
-          ::google::protobuf::Message::GetNewImpl<CP_InterfaceWrapper>(),
-#if defined(PROTOBUF_CUSTOM_VTABLE)
-          &CP_InterfaceWrapper::SharedDtor,
-          ::google::protobuf::Message::GetClearImpl<CP_InterfaceWrapper>(), &CP_InterfaceWrapper::ByteSizeLong,
-              &CP_InterfaceWrapper::_InternalSerialize,
-#endif  // PROTOBUF_CUSTOM_VTABLE
-          PROTOBUF_FIELD_OFFSET(CP_InterfaceWrapper, _impl_._cached_size_),
-          false,
-      },
-      &CP_InterfaceWrapper::kDescriptorMethods,
-      &descriptor_table_crashpilot_2finterface_2fcp_5finterface_2eproto,
-      nullptr,  // tracker
-  };
-}
-
-PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 const
-    ::google::protobuf::internal::ClassDataFull CP_InterfaceWrapper_class_data_ =
-        CP_InterfaceWrapper::InternalGenerateClassData_();
-
-PROTOBUF_ATTRIBUTE_WEAK const ::google::protobuf::internal::ClassData* PROTOBUF_NONNULL
-CP_InterfaceWrapper::GetClassData() const {
-  ::google::protobuf::internal::PrefetchToLocalCache(&CP_InterfaceWrapper_class_data_);
-  ::google::protobuf::internal::PrefetchToLocalCache(CP_InterfaceWrapper_class_data_.tc_table);
-  return CP_InterfaceWrapper_class_data_.base();
-}
-PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1
-const ::_pbi::TcParseTable<2, 4, 4, 0, 2>
-CP_InterfaceWrapper::_table_ = {
-  {
-    PROTOBUF_FIELD_OFFSET(CP_InterfaceWrapper, _impl_._has_bits_),
-    0, // no _extensions_
-    4, 24,  // max_field_number, fast_idx_mask
-    offsetof(decltype(_table_), field_lookup_table),
-    4294967280,  // skipmap
-    offsetof(decltype(_table_), field_entries),
-    4,  // num_field_entries
-    4,  // num_aux_entries
-    offsetof(decltype(_table_), aux_entries),
-    CP_InterfaceWrapper_class_data_.base(),
-    nullptr,  // post_loop_handler
-    ::_pbi::TcParser::GenericFallback,  // fallback
-    #ifdef PROTOBUF_PREFETCH_PARSE_TABLE
-    ::_pbi::TcParser::GetTable<::CP_InterfaceWrapper>(),  // to_prefetch
-    #endif  // PROTOBUF_PREFETCH_PARSE_TABLE
-  }, {{
-    // repeated .CP_Robot robot_commands = 4 [json_name = "robotCommands"];
-    {::_pbi::TcParser::FastMtR1,
-     {34, 0, 3,
-      PROTOBUF_FIELD_OFFSET(CP_InterfaceWrapper, _impl_.robot_commands_)}},
-    // optional .SSL_WrapperPacket vision_raw = 1 [json_name = "visionRaw"];
-    {::_pbi::TcParser::FastMtS1,
-     {10, 1, 0,
-      PROTOBUF_FIELD_OFFSET(CP_InterfaceWrapper, _impl_.vision_raw_)}},
-    // optional .TrackerWrapperPacket vision_tracked = 2 [json_name = "visionTracked"];
-    {::_pbi::TcParser::FastMtS1,
-     {18, 2, 1,
-      PROTOBUF_FIELD_OFFSET(CP_InterfaceWrapper, _impl_.vision_tracked_)}},
-    // optional .Referee gc_data = 3 [json_name = "gcData"];
-    {::_pbi::TcParser::FastMtS1,
-     {26, 3, 2,
-      PROTOBUF_FIELD_OFFSET(CP_InterfaceWrapper, _impl_.gc_data_)}},
-  }}, {{
-    65535, 65535
-  }}, {{
-    // optional .SSL_WrapperPacket vision_raw = 1 [json_name = "visionRaw"];
-    {PROTOBUF_FIELD_OFFSET(CP_InterfaceWrapper, _impl_.vision_raw_), _Internal::kHasBitsOffset + 1, 0, (0 | ::_fl::kFcOptional | ::_fl::kMessage | ::_fl::kTvTable)},
-    // optional .TrackerWrapperPacket vision_tracked = 2 [json_name = "visionTracked"];
-    {PROTOBUF_FIELD_OFFSET(CP_InterfaceWrapper, _impl_.vision_tracked_), _Internal::kHasBitsOffset + 2, 1, (0 | ::_fl::kFcOptional | ::_fl::kMessage | ::_fl::kTvTable)},
-    // optional .Referee gc_data = 3 [json_name = "gcData"];
-    {PROTOBUF_FIELD_OFFSET(CP_InterfaceWrapper, _impl_.gc_data_), _Internal::kHasBitsOffset + 3, 2, (0 | ::_fl::kFcOptional | ::_fl::kMessage | ::_fl::kTvTable)},
-    // repeated .CP_Robot robot_commands = 4 [json_name = "robotCommands"];
-    {PROTOBUF_FIELD_OFFSET(CP_InterfaceWrapper, _impl_.robot_commands_), _Internal::kHasBitsOffset + 0, 3, (0 | ::_fl::kFcRepeated | ::_fl::kMessage | ::_fl::kTvTable)},
-  }},
-  {{
-      {::_pbi::TcParser::GetTable<::SSL_WrapperPacket>()},
-      {::_pbi::TcParser::GetTable<::TrackerWrapperPacket>()},
-      {::_pbi::TcParser::GetTable<::Referee>()},
-      {::_pbi::TcParser::GetTable<::CP_Robot>()},
-  }},
-  {{
-  }},
-};
-PROTOBUF_NOINLINE void CP_InterfaceWrapper::Clear() {
-// @@protoc_insertion_point(message_clear_start:CP_InterfaceWrapper)
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-  ::uint32_t cached_has_bits = 0;
-  // Prevent compiler warnings about cached_has_bits being unused
-  (void) cached_has_bits;
-
-  cached_has_bits = _impl_._has_bits_[0];
-  if (BatchCheckHasBit(cached_has_bits, 0x0000000fU)) {
-    if (CheckHasBitForRepeated(cached_has_bits, 0x00000001U)) {
-      _impl_.robot_commands_.Clear();
-    }
-    if (CheckHasBit(cached_has_bits, 0x00000002U)) {
-      ABSL_DCHECK(_impl_.vision_raw_ != nullptr);
-      _impl_.vision_raw_->Clear();
-    }
-    if (CheckHasBit(cached_has_bits, 0x00000004U)) {
-      ABSL_DCHECK(_impl_.vision_tracked_ != nullptr);
-      _impl_.vision_tracked_->Clear();
-    }
-    if (CheckHasBit(cached_has_bits, 0x00000008U)) {
-      ABSL_DCHECK(_impl_.gc_data_ != nullptr);
-      _impl_.gc_data_->Clear();
-    }
-  }
-  _impl_._has_bits_.Clear();
-  _internal_metadata_.Clear<::google::protobuf::UnknownFieldSet>();
-}
-
-#if defined(PROTOBUF_CUSTOM_VTABLE)
-::uint8_t* PROTOBUF_NONNULL CP_InterfaceWrapper::_InternalSerialize(
-    const ::google::protobuf::MessageLite& base, ::uint8_t* PROTOBUF_NONNULL target,
-    ::google::protobuf::io::EpsCopyOutputStream* PROTOBUF_NONNULL stream) {
-  const CP_InterfaceWrapper& this_ = static_cast<const CP_InterfaceWrapper&>(base);
-#else   // PROTOBUF_CUSTOM_VTABLE
-::uint8_t* PROTOBUF_NONNULL CP_InterfaceWrapper::_InternalSerialize(
-    ::uint8_t* PROTOBUF_NONNULL target,
-    ::google::protobuf::io::EpsCopyOutputStream* PROTOBUF_NONNULL stream) const {
-  const CP_InterfaceWrapper& this_ = *this;
-#endif  // PROTOBUF_CUSTOM_VTABLE
-  if constexpr (::_pbi::DebugHardenCheckHasBitConsistency()) {
-    this_.CheckHasBitConsistency();
-  }
-  // @@protoc_insertion_point(serialize_to_array_start:CP_InterfaceWrapper)
-  ::uint32_t cached_has_bits = 0;
-  (void)cached_has_bits;
-
-  cached_has_bits = this_._impl_._has_bits_[0];
-  // optional .SSL_WrapperPacket vision_raw = 1 [json_name = "visionRaw"];
-  if (CheckHasBit(cached_has_bits, 0x00000002U)) {
-    target = ::google::protobuf::internal::WireFormatLite::InternalWriteMessage(
-        1, *this_._impl_.vision_raw_, this_._impl_.vision_raw_->GetCachedSize(), target,
-        stream);
-  }
-
-  // optional .TrackerWrapperPacket vision_tracked = 2 [json_name = "visionTracked"];
-  if (CheckHasBit(cached_has_bits, 0x00000004U)) {
-    target = ::google::protobuf::internal::WireFormatLite::InternalWriteMessage(
-        2, *this_._impl_.vision_tracked_, this_._impl_.vision_tracked_->GetCachedSize(), target,
-        stream);
-  }
-
-  // optional .Referee gc_data = 3 [json_name = "gcData"];
-  if (CheckHasBit(cached_has_bits, 0x00000008U)) {
-    target = ::google::protobuf::internal::WireFormatLite::InternalWriteMessage(
-        3, *this_._impl_.gc_data_, this_._impl_.gc_data_->GetCachedSize(), target,
-        stream);
-  }
-
-  // repeated .CP_Robot robot_commands = 4 [json_name = "robotCommands"];
-  if (CheckHasBitForRepeated(cached_has_bits, 0x00000001U)) {
-    for (unsigned i = 0, n = static_cast<unsigned>(
-                             this_._internal_robot_commands_size());
-         i < n; i++) {
-      const auto& repfield = this_._internal_robot_commands().Get(i);
-      target =
-          ::google::protobuf::internal::WireFormatLite::InternalWriteMessage(
-              4, repfield, repfield.GetCachedSize(),
-              target, stream);
-    }
-  }
-
-  if (ABSL_PREDICT_FALSE(this_._internal_metadata_.have_unknown_fields())) {
-    target =
-        ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
-            this_._internal_metadata_.unknown_fields<::google::protobuf::UnknownFieldSet>(::google::protobuf::UnknownFieldSet::default_instance), target, stream);
-  }
-  // @@protoc_insertion_point(serialize_to_array_end:CP_InterfaceWrapper)
-  return target;
-}
-
-#if defined(PROTOBUF_CUSTOM_VTABLE)
-::size_t CP_InterfaceWrapper::ByteSizeLong(const MessageLite& base) {
-  const CP_InterfaceWrapper& this_ = static_cast<const CP_InterfaceWrapper&>(base);
-#else   // PROTOBUF_CUSTOM_VTABLE
-::size_t CP_InterfaceWrapper::ByteSizeLong() const {
-  const CP_InterfaceWrapper& this_ = *this;
-#endif  // PROTOBUF_CUSTOM_VTABLE
-  // @@protoc_insertion_point(message_byte_size_start:CP_InterfaceWrapper)
-  ::size_t total_size = 0;
-
-  ::uint32_t cached_has_bits = 0;
-  // Prevent compiler warnings about cached_has_bits being unused
-  (void)cached_has_bits;
-
-  ::_pbi::Prefetch5LinesFrom7Lines(&this_);
-  cached_has_bits = this_._impl_._has_bits_[0];
-  if (BatchCheckHasBit(cached_has_bits, 0x0000000fU)) {
-    // repeated .CP_Robot robot_commands = 4 [json_name = "robotCommands"];
-    if (CheckHasBitForRepeated(cached_has_bits, 0x00000001U)) {
-      total_size += 1UL * this_._internal_robot_commands_size();
-      for (const auto& msg : this_._internal_robot_commands()) {
-        total_size += ::google::protobuf::internal::WireFormatLite::MessageSize(msg);
-      }
-    }
-    // optional .SSL_WrapperPacket vision_raw = 1 [json_name = "visionRaw"];
-    if (CheckHasBit(cached_has_bits, 0x00000002U)) {
-      total_size += 1 +
-                    ::google::protobuf::internal::WireFormatLite::MessageSize(*this_._impl_.vision_raw_);
-    }
-    // optional .TrackerWrapperPacket vision_tracked = 2 [json_name = "visionTracked"];
-    if (CheckHasBit(cached_has_bits, 0x00000004U)) {
-      total_size += 1 +
-                    ::google::protobuf::internal::WireFormatLite::MessageSize(*this_._impl_.vision_tracked_);
-    }
-    // optional .Referee gc_data = 3 [json_name = "gcData"];
-    if (CheckHasBit(cached_has_bits, 0x00000008U)) {
-      total_size += 1 +
-                    ::google::protobuf::internal::WireFormatLite::MessageSize(*this_._impl_.gc_data_);
-    }
-  }
-  return this_.MaybeComputeUnknownFieldsSize(total_size,
-                                             &this_._impl_._cached_size_);
-}
-
-void CP_InterfaceWrapper::MergeImpl(::google::protobuf::MessageLite& to_msg,
-                            const ::google::protobuf::MessageLite& from_msg) {
-   auto* const _this =
-      static_cast<CP_InterfaceWrapper*>(&to_msg);
-  auto& from = static_cast<const CP_InterfaceWrapper&>(from_msg);
-  if constexpr (::_pbi::DebugHardenCheckHasBitConsistency()) {
-    from.CheckHasBitConsistency();
-  }
-  ::google::protobuf::Arena* arena = _this->GetArena();
-  // @@protoc_insertion_point(class_specific_merge_from_start:CP_InterfaceWrapper)
-  ABSL_DCHECK_NE(&from, _this);
-  ::uint32_t cached_has_bits = 0;
-  (void)cached_has_bits;
-
-  cached_has_bits = from._impl_._has_bits_[0];
-  if (BatchCheckHasBit(cached_has_bits, 0x0000000fU)) {
-    if (CheckHasBitForRepeated(cached_has_bits, 0x00000001U)) {
-      _this->_internal_mutable_robot_commands()->InternalMergeFromWithArena(
-          ::google::protobuf::MessageLite::internal_visibility(), arena,
-          from._internal_robot_commands());
-    }
-    if (CheckHasBit(cached_has_bits, 0x00000002U)) {
-      ABSL_DCHECK(from._impl_.vision_raw_ != nullptr);
-      if (_this->_impl_.vision_raw_ == nullptr) {
-        _this->_impl_.vision_raw_ = ::google::protobuf::Message::CopyConstruct(arena, *from._impl_.vision_raw_);
-      } else {
-        _this->_impl_.vision_raw_->MergeFrom(*from._impl_.vision_raw_);
-      }
-    }
-    if (CheckHasBit(cached_has_bits, 0x00000004U)) {
-      ABSL_DCHECK(from._impl_.vision_tracked_ != nullptr);
-      if (_this->_impl_.vision_tracked_ == nullptr) {
-        _this->_impl_.vision_tracked_ = ::google::protobuf::Message::CopyConstruct(arena, *from._impl_.vision_tracked_);
-      } else {
-        _this->_impl_.vision_tracked_->MergeFrom(*from._impl_.vision_tracked_);
-      }
-    }
-    if (CheckHasBit(cached_has_bits, 0x00000008U)) {
-      ABSL_DCHECK(from._impl_.gc_data_ != nullptr);
-      if (_this->_impl_.gc_data_ == nullptr) {
-        _this->_impl_.gc_data_ = ::google::protobuf::Message::CopyConstruct(arena, *from._impl_.gc_data_);
-      } else {
-        _this->_impl_.gc_data_->MergeFrom(*from._impl_.gc_data_);
-      }
-    }
-  }
-  _this->_impl_._has_bits_[0] |= cached_has_bits;
-  _this->_internal_metadata_.MergeFrom<::google::protobuf::UnknownFieldSet>(
-      from._internal_metadata_);
-}
-
-void CP_InterfaceWrapper::CopyFrom(const CP_InterfaceWrapper& from) {
-  // @@protoc_insertion_point(class_specific_copy_from_start:CP_InterfaceWrapper)
-  if (&from == this) return;
-  Clear();
-  MergeFrom(from);
-}
-
-PROTOBUF_NOINLINE bool CP_InterfaceWrapper::IsInitializedImpl(
-    const MessageLite& msg) {
-  auto& this_ = static_cast<const CP_InterfaceWrapper&>(msg);
-  if (!::google::protobuf::internal::AllAreInitialized(this_._internal_robot_commands()))
-    return false;
-  if (CheckHasBit(this_._impl_._has_bits_[0], 0x00000002U)) {
-    if (!this_._impl_.vision_raw_->IsInitialized()) return false;
-  }
-  if (CheckHasBit(this_._impl_._has_bits_[0], 0x00000004U)) {
-    if (!this_._impl_.vision_tracked_->IsInitialized()) return false;
-  }
-  if (CheckHasBit(this_._impl_._has_bits_[0], 0x00000008U)) {
-    if (!this_._impl_.gc_data_->IsInitialized()) return false;
-  }
-  return true;
-}
-
-void CP_InterfaceWrapper::InternalSwap(CP_InterfaceWrapper* PROTOBUF_RESTRICT PROTOBUF_NONNULL other) {
-  using ::std::swap;
-  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
-  swap(_impl_._has_bits_[0], other->_impl_._has_bits_[0]);
-  _impl_.robot_commands_.InternalSwap(&other->_impl_.robot_commands_);
-  ::google::protobuf::internal::memswap<
-      PROTOBUF_FIELD_OFFSET(CP_InterfaceWrapper, _impl_.gc_data_)
-      + sizeof(CP_InterfaceWrapper::_impl_.gc_data_)
-      - PROTOBUF_FIELD_OFFSET(CP_InterfaceWrapper, _impl_.vision_raw_)>(
-          reinterpret_cast<char*>(&_impl_.vision_raw_),
-          reinterpret_cast<char*>(&other->_impl_.vision_raw_));
-}
-
-::google::protobuf::Metadata CP_InterfaceWrapper::GetMetadata() const {
-  return ::google::protobuf::Message::GetMetadataImpl(GetClassData()->full());
-}
-// ===================================================================
-
-class InterfaceWrapper_CP::_Internal {
- public:
-  using HasBits =
-      decltype(::std::declval<InterfaceWrapper_CP>()._impl_._has_bits_);
-  static constexpr ::int32_t kHasBitsOffset =
-      8 * PROTOBUF_FIELD_OFFSET(InterfaceWrapper_CP, _impl_._has_bits_);
+      8 * PROTOBUF_FIELD_OFFSET(CP_Interface, _impl_._has_bits_);
   static bool MissingRequiredFields(const HasBits& has_bits) {
-    return ((has_bits[0] & 0x00000002) ^ 0x00000002) != 0;
+    return ((has_bits[0] & 0x00000003) ^ 0x00000003) != 0;
   }
 };
 
-InterfaceWrapper_CP::InterfaceWrapper_CP(::google::protobuf::Arena* PROTOBUF_NULLABLE arena)
-#if defined(PROTOBUF_CUSTOM_VTABLE)
-    : ::google::protobuf::Message(arena, InterfaceWrapper_CP_class_data_.base()) {
-#else   // PROTOBUF_CUSTOM_VTABLE
-    : ::google::protobuf::Message(arena) {
-#endif  // PROTOBUF_CUSTOM_VTABLE
-  SharedCtor(arena);
-  // @@protoc_insertion_point(arena_constructor:InterfaceWrapper_CP)
-}
-PROTOBUF_NDEBUG_INLINE InterfaceWrapper_CP::Impl_::Impl_(
-    [[maybe_unused]] ::google::protobuf::internal::InternalVisibility visibility,
-    [[maybe_unused]] ::google::protobuf::Arena* PROTOBUF_NULLABLE arena, const Impl_& from,
-    [[maybe_unused]] const ::InterfaceWrapper_CP& from_msg)
-      : _has_bits_{from._has_bits_},
-        _cached_size_{0},
-        #ifdef PROTOBUF_INTERNAL_REMOVE_ARENA_PTRS_REPEATED_PTR_FIELD
-        robot_commands_{visibility, ::_pbi::InternalMetadataOffset::Build<
-            ::InterfaceWrapper_CP,
-            PROTOBUF_FIELD_OFFSET(::InterfaceWrapper_CP, _impl_.robot_commands_)>()
-        , from.robot_commands_}
-        #else
-        robot_commands_ { visibility, arena, from.robot_commands_ }
-        #endif
-     {}
-
-InterfaceWrapper_CP::InterfaceWrapper_CP(
-    ::google::protobuf::Arena* PROTOBUF_NULLABLE arena,
-    const InterfaceWrapper_CP& from)
-#if defined(PROTOBUF_CUSTOM_VTABLE)
-    : ::google::protobuf::Message(arena, InterfaceWrapper_CP_class_data_.base()) {
-#else   // PROTOBUF_CUSTOM_VTABLE
-    : ::google::protobuf::Message(arena) {
-#endif  // PROTOBUF_CUSTOM_VTABLE
-  InterfaceWrapper_CP* const _this = this;
-  (void)_this;
-  _internal_metadata_.MergeFrom<::google::protobuf::UnknownFieldSet>(
-      from._internal_metadata_);
-  new (&_impl_) Impl_(internal_visibility(), arena, from._impl_, from);
-  ::uint32_t cached_has_bits = _impl_._has_bits_[0];
-  _impl_.interface_command_ = (CheckHasBit(cached_has_bits, 0x00000002U))
-                ? ::google::protobuf::Message::CopyConstruct(arena, *from._impl_.interface_command_)
-                : nullptr;
-
-  // @@protoc_insertion_point(copy_constructor:InterfaceWrapper_CP)
-}
-PROTOBUF_NDEBUG_INLINE InterfaceWrapper_CP::Impl_::Impl_(
-    [[maybe_unused]] ::google::protobuf::internal::InternalVisibility visibility,
-    [[maybe_unused]] ::google::protobuf::Arena* PROTOBUF_NULLABLE arena)
-      : _cached_size_{0},
-        #ifdef PROTOBUF_INTERNAL_REMOVE_ARENA_PTRS_REPEATED_PTR_FIELD
-        robot_commands_{visibility, ::_pbi::InternalMetadataOffset::Build<
-            ::InterfaceWrapper_CP,
-            PROTOBUF_FIELD_OFFSET(::InterfaceWrapper_CP, _impl_.robot_commands_)>()
-        }
-        #else
-        robot_commands_ { visibility, arena }
-        #endif
-     {}
-
-inline void InterfaceWrapper_CP::SharedCtor(::_pb::Arena* PROTOBUF_NULLABLE arena) {
-  new (&_impl_) Impl_(internal_visibility(), arena);
-  _impl_.interface_command_ = {};
-}
-InterfaceWrapper_CP::~InterfaceWrapper_CP() {
-  // @@protoc_insertion_point(destructor:InterfaceWrapper_CP)
-  SharedDtor(*this);
-}
-inline void InterfaceWrapper_CP::SharedDtor(MessageLite& self) {
-  InterfaceWrapper_CP& this_ = static_cast<InterfaceWrapper_CP&>(self);
-  if constexpr (::_pbi::DebugHardenCheckHasBitConsistency()) {
-    this_.CheckHasBitConsistency();
-  }
-  this_._internal_metadata_.Delete<::google::protobuf::UnknownFieldSet>();
-  ABSL_DCHECK(this_.GetArena() == nullptr);
-  delete this_._impl_.interface_command_;
-  this_._impl_.~Impl_();
-}
-
-inline void* PROTOBUF_NONNULL InterfaceWrapper_CP::PlacementNew_(
-    const void* PROTOBUF_NONNULL, void* PROTOBUF_NONNULL mem,
-    ::google::protobuf::Arena* PROTOBUF_NULLABLE arena) {
-  return ::new (mem) InterfaceWrapper_CP(arena);
-}
-#ifdef PROTOBUF_INTERNAL_REMOVE_ARENA_PTRS_REPEATED_PTR_FIELD
-constexpr auto InterfaceWrapper_CP::InternalNewImpl_() {
-  return ::google::protobuf::internal::MessageCreator::CopyInit(sizeof(InterfaceWrapper_CP),
-                                            alignof(InterfaceWrapper_CP));
-}
-#else  // !PROTOBUF_INTERNAL_REMOVE_ARENA_PTRS_REPEATED_PTR_FIELD
-constexpr auto InterfaceWrapper_CP::InternalNewImpl_() {
-  constexpr auto arena_bits = ::google::protobuf::internal::EncodePlacementArenaOffsets({
-      PROTOBUF_FIELD_OFFSET(InterfaceWrapper_CP, _impl_.robot_commands_) +
-          decltype(InterfaceWrapper_CP::_impl_.robot_commands_)::
-              InternalGetArenaOffset(
-                  ::google::protobuf::Message::internal_visibility()),
-  });
-  if (arena_bits.has_value()) {
-    return ::google::protobuf::internal::MessageCreator::ZeroInit(
-        sizeof(InterfaceWrapper_CP), alignof(InterfaceWrapper_CP), *arena_bits);
-  } else {
-    return ::google::protobuf::internal::MessageCreator(&InterfaceWrapper_CP::PlacementNew_,
-                                 sizeof(InterfaceWrapper_CP),
-                                 alignof(InterfaceWrapper_CP));
-  }
-}
-#endif
-constexpr auto InterfaceWrapper_CP::InternalGenerateClassData_() {
-  return ::google::protobuf::internal::ClassDataFull{
-      ::google::protobuf::internal::ClassData{
-          &_InterfaceWrapper_CP_default_instance_._instance,
-          &_table_.header,
-          InterfaceWrapper_CP::IsInitializedImpl,
-          &InterfaceWrapper_CP::MergeImpl,
-          ::google::protobuf::Message::GetNewImpl<InterfaceWrapper_CP>(),
-#if defined(PROTOBUF_CUSTOM_VTABLE)
-          &InterfaceWrapper_CP::SharedDtor,
-          ::google::protobuf::Message::GetClearImpl<InterfaceWrapper_CP>(), &InterfaceWrapper_CP::ByteSizeLong,
-              &InterfaceWrapper_CP::_InternalSerialize,
-#endif  // PROTOBUF_CUSTOM_VTABLE
-          PROTOBUF_FIELD_OFFSET(InterfaceWrapper_CP, _impl_._cached_size_),
-          false,
-      },
-      &InterfaceWrapper_CP::kDescriptorMethods,
-      &descriptor_table_crashpilot_2finterface_2fcp_5finterface_2eproto,
-      nullptr,  // tracker
-  };
-}
-
-PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 const
-    ::google::protobuf::internal::ClassDataFull InterfaceWrapper_CP_class_data_ =
-        InterfaceWrapper_CP::InternalGenerateClassData_();
-
-PROTOBUF_ATTRIBUTE_WEAK const ::google::protobuf::internal::ClassData* PROTOBUF_NONNULL
-InterfaceWrapper_CP::GetClassData() const {
-  ::google::protobuf::internal::PrefetchToLocalCache(&InterfaceWrapper_CP_class_data_);
-  ::google::protobuf::internal::PrefetchToLocalCache(InterfaceWrapper_CP_class_data_.tc_table);
-  return InterfaceWrapper_CP_class_data_.base();
-}
-PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1
-const ::_pbi::TcParseTable<1, 2, 2, 0, 2>
-InterfaceWrapper_CP::_table_ = {
-  {
-    PROTOBUF_FIELD_OFFSET(InterfaceWrapper_CP, _impl_._has_bits_),
-    0, // no _extensions_
-    2, 8,  // max_field_number, fast_idx_mask
-    offsetof(decltype(_table_), field_lookup_table),
-    4294967292,  // skipmap
-    offsetof(decltype(_table_), field_entries),
-    2,  // num_field_entries
-    2,  // num_aux_entries
-    offsetof(decltype(_table_), aux_entries),
-    InterfaceWrapper_CP_class_data_.base(),
-    nullptr,  // post_loop_handler
-    ::_pbi::TcParser::GenericFallback,  // fallback
-    #ifdef PROTOBUF_PREFETCH_PARSE_TABLE
-    ::_pbi::TcParser::GetTable<::InterfaceWrapper_CP>(),  // to_prefetch
-    #endif  // PROTOBUF_PREFETCH_PARSE_TABLE
-  }, {{
-    // required .InterfaceCommand_CP interface_command = 2 [json_name = "interfaceCommand"];
-    {::_pbi::TcParser::FastMtS1,
-     {18, 1, 1,
-      PROTOBUF_FIELD_OFFSET(InterfaceWrapper_CP, _impl_.interface_command_)}},
-    // repeated .InterfaceRobotCommands_CP robot_commands = 1 [json_name = "robotCommands"];
-    {::_pbi::TcParser::FastMtR1,
-     {10, 0, 0,
-      PROTOBUF_FIELD_OFFSET(InterfaceWrapper_CP, _impl_.robot_commands_)}},
-  }}, {{
-    65535, 65535
-  }}, {{
-    // repeated .InterfaceRobotCommands_CP robot_commands = 1 [json_name = "robotCommands"];
-    {PROTOBUF_FIELD_OFFSET(InterfaceWrapper_CP, _impl_.robot_commands_), _Internal::kHasBitsOffset + 0, 0, (0 | ::_fl::kFcRepeated | ::_fl::kMessage | ::_fl::kTvTable)},
-    // required .InterfaceCommand_CP interface_command = 2 [json_name = "interfaceCommand"];
-    {PROTOBUF_FIELD_OFFSET(InterfaceWrapper_CP, _impl_.interface_command_), _Internal::kHasBitsOffset + 1, 1, (0 | ::_fl::kFcOptional | ::_fl::kMessage | ::_fl::kTvTable)},
-  }},
-  {{
-      {::_pbi::TcParser::GetTable<::InterfaceRobotCommands_CP>()},
-      {::_pbi::TcParser::GetTable<::InterfaceCommand_CP>()},
-  }},
-  {{
-  }},
-};
-PROTOBUF_NOINLINE void InterfaceWrapper_CP::Clear() {
-// @@protoc_insertion_point(message_clear_start:InterfaceWrapper_CP)
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-  ::uint32_t cached_has_bits = 0;
-  // Prevent compiler warnings about cached_has_bits being unused
-  (void) cached_has_bits;
-
-  cached_has_bits = _impl_._has_bits_[0];
-  if (BatchCheckHasBit(cached_has_bits, 0x00000003U)) {
-    if (CheckHasBitForRepeated(cached_has_bits, 0x00000001U)) {
-      _impl_.robot_commands_.Clear();
-    }
-    if (CheckHasBit(cached_has_bits, 0x00000002U)) {
-      ABSL_DCHECK(_impl_.interface_command_ != nullptr);
-      _impl_.interface_command_->Clear();
-    }
-  }
-  _impl_._has_bits_.Clear();
-  _internal_metadata_.Clear<::google::protobuf::UnknownFieldSet>();
-}
-
-#if defined(PROTOBUF_CUSTOM_VTABLE)
-::uint8_t* PROTOBUF_NONNULL InterfaceWrapper_CP::_InternalSerialize(
-    const ::google::protobuf::MessageLite& base, ::uint8_t* PROTOBUF_NONNULL target,
-    ::google::protobuf::io::EpsCopyOutputStream* PROTOBUF_NONNULL stream) {
-  const InterfaceWrapper_CP& this_ = static_cast<const InterfaceWrapper_CP&>(base);
-#else   // PROTOBUF_CUSTOM_VTABLE
-::uint8_t* PROTOBUF_NONNULL InterfaceWrapper_CP::_InternalSerialize(
-    ::uint8_t* PROTOBUF_NONNULL target,
-    ::google::protobuf::io::EpsCopyOutputStream* PROTOBUF_NONNULL stream) const {
-  const InterfaceWrapper_CP& this_ = *this;
-#endif  // PROTOBUF_CUSTOM_VTABLE
-  if constexpr (::_pbi::DebugHardenCheckHasBitConsistency()) {
-    this_.CheckHasBitConsistency();
-  }
-  // @@protoc_insertion_point(serialize_to_array_start:InterfaceWrapper_CP)
-  ::uint32_t cached_has_bits = 0;
-  (void)cached_has_bits;
-
-  cached_has_bits = this_._impl_._has_bits_[0];
-  // repeated .InterfaceRobotCommands_CP robot_commands = 1 [json_name = "robotCommands"];
-  if (CheckHasBitForRepeated(cached_has_bits, 0x00000001U)) {
-    for (unsigned i = 0, n = static_cast<unsigned>(
-                             this_._internal_robot_commands_size());
-         i < n; i++) {
-      const auto& repfield = this_._internal_robot_commands().Get(i);
-      target =
-          ::google::protobuf::internal::WireFormatLite::InternalWriteMessage(
-              1, repfield, repfield.GetCachedSize(),
-              target, stream);
-    }
-  }
-
-  // required .InterfaceCommand_CP interface_command = 2 [json_name = "interfaceCommand"];
-  if (CheckHasBit(cached_has_bits, 0x00000002U)) {
-    target = ::google::protobuf::internal::WireFormatLite::InternalWriteMessage(
-        2, *this_._impl_.interface_command_, this_._impl_.interface_command_->GetCachedSize(), target,
-        stream);
-  }
-
-  if (ABSL_PREDICT_FALSE(this_._internal_metadata_.have_unknown_fields())) {
-    target =
-        ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
-            this_._internal_metadata_.unknown_fields<::google::protobuf::UnknownFieldSet>(::google::protobuf::UnknownFieldSet::default_instance), target, stream);
-  }
-  // @@protoc_insertion_point(serialize_to_array_end:InterfaceWrapper_CP)
-  return target;
-}
-
-#if defined(PROTOBUF_CUSTOM_VTABLE)
-::size_t InterfaceWrapper_CP::ByteSizeLong(const MessageLite& base) {
-  const InterfaceWrapper_CP& this_ = static_cast<const InterfaceWrapper_CP&>(base);
-#else   // PROTOBUF_CUSTOM_VTABLE
-::size_t InterfaceWrapper_CP::ByteSizeLong() const {
-  const InterfaceWrapper_CP& this_ = *this;
-#endif  // PROTOBUF_CUSTOM_VTABLE
-  // @@protoc_insertion_point(message_byte_size_start:InterfaceWrapper_CP)
-  ::size_t total_size = 0;
-
-  ::uint32_t cached_has_bits = 0;
-  // Prevent compiler warnings about cached_has_bits being unused
-  (void)cached_has_bits;
-
-  ::_pbi::Prefetch5LinesFrom7Lines(&this_);
-   {
-    // repeated .InterfaceRobotCommands_CP robot_commands = 1 [json_name = "robotCommands"];
-    cached_has_bits = this_._impl_._has_bits_[0];
-    if (CheckHasBitForRepeated(cached_has_bits, 0x00000001U)) {
-      total_size += 1UL * this_._internal_robot_commands_size();
-      for (const auto& msg : this_._internal_robot_commands()) {
-        total_size += ::google::protobuf::internal::WireFormatLite::MessageSize(msg);
-      }
-    }
-  }
-   {
-    // required .InterfaceCommand_CP interface_command = 2 [json_name = "interfaceCommand"];
-    if (CheckHasBit(cached_has_bits, 0x00000002U)) {
-      total_size += 1 +
-                    ::google::protobuf::internal::WireFormatLite::MessageSize(*this_._impl_.interface_command_);
-    }
-  }
-  return this_.MaybeComputeUnknownFieldsSize(total_size,
-                                             &this_._impl_._cached_size_);
-}
-
-void InterfaceWrapper_CP::MergeImpl(::google::protobuf::MessageLite& to_msg,
-                            const ::google::protobuf::MessageLite& from_msg) {
-   auto* const _this =
-      static_cast<InterfaceWrapper_CP*>(&to_msg);
-  auto& from = static_cast<const InterfaceWrapper_CP&>(from_msg);
-  if constexpr (::_pbi::DebugHardenCheckHasBitConsistency()) {
-    from.CheckHasBitConsistency();
-  }
-  ::google::protobuf::Arena* arena = _this->GetArena();
-  // @@protoc_insertion_point(class_specific_merge_from_start:InterfaceWrapper_CP)
-  ABSL_DCHECK_NE(&from, _this);
-  ::uint32_t cached_has_bits = 0;
-  (void)cached_has_bits;
-
-  cached_has_bits = from._impl_._has_bits_[0];
-  if (BatchCheckHasBit(cached_has_bits, 0x00000003U)) {
-    if (CheckHasBitForRepeated(cached_has_bits, 0x00000001U)) {
-      _this->_internal_mutable_robot_commands()->InternalMergeFromWithArena(
-          ::google::protobuf::MessageLite::internal_visibility(), arena,
-          from._internal_robot_commands());
-    }
-    if (CheckHasBit(cached_has_bits, 0x00000002U)) {
-      ABSL_DCHECK(from._impl_.interface_command_ != nullptr);
-      if (_this->_impl_.interface_command_ == nullptr) {
-        _this->_impl_.interface_command_ = ::google::protobuf::Message::CopyConstruct(arena, *from._impl_.interface_command_);
-      } else {
-        _this->_impl_.interface_command_->MergeFrom(*from._impl_.interface_command_);
-      }
-    }
-  }
-  _this->_impl_._has_bits_[0] |= cached_has_bits;
-  _this->_internal_metadata_.MergeFrom<::google::protobuf::UnknownFieldSet>(
-      from._internal_metadata_);
-}
-
-void InterfaceWrapper_CP::CopyFrom(const InterfaceWrapper_CP& from) {
-  // @@protoc_insertion_point(class_specific_copy_from_start:InterfaceWrapper_CP)
-  if (&from == this) return;
-  Clear();
-  MergeFrom(from);
-}
-
-PROTOBUF_NOINLINE bool InterfaceWrapper_CP::IsInitializedImpl(
-    const MessageLite& msg) {
-  auto& this_ = static_cast<const InterfaceWrapper_CP&>(msg);
-  if (_Internal::MissingRequiredFields(this_._impl_._has_bits_)) {
-    return false;
-  }
-  if (!::google::protobuf::internal::AllAreInitialized(this_._internal_robot_commands()))
-    return false;
-  if (CheckHasBit(this_._impl_._has_bits_[0], 0x00000002U)) {
-    if (!this_._impl_.interface_command_->IsInitialized()) return false;
-  }
-  return true;
-}
-
-void InterfaceWrapper_CP::InternalSwap(InterfaceWrapper_CP* PROTOBUF_RESTRICT PROTOBUF_NONNULL other) {
-  using ::std::swap;
-  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
-  swap(_impl_._has_bits_[0], other->_impl_._has_bits_[0]);
-  _impl_.robot_commands_.InternalSwap(&other->_impl_.robot_commands_);
-  swap(_impl_.interface_command_, other->_impl_.interface_command_);
-}
-
-::google::protobuf::Metadata InterfaceWrapper_CP::GetMetadata() const {
-  return ::google::protobuf::Message::GetMetadataImpl(GetClassData()->full());
-}
-// ===================================================================
-
-class InterfaceRobotCommands_CP::_Internal {
- public:
-  using HasBits =
-      decltype(::std::declval<InterfaceRobotCommands_CP>()._impl_._has_bits_);
-  static constexpr ::int32_t kHasBitsOffset =
-      8 * PROTOBUF_FIELD_OFFSET(InterfaceRobotCommands_CP, _impl_._has_bits_);
-};
-
-void InterfaceRobotCommands_CP::clear_command() {
+void CP_Interface::clear_command() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   if (_impl_.command_ != nullptr) _impl_.command_->Clear();
   ClearHasBit(_impl_._has_bits_[0],
                   0x00000001U);
 }
-InterfaceRobotCommands_CP::InterfaceRobotCommands_CP(::google::protobuf::Arena* PROTOBUF_NULLABLE arena)
+CP_Interface::CP_Interface(::google::protobuf::Arena* PROTOBUF_NULLABLE arena)
 #if defined(PROTOBUF_CUSTOM_VTABLE)
-    : ::google::protobuf::Message(arena, InterfaceRobotCommands_CP_class_data_.base()) {
+    : ::google::protobuf::Message(arena, CP_Interface_class_data_.base()) {
 #else   // PROTOBUF_CUSTOM_VTABLE
     : ::google::protobuf::Message(arena) {
 #endif  // PROTOBUF_CUSTOM_VTABLE
   SharedCtor(arena);
-  // @@protoc_insertion_point(arena_constructor:InterfaceRobotCommands_CP)
+  // @@protoc_insertion_point(arena_constructor:CP_Interface)
 }
-PROTOBUF_NDEBUG_INLINE InterfaceRobotCommands_CP::Impl_::Impl_(
+PROTOBUF_NDEBUG_INLINE CP_Interface::Impl_::Impl_(
     [[maybe_unused]] ::google::protobuf::internal::InternalVisibility visibility,
     [[maybe_unused]] ::google::protobuf::Arena* PROTOBUF_NULLABLE arena, const Impl_& from,
-    [[maybe_unused]] const ::InterfaceRobotCommands_CP& from_msg)
+    [[maybe_unused]] const ::CP_Interface& from_msg)
       : _has_bits_{from._has_bits_},
         _cached_size_{0} {}
 
-InterfaceRobotCommands_CP::InterfaceRobotCommands_CP(
+CP_Interface::CP_Interface(
     ::google::protobuf::Arena* PROTOBUF_NULLABLE arena,
-    const InterfaceRobotCommands_CP& from)
+    const CP_Interface& from)
 #if defined(PROTOBUF_CUSTOM_VTABLE)
-    : ::google::protobuf::Message(arena, InterfaceRobotCommands_CP_class_data_.base()) {
+    : ::google::protobuf::Message(arena, CP_Interface_class_data_.base()) {
 #else   // PROTOBUF_CUSTOM_VTABLE
     : ::google::protobuf::Message(arena) {
 #endif  // PROTOBUF_CUSTOM_VTABLE
-  InterfaceRobotCommands_CP* const _this = this;
+  CP_Interface* const _this = this;
   (void)_this;
   _internal_metadata_.MergeFrom<::google::protobuf::UnknownFieldSet>(
       from._internal_metadata_);
@@ -1142,14 +158,14 @@ InterfaceRobotCommands_CP::InterfaceRobotCommands_CP(
                 : nullptr;
   _impl_.robot_id_ = from._impl_.robot_id_;
 
-  // @@protoc_insertion_point(copy_constructor:InterfaceRobotCommands_CP)
+  // @@protoc_insertion_point(copy_constructor:CP_Interface)
 }
-PROTOBUF_NDEBUG_INLINE InterfaceRobotCommands_CP::Impl_::Impl_(
+PROTOBUF_NDEBUG_INLINE CP_Interface::Impl_::Impl_(
     [[maybe_unused]] ::google::protobuf::internal::InternalVisibility visibility,
     [[maybe_unused]] ::google::protobuf::Arena* PROTOBUF_NULLABLE arena)
       : _cached_size_{0} {}
 
-inline void InterfaceRobotCommands_CP::SharedCtor(::_pb::Arena* PROTOBUF_NULLABLE arena) {
+inline void CP_Interface::SharedCtor(::_pb::Arena* PROTOBUF_NULLABLE arena) {
   new (&_impl_) Impl_(internal_visibility(), arena);
   ::memset(reinterpret_cast<char*>(&_impl_) +
                offsetof(Impl_, command_),
@@ -1158,12 +174,12 @@ inline void InterfaceRobotCommands_CP::SharedCtor(::_pb::Arena* PROTOBUF_NULLABL
                offsetof(Impl_, command_) +
                sizeof(Impl_::robot_id_));
 }
-InterfaceRobotCommands_CP::~InterfaceRobotCommands_CP() {
-  // @@protoc_insertion_point(destructor:InterfaceRobotCommands_CP)
+CP_Interface::~CP_Interface() {
+  // @@protoc_insertion_point(destructor:CP_Interface)
   SharedDtor(*this);
 }
-inline void InterfaceRobotCommands_CP::SharedDtor(MessageLite& self) {
-  InterfaceRobotCommands_CP& this_ = static_cast<InterfaceRobotCommands_CP&>(self);
+inline void CP_Interface::SharedDtor(MessageLite& self) {
+  CP_Interface& this_ = static_cast<CP_Interface&>(self);
   if constexpr (::_pbi::DebugHardenCheckHasBitConsistency()) {
     this_.CheckHasBitConsistency();
   }
@@ -1173,52 +189,52 @@ inline void InterfaceRobotCommands_CP::SharedDtor(MessageLite& self) {
   this_._impl_.~Impl_();
 }
 
-inline void* PROTOBUF_NONNULL InterfaceRobotCommands_CP::PlacementNew_(
+inline void* PROTOBUF_NONNULL CP_Interface::PlacementNew_(
     const void* PROTOBUF_NONNULL, void* PROTOBUF_NONNULL mem,
     ::google::protobuf::Arena* PROTOBUF_NULLABLE arena) {
-  return ::new (mem) InterfaceRobotCommands_CP(arena);
+  return ::new (mem) CP_Interface(arena);
 }
-constexpr auto InterfaceRobotCommands_CP::InternalNewImpl_() {
-  return ::google::protobuf::internal::MessageCreator::ZeroInit(sizeof(InterfaceRobotCommands_CP),
-                                            alignof(InterfaceRobotCommands_CP));
+constexpr auto CP_Interface::InternalNewImpl_() {
+  return ::google::protobuf::internal::MessageCreator::ZeroInit(sizeof(CP_Interface),
+                                            alignof(CP_Interface));
 }
-constexpr auto InterfaceRobotCommands_CP::InternalGenerateClassData_() {
+constexpr auto CP_Interface::InternalGenerateClassData_() {
   return ::google::protobuf::internal::ClassDataFull{
       ::google::protobuf::internal::ClassData{
-          &_InterfaceRobotCommands_CP_default_instance_._instance,
+          &_CP_Interface_default_instance_._instance,
           &_table_.header,
-          InterfaceRobotCommands_CP::IsInitializedImpl,
-          &InterfaceRobotCommands_CP::MergeImpl,
-          ::google::protobuf::Message::GetNewImpl<InterfaceRobotCommands_CP>(),
+          CP_Interface::IsInitializedImpl,
+          &CP_Interface::MergeImpl,
+          ::google::protobuf::Message::GetNewImpl<CP_Interface>(),
 #if defined(PROTOBUF_CUSTOM_VTABLE)
-          &InterfaceRobotCommands_CP::SharedDtor,
-          ::google::protobuf::Message::GetClearImpl<InterfaceRobotCommands_CP>(), &InterfaceRobotCommands_CP::ByteSizeLong,
-              &InterfaceRobotCommands_CP::_InternalSerialize,
+          &CP_Interface::SharedDtor,
+          ::google::protobuf::Message::GetClearImpl<CP_Interface>(), &CP_Interface::ByteSizeLong,
+              &CP_Interface::_InternalSerialize,
 #endif  // PROTOBUF_CUSTOM_VTABLE
-          PROTOBUF_FIELD_OFFSET(InterfaceRobotCommands_CP, _impl_._cached_size_),
+          PROTOBUF_FIELD_OFFSET(CP_Interface, _impl_._cached_size_),
           false,
       },
-      &InterfaceRobotCommands_CP::kDescriptorMethods,
+      &CP_Interface::kDescriptorMethods,
       &descriptor_table_crashpilot_2finterface_2fcp_5finterface_2eproto,
       nullptr,  // tracker
   };
 }
 
 PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 const
-    ::google::protobuf::internal::ClassDataFull InterfaceRobotCommands_CP_class_data_ =
-        InterfaceRobotCommands_CP::InternalGenerateClassData_();
+    ::google::protobuf::internal::ClassDataFull CP_Interface_class_data_ =
+        CP_Interface::InternalGenerateClassData_();
 
 PROTOBUF_ATTRIBUTE_WEAK const ::google::protobuf::internal::ClassData* PROTOBUF_NONNULL
-InterfaceRobotCommands_CP::GetClassData() const {
-  ::google::protobuf::internal::PrefetchToLocalCache(&InterfaceRobotCommands_CP_class_data_);
-  ::google::protobuf::internal::PrefetchToLocalCache(InterfaceRobotCommands_CP_class_data_.tc_table);
-  return InterfaceRobotCommands_CP_class_data_.base();
+CP_Interface::GetClassData() const {
+  ::google::protobuf::internal::PrefetchToLocalCache(&CP_Interface_class_data_);
+  ::google::protobuf::internal::PrefetchToLocalCache(CP_Interface_class_data_.tc_table);
+  return CP_Interface_class_data_.base();
 }
 PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1
 const ::_pbi::TcParseTable<1, 2, 1, 0, 2>
-InterfaceRobotCommands_CP::_table_ = {
+CP_Interface::_table_ = {
   {
-    PROTOBUF_FIELD_OFFSET(InterfaceRobotCommands_CP, _impl_._has_bits_),
+    PROTOBUF_FIELD_OFFSET(CP_Interface, _impl_._has_bits_),
     0, // no _extensions_
     2, 8,  // max_field_number, fast_idx_mask
     offsetof(decltype(_table_), field_lookup_table),
@@ -1227,28 +243,28 @@ InterfaceRobotCommands_CP::_table_ = {
     2,  // num_field_entries
     1,  // num_aux_entries
     offsetof(decltype(_table_), aux_entries),
-    InterfaceRobotCommands_CP_class_data_.base(),
+    CP_Interface_class_data_.base(),
     nullptr,  // post_loop_handler
     ::_pbi::TcParser::GenericFallback,  // fallback
     #ifdef PROTOBUF_PREFETCH_PARSE_TABLE
-    ::_pbi::TcParser::GetTable<::InterfaceRobotCommands_CP>(),  // to_prefetch
+    ::_pbi::TcParser::GetTable<::CP_Interface>(),  // to_prefetch
     #endif  // PROTOBUF_PREFETCH_PARSE_TABLE
   }, {{
-    // optional .CP_Command command = 2 [json_name = "command"];
+    // required .CP_Command command = 2 [json_name = "command"];
     {::_pbi::TcParser::FastMtS1,
      {18, 0, 0,
-      PROTOBUF_FIELD_OFFSET(InterfaceRobotCommands_CP, _impl_.command_)}},
-    // optional uint32 robot_id = 1 [json_name = "robotId"];
-    {::_pbi::TcParser::SingularVarintNoZag1<::uint32_t, offsetof(InterfaceRobotCommands_CP, _impl_.robot_id_), 1>(),
+      PROTOBUF_FIELD_OFFSET(CP_Interface, _impl_.command_)}},
+    // required uint32 robot_id = 1 [json_name = "robotId"];
+    {::_pbi::TcParser::SingularVarintNoZag1<::uint32_t, offsetof(CP_Interface, _impl_.robot_id_), 1>(),
      {8, 1, 0,
-      PROTOBUF_FIELD_OFFSET(InterfaceRobotCommands_CP, _impl_.robot_id_)}},
+      PROTOBUF_FIELD_OFFSET(CP_Interface, _impl_.robot_id_)}},
   }}, {{
     65535, 65535
   }}, {{
-    // optional uint32 robot_id = 1 [json_name = "robotId"];
-    {PROTOBUF_FIELD_OFFSET(InterfaceRobotCommands_CP, _impl_.robot_id_), _Internal::kHasBitsOffset + 1, 0, (0 | ::_fl::kFcOptional | ::_fl::kUInt32)},
-    // optional .CP_Command command = 2 [json_name = "command"];
-    {PROTOBUF_FIELD_OFFSET(InterfaceRobotCommands_CP, _impl_.command_), _Internal::kHasBitsOffset + 0, 0, (0 | ::_fl::kFcOptional | ::_fl::kMessage | ::_fl::kTvTable)},
+    // required uint32 robot_id = 1 [json_name = "robotId"];
+    {PROTOBUF_FIELD_OFFSET(CP_Interface, _impl_.robot_id_), _Internal::kHasBitsOffset + 1, 0, (0 | ::_fl::kFcOptional | ::_fl::kUInt32)},
+    // required .CP_Command command = 2 [json_name = "command"];
+    {PROTOBUF_FIELD_OFFSET(CP_Interface, _impl_.command_), _Internal::kHasBitsOffset + 0, 0, (0 | ::_fl::kFcOptional | ::_fl::kMessage | ::_fl::kTvTable)},
   }},
   {{
       {::_pbi::TcParser::GetTable<::CP_Command>()},
@@ -1256,8 +272,8 @@ InterfaceRobotCommands_CP::_table_ = {
   {{
   }},
 };
-PROTOBUF_NOINLINE void InterfaceRobotCommands_CP::Clear() {
-// @@protoc_insertion_point(message_clear_start:InterfaceRobotCommands_CP)
+PROTOBUF_NOINLINE void CP_Interface::Clear() {
+// @@protoc_insertion_point(message_clear_start:CP_Interface)
   ::google::protobuf::internal::TSanWrite(&_impl_);
   ::uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
@@ -1274,32 +290,32 @@ PROTOBUF_NOINLINE void InterfaceRobotCommands_CP::Clear() {
 }
 
 #if defined(PROTOBUF_CUSTOM_VTABLE)
-::uint8_t* PROTOBUF_NONNULL InterfaceRobotCommands_CP::_InternalSerialize(
+::uint8_t* PROTOBUF_NONNULL CP_Interface::_InternalSerialize(
     const ::google::protobuf::MessageLite& base, ::uint8_t* PROTOBUF_NONNULL target,
     ::google::protobuf::io::EpsCopyOutputStream* PROTOBUF_NONNULL stream) {
-  const InterfaceRobotCommands_CP& this_ = static_cast<const InterfaceRobotCommands_CP&>(base);
+  const CP_Interface& this_ = static_cast<const CP_Interface&>(base);
 #else   // PROTOBUF_CUSTOM_VTABLE
-::uint8_t* PROTOBUF_NONNULL InterfaceRobotCommands_CP::_InternalSerialize(
+::uint8_t* PROTOBUF_NONNULL CP_Interface::_InternalSerialize(
     ::uint8_t* PROTOBUF_NONNULL target,
     ::google::protobuf::io::EpsCopyOutputStream* PROTOBUF_NONNULL stream) const {
-  const InterfaceRobotCommands_CP& this_ = *this;
+  const CP_Interface& this_ = *this;
 #endif  // PROTOBUF_CUSTOM_VTABLE
   if constexpr (::_pbi::DebugHardenCheckHasBitConsistency()) {
     this_.CheckHasBitConsistency();
   }
-  // @@protoc_insertion_point(serialize_to_array_start:InterfaceRobotCommands_CP)
+  // @@protoc_insertion_point(serialize_to_array_start:CP_Interface)
   ::uint32_t cached_has_bits = 0;
   (void)cached_has_bits;
 
   cached_has_bits = this_._impl_._has_bits_[0];
-  // optional uint32 robot_id = 1 [json_name = "robotId"];
+  // required uint32 robot_id = 1 [json_name = "robotId"];
   if (CheckHasBit(cached_has_bits, 0x00000002U)) {
     target = stream->EnsureSpace(target);
     target = ::_pbi::WireFormatLite::WriteUInt32ToArray(
         1, this_._internal_robot_id(), target);
   }
 
-  // optional .CP_Command command = 2 [json_name = "command"];
+  // required .CP_Command command = 2 [json_name = "command"];
   if (CheckHasBit(cached_has_bits, 0x00000001U)) {
     target = ::google::protobuf::internal::WireFormatLite::InternalWriteMessage(
         2, *this_._impl_.command_, this_._impl_.command_->GetCachedSize(), target,
@@ -1311,18 +327,18 @@ PROTOBUF_NOINLINE void InterfaceRobotCommands_CP::Clear() {
         ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
             this_._internal_metadata_.unknown_fields<::google::protobuf::UnknownFieldSet>(::google::protobuf::UnknownFieldSet::default_instance), target, stream);
   }
-  // @@protoc_insertion_point(serialize_to_array_end:InterfaceRobotCommands_CP)
+  // @@protoc_insertion_point(serialize_to_array_end:CP_Interface)
   return target;
 }
 
 #if defined(PROTOBUF_CUSTOM_VTABLE)
-::size_t InterfaceRobotCommands_CP::ByteSizeLong(const MessageLite& base) {
-  const InterfaceRobotCommands_CP& this_ = static_cast<const InterfaceRobotCommands_CP&>(base);
+::size_t CP_Interface::ByteSizeLong(const MessageLite& base) {
+  const CP_Interface& this_ = static_cast<const CP_Interface&>(base);
 #else   // PROTOBUF_CUSTOM_VTABLE
-::size_t InterfaceRobotCommands_CP::ByteSizeLong() const {
-  const InterfaceRobotCommands_CP& this_ = *this;
+::size_t CP_Interface::ByteSizeLong() const {
+  const CP_Interface& this_ = *this;
 #endif  // PROTOBUF_CUSTOM_VTABLE
-  // @@protoc_insertion_point(message_byte_size_start:InterfaceRobotCommands_CP)
+  // @@protoc_insertion_point(message_byte_size_start:CP_Interface)
   ::size_t total_size = 0;
 
   ::uint32_t cached_has_bits = 0;
@@ -1332,12 +348,12 @@ PROTOBUF_NOINLINE void InterfaceRobotCommands_CP::Clear() {
   ::_pbi::Prefetch5LinesFrom7Lines(&this_);
   cached_has_bits = this_._impl_._has_bits_[0];
   if (BatchCheckHasBit(cached_has_bits, 0x00000003U)) {
-    // optional .CP_Command command = 2 [json_name = "command"];
+    // required .CP_Command command = 2 [json_name = "command"];
     if (CheckHasBit(cached_has_bits, 0x00000001U)) {
       total_size += 1 +
                     ::google::protobuf::internal::WireFormatLite::MessageSize(*this_._impl_.command_);
     }
-    // optional uint32 robot_id = 1 [json_name = "robotId"];
+    // required uint32 robot_id = 1 [json_name = "robotId"];
     if (CheckHasBit(cached_has_bits, 0x00000002U)) {
       total_size += ::_pbi::WireFormatLite::UInt32SizePlusOne(
           this_._internal_robot_id());
@@ -1347,16 +363,16 @@ PROTOBUF_NOINLINE void InterfaceRobotCommands_CP::Clear() {
                                              &this_._impl_._cached_size_);
 }
 
-void InterfaceRobotCommands_CP::MergeImpl(::google::protobuf::MessageLite& to_msg,
+void CP_Interface::MergeImpl(::google::protobuf::MessageLite& to_msg,
                             const ::google::protobuf::MessageLite& from_msg) {
    auto* const _this =
-      static_cast<InterfaceRobotCommands_CP*>(&to_msg);
-  auto& from = static_cast<const InterfaceRobotCommands_CP&>(from_msg);
+      static_cast<CP_Interface*>(&to_msg);
+  auto& from = static_cast<const CP_Interface&>(from_msg);
   if constexpr (::_pbi::DebugHardenCheckHasBitConsistency()) {
     from.CheckHasBitConsistency();
   }
   ::google::protobuf::Arena* arena = _this->GetArena();
-  // @@protoc_insertion_point(class_specific_merge_from_start:InterfaceRobotCommands_CP)
+  // @@protoc_insertion_point(class_specific_merge_from_start:CP_Interface)
   ABSL_DCHECK_NE(&from, _this);
   ::uint32_t cached_has_bits = 0;
   (void)cached_has_bits;
@@ -1380,339 +396,38 @@ void InterfaceRobotCommands_CP::MergeImpl(::google::protobuf::MessageLite& to_ms
       from._internal_metadata_);
 }
 
-void InterfaceRobotCommands_CP::CopyFrom(const InterfaceRobotCommands_CP& from) {
-  // @@protoc_insertion_point(class_specific_copy_from_start:InterfaceRobotCommands_CP)
+void CP_Interface::CopyFrom(const CP_Interface& from) {
+  // @@protoc_insertion_point(class_specific_copy_from_start:CP_Interface)
   if (&from == this) return;
   Clear();
   MergeFrom(from);
 }
 
-PROTOBUF_NOINLINE bool InterfaceRobotCommands_CP::IsInitializedImpl(
+PROTOBUF_NOINLINE bool CP_Interface::IsInitializedImpl(
     const MessageLite& msg) {
-  auto& this_ = static_cast<const InterfaceRobotCommands_CP&>(msg);
+  auto& this_ = static_cast<const CP_Interface&>(msg);
+  if (_Internal::MissingRequiredFields(this_._impl_._has_bits_)) {
+    return false;
+  }
   if (CheckHasBit(this_._impl_._has_bits_[0], 0x00000001U)) {
     if (!this_._impl_.command_->IsInitialized()) return false;
   }
   return true;
 }
 
-void InterfaceRobotCommands_CP::InternalSwap(InterfaceRobotCommands_CP* PROTOBUF_RESTRICT PROTOBUF_NONNULL other) {
+void CP_Interface::InternalSwap(CP_Interface* PROTOBUF_RESTRICT PROTOBUF_NONNULL other) {
   using ::std::swap;
   _internal_metadata_.InternalSwap(&other->_internal_metadata_);
   swap(_impl_._has_bits_[0], other->_impl_._has_bits_[0]);
   ::google::protobuf::internal::memswap<
-      PROTOBUF_FIELD_OFFSET(InterfaceRobotCommands_CP, _impl_.robot_id_)
-      + sizeof(InterfaceRobotCommands_CP::_impl_.robot_id_)
-      - PROTOBUF_FIELD_OFFSET(InterfaceRobotCommands_CP, _impl_.command_)>(
+      PROTOBUF_FIELD_OFFSET(CP_Interface, _impl_.robot_id_)
+      + sizeof(CP_Interface::_impl_.robot_id_)
+      - PROTOBUF_FIELD_OFFSET(CP_Interface, _impl_.command_)>(
           reinterpret_cast<char*>(&_impl_.command_),
           reinterpret_cast<char*>(&other->_impl_.command_));
 }
 
-::google::protobuf::Metadata InterfaceRobotCommands_CP::GetMetadata() const {
-  return ::google::protobuf::Message::GetMetadataImpl(GetClassData()->full());
-}
-// ===================================================================
-
-class InterfaceCommand_CP::_Internal {
- public:
-  using HasBits =
-      decltype(::std::declval<InterfaceCommand_CP>()._impl_._has_bits_);
-  static constexpr ::int32_t kHasBitsOffset =
-      8 * PROTOBUF_FIELD_OFFSET(InterfaceCommand_CP, _impl_._has_bits_);
-  static bool MissingRequiredFields(const HasBits& has_bits) {
-    return ((has_bits[0] & 0x00000007) ^ 0x00000007) != 0;
-  }
-};
-
-InterfaceCommand_CP::InterfaceCommand_CP(::google::protobuf::Arena* PROTOBUF_NULLABLE arena)
-#if defined(PROTOBUF_CUSTOM_VTABLE)
-    : ::google::protobuf::Message(arena, InterfaceCommand_CP_class_data_.base()) {
-#else   // PROTOBUF_CUSTOM_VTABLE
-    : ::google::protobuf::Message(arena) {
-#endif  // PROTOBUF_CUSTOM_VTABLE
-  SharedCtor(arena);
-  // @@protoc_insertion_point(arena_constructor:InterfaceCommand_CP)
-}
-InterfaceCommand_CP::InterfaceCommand_CP(
-    ::google::protobuf::Arena* PROTOBUF_NULLABLE arena, const InterfaceCommand_CP& from)
-#if defined(PROTOBUF_CUSTOM_VTABLE)
-    : ::google::protobuf::Message(arena, InterfaceCommand_CP_class_data_.base()),
-#else   // PROTOBUF_CUSTOM_VTABLE
-    : ::google::protobuf::Message(arena),
-#endif  // PROTOBUF_CUSTOM_VTABLE
-      _impl_(from._impl_) {
-  _internal_metadata_.MergeFrom<::google::protobuf::UnknownFieldSet>(
-      from._internal_metadata_);
-}
-PROTOBUF_NDEBUG_INLINE InterfaceCommand_CP::Impl_::Impl_(
-    [[maybe_unused]] ::google::protobuf::internal::InternalVisibility visibility,
-    [[maybe_unused]] ::google::protobuf::Arena* PROTOBUF_NULLABLE arena)
-      : _cached_size_{0} {}
-
-inline void InterfaceCommand_CP::SharedCtor(::_pb::Arena* PROTOBUF_NULLABLE arena) {
-  new (&_impl_) Impl_(internal_visibility(), arena);
-  ::memset(reinterpret_cast<char*>(&_impl_) +
-               offsetof(Impl_, testfield_),
-           0,
-           offsetof(Impl_, ball_tracked_) -
-               offsetof(Impl_, testfield_) +
-               sizeof(Impl_::ball_tracked_));
-}
-InterfaceCommand_CP::~InterfaceCommand_CP() {
-  // @@protoc_insertion_point(destructor:InterfaceCommand_CP)
-  SharedDtor(*this);
-}
-inline void InterfaceCommand_CP::SharedDtor(MessageLite& self) {
-  InterfaceCommand_CP& this_ = static_cast<InterfaceCommand_CP&>(self);
-  if constexpr (::_pbi::DebugHardenCheckHasBitConsistency()) {
-    this_.CheckHasBitConsistency();
-  }
-  this_._internal_metadata_.Delete<::google::protobuf::UnknownFieldSet>();
-  ABSL_DCHECK(this_.GetArena() == nullptr);
-  this_._impl_.~Impl_();
-}
-
-inline void* PROTOBUF_NONNULL InterfaceCommand_CP::PlacementNew_(
-    const void* PROTOBUF_NONNULL, void* PROTOBUF_NONNULL mem,
-    ::google::protobuf::Arena* PROTOBUF_NULLABLE arena) {
-  return ::new (mem) InterfaceCommand_CP(arena);
-}
-constexpr auto InterfaceCommand_CP::InternalNewImpl_() {
-  return ::google::protobuf::internal::MessageCreator::ZeroInit(sizeof(InterfaceCommand_CP),
-                                            alignof(InterfaceCommand_CP));
-}
-constexpr auto InterfaceCommand_CP::InternalGenerateClassData_() {
-  return ::google::protobuf::internal::ClassDataFull{
-      ::google::protobuf::internal::ClassData{
-          &_InterfaceCommand_CP_default_instance_._instance,
-          &_table_.header,
-          InterfaceCommand_CP::IsInitializedImpl,
-          &InterfaceCommand_CP::MergeImpl,
-          ::google::protobuf::Message::GetNewImpl<InterfaceCommand_CP>(),
-#if defined(PROTOBUF_CUSTOM_VTABLE)
-          &InterfaceCommand_CP::SharedDtor,
-          ::google::protobuf::Message::GetClearImpl<InterfaceCommand_CP>(), &InterfaceCommand_CP::ByteSizeLong,
-              &InterfaceCommand_CP::_InternalSerialize,
-#endif  // PROTOBUF_CUSTOM_VTABLE
-          PROTOBUF_FIELD_OFFSET(InterfaceCommand_CP, _impl_._cached_size_),
-          false,
-      },
-      &InterfaceCommand_CP::kDescriptorMethods,
-      &descriptor_table_crashpilot_2finterface_2fcp_5finterface_2eproto,
-      nullptr,  // tracker
-  };
-}
-
-PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 const
-    ::google::protobuf::internal::ClassDataFull InterfaceCommand_CP_class_data_ =
-        InterfaceCommand_CP::InternalGenerateClassData_();
-
-PROTOBUF_ATTRIBUTE_WEAK const ::google::protobuf::internal::ClassData* PROTOBUF_NONNULL
-InterfaceCommand_CP::GetClassData() const {
-  ::google::protobuf::internal::PrefetchToLocalCache(&InterfaceCommand_CP_class_data_);
-  ::google::protobuf::internal::PrefetchToLocalCache(InterfaceCommand_CP_class_data_.tc_table);
-  return InterfaceCommand_CP_class_data_.base();
-}
-PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1
-const ::_pbi::TcParseTable<2, 3, 0, 0, 2>
-InterfaceCommand_CP::_table_ = {
-  {
-    PROTOBUF_FIELD_OFFSET(InterfaceCommand_CP, _impl_._has_bits_),
-    0, // no _extensions_
-    3, 24,  // max_field_number, fast_idx_mask
-    offsetof(decltype(_table_), field_lookup_table),
-    4294967288,  // skipmap
-    offsetof(decltype(_table_), field_entries),
-    3,  // num_field_entries
-    0,  // num_aux_entries
-    offsetof(decltype(_table_), field_names),  // no aux_entries
-    InterfaceCommand_CP_class_data_.base(),
-    nullptr,  // post_loop_handler
-    ::_pbi::TcParser::GenericFallback,  // fallback
-    #ifdef PROTOBUF_PREFETCH_PARSE_TABLE
-    ::_pbi::TcParser::GetTable<::InterfaceCommand_CP>(),  // to_prefetch
-    #endif  // PROTOBUF_PREFETCH_PARSE_TABLE
-  }, {{
-    {::_pbi::TcParser::MiniParse, {}},
-    // required bool enable_testfield = 1 [json_name = "enableTestfield"];
-    {::_pbi::TcParser::SingularVarintNoZag1<bool, offsetof(InterfaceCommand_CP, _impl_.enable_testfield_), 1>(),
-     {8, 1, 0,
-      PROTOBUF_FIELD_OFFSET(InterfaceCommand_CP, _impl_.enable_testfield_)}},
-    // required uint32 testfield = 2 [json_name = "testfield"];
-    {::_pbi::TcParser::SingularVarintNoZag1<::uint32_t, offsetof(InterfaceCommand_CP, _impl_.testfield_), 0>(),
-     {16, 0, 0,
-      PROTOBUF_FIELD_OFFSET(InterfaceCommand_CP, _impl_.testfield_)}},
-    // required bool ball_tracked = 3 [json_name = "ballTracked"];
-    {::_pbi::TcParser::SingularVarintNoZag1<bool, offsetof(InterfaceCommand_CP, _impl_.ball_tracked_), 2>(),
-     {24, 2, 0,
-      PROTOBUF_FIELD_OFFSET(InterfaceCommand_CP, _impl_.ball_tracked_)}},
-  }}, {{
-    65535, 65535
-  }}, {{
-    // required bool enable_testfield = 1 [json_name = "enableTestfield"];
-    {PROTOBUF_FIELD_OFFSET(InterfaceCommand_CP, _impl_.enable_testfield_), _Internal::kHasBitsOffset + 1, 0, (0 | ::_fl::kFcOptional | ::_fl::kBool)},
-    // required uint32 testfield = 2 [json_name = "testfield"];
-    {PROTOBUF_FIELD_OFFSET(InterfaceCommand_CP, _impl_.testfield_), _Internal::kHasBitsOffset + 0, 0, (0 | ::_fl::kFcOptional | ::_fl::kUInt32)},
-    // required bool ball_tracked = 3 [json_name = "ballTracked"];
-    {PROTOBUF_FIELD_OFFSET(InterfaceCommand_CP, _impl_.ball_tracked_), _Internal::kHasBitsOffset + 2, 0, (0 | ::_fl::kFcOptional | ::_fl::kBool)},
-  }},
-  // no aux_entries
-  {{
-  }},
-};
-PROTOBUF_NOINLINE void InterfaceCommand_CP::Clear() {
-// @@protoc_insertion_point(message_clear_start:InterfaceCommand_CP)
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-  ::uint32_t cached_has_bits = 0;
-  // Prevent compiler warnings about cached_has_bits being unused
-  (void) cached_has_bits;
-
-  cached_has_bits = _impl_._has_bits_[0];
-  if (BatchCheckHasBit(cached_has_bits, 0x00000007U)) {
-    ::memset(&_impl_.testfield_, 0, static_cast<::size_t>(
-        reinterpret_cast<char*>(&_impl_.ball_tracked_) -
-        reinterpret_cast<char*>(&_impl_.testfield_)) + sizeof(_impl_.ball_tracked_));
-  }
-  _impl_._has_bits_.Clear();
-  _internal_metadata_.Clear<::google::protobuf::UnknownFieldSet>();
-}
-
-#if defined(PROTOBUF_CUSTOM_VTABLE)
-::uint8_t* PROTOBUF_NONNULL InterfaceCommand_CP::_InternalSerialize(
-    const ::google::protobuf::MessageLite& base, ::uint8_t* PROTOBUF_NONNULL target,
-    ::google::protobuf::io::EpsCopyOutputStream* PROTOBUF_NONNULL stream) {
-  const InterfaceCommand_CP& this_ = static_cast<const InterfaceCommand_CP&>(base);
-#else   // PROTOBUF_CUSTOM_VTABLE
-::uint8_t* PROTOBUF_NONNULL InterfaceCommand_CP::_InternalSerialize(
-    ::uint8_t* PROTOBUF_NONNULL target,
-    ::google::protobuf::io::EpsCopyOutputStream* PROTOBUF_NONNULL stream) const {
-  const InterfaceCommand_CP& this_ = *this;
-#endif  // PROTOBUF_CUSTOM_VTABLE
-  if constexpr (::_pbi::DebugHardenCheckHasBitConsistency()) {
-    this_.CheckHasBitConsistency();
-  }
-  // @@protoc_insertion_point(serialize_to_array_start:InterfaceCommand_CP)
-  ::uint32_t cached_has_bits = 0;
-  (void)cached_has_bits;
-
-  cached_has_bits = this_._impl_._has_bits_[0];
-  // required bool enable_testfield = 1 [json_name = "enableTestfield"];
-  if (CheckHasBit(cached_has_bits, 0x00000002U)) {
-    target = stream->EnsureSpace(target);
-    target = ::_pbi::WireFormatLite::WriteBoolToArray(
-        1, this_._internal_enable_testfield(), target);
-  }
-
-  // required uint32 testfield = 2 [json_name = "testfield"];
-  if (CheckHasBit(cached_has_bits, 0x00000001U)) {
-    target = stream->EnsureSpace(target);
-    target = ::_pbi::WireFormatLite::WriteUInt32ToArray(
-        2, this_._internal_testfield(), target);
-  }
-
-  // required bool ball_tracked = 3 [json_name = "ballTracked"];
-  if (CheckHasBit(cached_has_bits, 0x00000004U)) {
-    target = stream->EnsureSpace(target);
-    target = ::_pbi::WireFormatLite::WriteBoolToArray(
-        3, this_._internal_ball_tracked(), target);
-  }
-
-  if (ABSL_PREDICT_FALSE(this_._internal_metadata_.have_unknown_fields())) {
-    target =
-        ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
-            this_._internal_metadata_.unknown_fields<::google::protobuf::UnknownFieldSet>(::google::protobuf::UnknownFieldSet::default_instance), target, stream);
-  }
-  // @@protoc_insertion_point(serialize_to_array_end:InterfaceCommand_CP)
-  return target;
-}
-
-#if defined(PROTOBUF_CUSTOM_VTABLE)
-::size_t InterfaceCommand_CP::ByteSizeLong(const MessageLite& base) {
-  const InterfaceCommand_CP& this_ = static_cast<const InterfaceCommand_CP&>(base);
-#else   // PROTOBUF_CUSTOM_VTABLE
-::size_t InterfaceCommand_CP::ByteSizeLong() const {
-  const InterfaceCommand_CP& this_ = *this;
-#endif  // PROTOBUF_CUSTOM_VTABLE
-  // @@protoc_insertion_point(message_byte_size_start:InterfaceCommand_CP)
-  ::size_t total_size = 0;
-
-  ::uint32_t cached_has_bits = 0;
-  // Prevent compiler warnings about cached_has_bits being unused
-  (void)cached_has_bits;
-
-  ::_pbi::Prefetch5LinesFrom7Lines(&this_);
-  cached_has_bits = this_._impl_._has_bits_[0];
-  total_size += ::absl::popcount(0x00000006U & cached_has_bits) * 2;
-   {
-    // required uint32 testfield = 2 [json_name = "testfield"];
-    if (CheckHasBit(cached_has_bits, 0x00000001U)) {
-      total_size += ::_pbi::WireFormatLite::UInt32SizePlusOne(
-          this_._internal_testfield());
-    }
-  }
-  return this_.MaybeComputeUnknownFieldsSize(total_size,
-                                             &this_._impl_._cached_size_);
-}
-
-void InterfaceCommand_CP::MergeImpl(::google::protobuf::MessageLite& to_msg,
-                            const ::google::protobuf::MessageLite& from_msg) {
-   auto* const _this =
-      static_cast<InterfaceCommand_CP*>(&to_msg);
-  auto& from = static_cast<const InterfaceCommand_CP&>(from_msg);
-  if constexpr (::_pbi::DebugHardenCheckHasBitConsistency()) {
-    from.CheckHasBitConsistency();
-  }
-  // @@protoc_insertion_point(class_specific_merge_from_start:InterfaceCommand_CP)
-  ABSL_DCHECK_NE(&from, _this);
-  ::uint32_t cached_has_bits = 0;
-  (void)cached_has_bits;
-
-  cached_has_bits = from._impl_._has_bits_[0];
-  if (BatchCheckHasBit(cached_has_bits, 0x00000007U)) {
-    if (CheckHasBit(cached_has_bits, 0x00000001U)) {
-      _this->_impl_.testfield_ = from._impl_.testfield_;
-    }
-    if (CheckHasBit(cached_has_bits, 0x00000002U)) {
-      _this->_impl_.enable_testfield_ = from._impl_.enable_testfield_;
-    }
-    if (CheckHasBit(cached_has_bits, 0x00000004U)) {
-      _this->_impl_.ball_tracked_ = from._impl_.ball_tracked_;
-    }
-  }
-  _this->_impl_._has_bits_[0] |= cached_has_bits;
-  _this->_internal_metadata_.MergeFrom<::google::protobuf::UnknownFieldSet>(
-      from._internal_metadata_);
-}
-
-void InterfaceCommand_CP::CopyFrom(const InterfaceCommand_CP& from) {
-  // @@protoc_insertion_point(class_specific_copy_from_start:InterfaceCommand_CP)
-  if (&from == this) return;
-  Clear();
-  MergeFrom(from);
-}
-
-PROTOBUF_NOINLINE bool InterfaceCommand_CP::IsInitializedImpl(
-    const MessageLite& msg) {
-  auto& this_ = static_cast<const InterfaceCommand_CP&>(msg);
-  if (_Internal::MissingRequiredFields(this_._impl_._has_bits_)) {
-    return false;
-  }
-  return true;
-}
-
-void InterfaceCommand_CP::InternalSwap(InterfaceCommand_CP* PROTOBUF_RESTRICT PROTOBUF_NONNULL other) {
-  using ::std::swap;
-  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
-  swap(_impl_._has_bits_[0], other->_impl_._has_bits_[0]);
-  ::google::protobuf::internal::memswap<
-      PROTOBUF_FIELD_OFFSET(InterfaceCommand_CP, _impl_.ball_tracked_)
-      + sizeof(InterfaceCommand_CP::_impl_.ball_tracked_)
-      - PROTOBUF_FIELD_OFFSET(InterfaceCommand_CP, _impl_.testfield_)>(
-          reinterpret_cast<char*>(&_impl_.testfield_),
-          reinterpret_cast<char*>(&other->_impl_.testfield_));
-}
-
-::google::protobuf::Metadata InterfaceCommand_CP::GetMetadata() const {
+::google::protobuf::Metadata CP_Interface::GetMetadata() const {
   return ::google::protobuf::Message::GetMetadataImpl(GetClassData()->full());
 }
 // @@protoc_insertion_point(namespace_scope)
