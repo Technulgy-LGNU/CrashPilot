@@ -24,11 +24,10 @@ _sym_db = _symbol_database.Default()
 
 from crashpilot import common_pb2 as crashpilot_dot_common__pb2
 from google.protobuf import timestamp_pb2 as google_dot_protobuf_dot_timestamp__pb2
-from engine import ssl_gc_engine_pb2 as engine_dot_ssl__gc__engine__pb2
 from geom import ssl_gc_geometry_pb2 as geom_dot_ssl__gc__geometry__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n%crashpilot/cp_robot/cp_cp_robot.proto\x1a\x17\x63rashpilot/common.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1a\x65ngine/ssl_gc_engine.proto\x1a\x1ageom/ssl_gc_geometry.proto\"\xd1\x02\n\x08\x43P_Robot\x12\x19\n\x08robot_id\x18\x01 \x02(\rR\x07robotId\x12\x38\n\ttimestamp\x18\x02 \x02(\x0b\x32\x1a.google.protobuf.TimestampR\ttimestamp\x12\x1b\n\tpacket_id\x18\x03 \x02(\rR\x08packetId\x12\x19\n\x04\x62\x61ll\x18\x04 \x02(\x0b\x32\x05.BallR\x04\x62\x61ll\x12/\n\x0bkicked_ball\x18\x05 \x02(\x0b\x32\x0e.CP_KickedBallR\nkickedBall\x12\x35\n\rrobots_yellow\x18\x06 \x03(\x0b\x32\x10.CP_TrackedRobotR\x0crobotsYellow\x12\x31\n\x0brobots_blue\x18\x07 \x03(\x0b\x32\x10.CP_TrackedRobotR\nrobotsBlue\x12\x1d\n\x03\x63md\x18\x08 \x02(\x0b\x32\x0b.CP_CommandR\x03\x63md\"\xaa\x01\n\nCP_Command\x12\x1f\n\x05state\x18\x01 \x02(\x0e\x32\t.CP_StateR\x05state\x12\x1c\n\x04task\x18\x02 \x02(\x0e\x32\x08.CP_TaskR\x04task\x12\x1a\n\x03pos\x18\x03 \x01(\x0b\x32\x08.Vector2R\x03pos\x12 \n\x0borientation\x18\x04 \x01(\x02R\x0borientation\x12\x1f\n\x0bkick_orient\x18\x05 \x01(\x02R\nkickOrient*c\n\x08\x43P_State\x12\x15\n\x11STATE_UNSPECIFIED\x10\x00\x12\x0e\n\nSTATE_HALT\x10\x01\x12\x0e\n\nSTATE_STOP\x10\x02\x12\x0e\n\nSTATE_FREE\x10\x03\x12\x10\n\x0cSTATE_GOALIE\x10\x04*\xe4\x01\n\x07\x43P_Task\x12\x14\n\x10TASK_UNSPECIFIED\x10\x00\x12\x0c\n\x08TASK_POS\x10\x01\x12\r\n\tTASK_KICK\x10\x02\x12\r\n\tTASK_CHIP\x10\x03\x12\x11\n\rTASK_REC_KICK\x10\x04\x12\x0e\n\nTASK_STEAL\x10\x05\x12\x10\n\x0cTASK_DRIBBLE\x10\x06\x12\x10\n\x0cTASK_PosBall\x10\x07\x12\x10\n\x0cTASK_RecBall\x10\x08\x12\x11\n\rSTATE_KICKOFF\x10\t\x12\x17\n\x13STATE_BALLPLACEMENT\x10\n\x12\x12\n\x0eSTATE_FREEKICK\x10\x0b\x42\x12\x42\x0e\x43pCpRobotProtoP\x01')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n%crashpilot/cp_robot/cp_cp_robot.proto\x1a\x17\x63rashpilot/common.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1ageom/ssl_gc_geometry.proto\"\xa3\x02\n\x08\x43P_Robot\x12\x19\n\x08robot_id\x18\x01 \x02(\rR\x07robotId\x12\x38\n\ttimestamp\x18\x02 \x02(\x0b\x32\x1a.google.protobuf.TimestampR\ttimestamp\x12\x1b\n\tpacket_id\x18\x03 \x02(\rR\x08packetId\x12\x1c\n\x04\x62\x61ll\x18\x04 \x02(\x0b\x32\x08.CP_BallR\x04\x62\x61ll\x12\x35\n\rrobots_yellow\x18\x05 \x03(\x0b\x32\x10.CP_TrackedRobotR\x0crobotsYellow\x12\x31\n\x0brobots_blue\x18\x06 \x03(\x0b\x32\x10.CP_TrackedRobotR\nrobotsBlue\x12\x1d\n\x03\x63md\x18\x07 \x02(\x0b\x32\x0b.CP_CommandR\x03\x63md\"\xdf\x01\n\nCP_Command\x12\x1f\n\x05state\x18\x01 \x02(\x0e\x32\t.CP_StateR\x05state\x12\x1c\n\x04task\x18\x02 \x02(\x0e\x32\x08.CP_TaskR\x04task\x12\x1a\n\x03pos\x18\x03 \x01(\x0b\x32\x08.Vector2R\x03pos\x12\x14\n\x05speed\x18\x04 \x01(\rR\x05speed\x12 \n\x0borientation\x18\x05 \x01(\rR\x0borientation\x12\x1f\n\x0bkick_orient\x18\x06 \x01(\rR\nkickOrient\x12\x1d\n\nkick_speed\x18\x07 \x01(\rR\tkickSpeed*y\n\x08\x43P_State\x12\x15\n\x11STATE_UNSPECIFIED\x10\x00\x12\x0e\n\nSTATE_HALT\x10\x01\x12\x0e\n\nSTATE_STOP\x10\x02\x12\x0e\n\nSTATE_FREE\x10\x03\x12\x10\n\x0cSTATE_GOALIE\x10\x04\x12\x14\n\x10STATE_SUBSTITUTE\x10\x05*\xb9\x01\n\x07\x43P_Task\x12\x14\n\x10TASK_UNSPECIFIED\x10\x00\x12\x0c\n\x08TASK_POS\x10\x01\x12\r\n\tTASK_KICK\x10\x02\x12\r\n\tTASK_CHIP\x10\x03\x12\x11\n\rTASK_REC_KICK\x10\x04\x12\x0e\n\nTASK_STEAL\x10\x05\x12\x10\n\x0cTASK_DRIBBLE\x10\x06\x12\x10\n\x0cTASK_PosBall\x10\x07\x12\x11\n\rSTATE_KICKOFF\x10\t\x12\x12\n\x0eSTATE_FREEKICK\x10\x0b\x42\x12\x42\x0e\x43pCpRobotProtoP\x01')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -36,12 +35,12 @@ _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'crashpilot.cp_robot.cp_cp_r
 if not _descriptor._USE_C_DESCRIPTORS:
   _globals['DESCRIPTOR']._loaded_options = None
   _globals['DESCRIPTOR']._serialized_options = b'B\016CpCpRobotProtoP\001'
-  _globals['_CP_STATE']._serialized_start=668
-  _globals['_CP_STATE']._serialized_end=767
-  _globals['_CP_TASK']._serialized_start=770
-  _globals['_CP_TASK']._serialized_end=998
-  _globals['_CP_ROBOT']._serialized_start=156
-  _globals['_CP_ROBOT']._serialized_end=493
-  _globals['_CP_COMMAND']._serialized_start=496
-  _globals['_CP_COMMAND']._serialized_end=666
+  _globals['_CP_STATE']._serialized_start=647
+  _globals['_CP_STATE']._serialized_end=768
+  _globals['_CP_TASK']._serialized_start=771
+  _globals['_CP_TASK']._serialized_end=956
+  _globals['_CP_ROBOT']._serialized_start=128
+  _globals['_CP_ROBOT']._serialized_end=419
+  _globals['_CP_COMMAND']._serialized_start=422
+  _globals['_CP_COMMAND']._serialized_end=645
 # @@protoc_insertion_point(module_scope)

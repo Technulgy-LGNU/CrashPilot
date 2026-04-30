@@ -1,15 +1,10 @@
 syntax = "proto2";
-import "geom/ssl_gc_geometry.proto";
 
-// From the tracked ssl vision packet, removed unnecessary fields
-// A ball kicked by a robot, including predictions when the ball will come to a stop
-message CP_KickedBall {
-  // The initial position [m] from which the ball was kicked
-  required Vector2 pos = 1;
-  // The initial velocity [m/s] with which the ball was kicked
-  required Vector3 vel = 2;
-  // The predicted position [m] at which the ball will come to a stop
-  optional Vector2 stop_pos = 5;
+message CP_Ball {
+  // The position [mm] in the ssl-vision coordinate system
+  required CP_Vector2 pos = 1;
+  // The velocity [mm/s] in the ssl-vision coordinate system
+  optional CP_Vector2 vel = 2;
 }
 
 // From the tracked ssl vision packet, removed unnecessary fields
@@ -17,14 +12,17 @@ message CP_KickedBall {
 message CP_TrackedRobot {
   required uint32 robot_id = 1;
 
-  // The position [m] in the ssl-vision coordinate system
-  required Vector2 pos = 2;
+  // The position [m,] in the ssl-vision coordinate system
+  required CP_Vector2 pos = 2;
   // The orientation [rad] in the ssl-vision coordinate system
   required float orientation = 3;
 
   // The velocity [m/s] in the ssl-vision coordinate system
-  optional Vector2 vel = 4;
-  // The angular velocity [rad/s] in the ssl-vision coordinate system
-  optional float vel_angular = 5;
+  optional CP_Vector2 vel = 4;
+}
+
+message CP_Vector2 {
+  required int32 x = 1;
+  required int32 y = 2;
 }
 
