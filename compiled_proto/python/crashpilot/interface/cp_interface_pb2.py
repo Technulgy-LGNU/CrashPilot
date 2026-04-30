@@ -23,9 +23,12 @@ _sym_db = _symbol_database.Default()
 
 
 from crashpilot.cp_robot import cp_cp_robot_pb2 as crashpilot_dot_cp__robot_dot_cp__cp__robot__pb2
+from state import ssl_gc_referee_message_pb2 as state_dot_ssl__gc__referee__message__pb2
+from vision_tracked import messages_robocup_ssl_wrapper_tracked_pb2 as vision__tracked_dot_messages__robocup__ssl__wrapper__tracked__pb2
+from vision_tracked import messages_robocup_ssl_wrapper_pb2 as vision__tracked_dot_messages__robocup__ssl__wrapper__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\'crashpilot/interface/cp_interface.proto\x1a%crashpilot/cp_robot/cp_cp_robot.proto\"P\n\x0c\x43P_Interface\x12\x19\n\x08robot_id\x18\x01 \x02(\rR\x07robotId\x12%\n\x07\x63ommand\x18\x02 \x02(\x0b\x32\x0b.CP_CommandR\x07\x63ommandB\x14\x42\x10\x43pInterfaceProtoP\x01')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\'crashpilot/interface/cp_interface.proto\x1a%crashpilot/cp_robot/cp_cp_robot.proto\x1a\"state/ssl_gc_referee_message.proto\x1a\x39vision_tracked/messages_robocup_ssl_wrapper_tracked.proto\x1a\x31vision_tracked/messages_robocup_ssl_wrapper.proto\"\xdb\x01\n\x13\x43P_InterfaceWrapper\x12\x31\n\nvision_raw\x18\x01 \x01(\x0b\x32\x12.SSL_WrapperPacketR\tvisionRaw\x12<\n\x0evision_tracked\x18\x02 \x01(\x0b\x32\x15.TrackerWrapperPacketR\rvisionTracked\x12!\n\x07gc_data\x18\x03 \x01(\x0b\x32\x08.RefereeR\x06gcData\x12\x30\n\x0erobot_commands\x18\x04 \x03(\x0b\x32\t.CP_RobotR\rrobotCommands\"\x9b\x01\n\x13InterfaceWrapper_CP\x12\x41\n\x0erobot_commands\x18\x01 \x03(\x0b\x32\x1a.InterfaceRobotCommands_CPR\rrobotCommands\x12\x41\n\x11interface_command\x18\x02 \x02(\x0b\x32\x14.InterfaceCommand_CPR\x10interfaceCommand\"]\n\x19InterfaceRobotCommands_CP\x12\x19\n\x08robot_id\x18\x01 \x01(\rR\x07robotId\x12%\n\x07\x63ommand\x18\x02 \x01(\x0b\x32\x0b.CP_CommandR\x07\x63ommand\"\x81\x01\n\x13InterfaceCommand_CP\x12)\n\x10\x65nable_testfield\x18\x01 \x02(\x08R\x0f\x65nableTestfield\x12\x1c\n\ttestfield\x18\x02 \x02(\rR\ttestfield\x12!\n\x0c\x62\x61ll_tracked\x18\x03 \x02(\x08R\x0b\x62\x61llTrackedB\x14\x42\x10\x43pInterfaceProtoP\x01')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -33,6 +36,12 @@ _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'crashpilot.interface.cp_int
 if not _descriptor._USE_C_DESCRIPTORS:
   _globals['DESCRIPTOR']._loaded_options = None
   _globals['DESCRIPTOR']._serialized_options = b'B\020CpInterfaceProtoP\001'
-  _globals['_CP_INTERFACE']._serialized_start=82
-  _globals['_CP_INTERFACE']._serialized_end=162
+  _globals['_CP_INTERFACEWRAPPER']._serialized_start=229
+  _globals['_CP_INTERFACEWRAPPER']._serialized_end=448
+  _globals['_INTERFACEWRAPPER_CP']._serialized_start=451
+  _globals['_INTERFACEWRAPPER_CP']._serialized_end=606
+  _globals['_INTERFACEROBOTCOMMANDS_CP']._serialized_start=608
+  _globals['_INTERFACEROBOTCOMMANDS_CP']._serialized_end=701
+  _globals['_INTERFACECOMMAND_CP']._serialized_start=704
+  _globals['_INTERFACECOMMAND_CP']._serialized_end=833
 # @@protoc_insertion_point(module_scope)
