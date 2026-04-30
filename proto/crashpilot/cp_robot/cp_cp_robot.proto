@@ -29,9 +29,9 @@ message CP_Command {
 
   optional Vector2 pos = 3;
   optional uint32 speed = 4;
-  optional float orientation = 5;
+  optional uint32 orientation = 5;
 
-  optional float kick_orient = 6;
+  optional uint32 kick_orient = 6;
   optional uint32 kick_speed = 7;
 }
 
