@@ -22,9 +22,10 @@ _runtime_version.ValidateProtobufRuntimeVersion(
 _sym_db = _symbol_database.Default()
 
 
+from geom import ssl_gc_geometry_pb2 as geom_dot_ssl__gc__geometry__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x17\x63rashpilot/common.proto\"G\n\x07\x43P_Ball\x12\x1d\n\x03pos\x18\x01 \x02(\x0b\x32\x0b.CP_Vector2R\x03pos\x12\x1d\n\x03vel\x18\x02 \x01(\x0b\x32\x0b.CP_Vector2R\x03vel\"\x8c\x01\n\x0f\x43P_TrackedRobot\x12\x19\n\x08robot_id\x18\x01 \x02(\rR\x07robotId\x12\x1d\n\x03pos\x18\x02 \x02(\x0b\x32\x0b.CP_Vector2R\x03pos\x12 \n\x0borientation\x18\x03 \x02(\x02R\x0borientation\x12\x1d\n\x03vel\x18\x04 \x01(\x0b\x32\x0b.CP_Vector2R\x03vel\"(\n\nCP_Vector2\x12\x0c\n\x01x\x18\x01 \x02(\x05R\x01x\x12\x0c\n\x01y\x18\x02 \x02(\x05R\x01yB\x0f\x42\x0b\x43ommonProtoP\x01')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x17\x63rashpilot/common.proto\x1a\x1ageom/ssl_gc_geometry.proto\"l\n\rCP_KickedBall\x12\x1a\n\x03pos\x18\x01 \x02(\x0b\x32\x08.Vector2R\x03pos\x12\x1a\n\x03vel\x18\x02 \x02(\x0b\x32\x08.Vector3R\x03vel\x12#\n\x08stop_pos\x18\x05 \x01(\x0b\x32\x08.Vector2R\x07stopPos\"\xa7\x01\n\x0f\x43P_TrackedRobot\x12\x19\n\x08robot_id\x18\x01 \x02(\rR\x07robotId\x12\x1a\n\x03pos\x18\x02 \x02(\x0b\x32\x08.Vector2R\x03pos\x12 \n\x0borientation\x18\x03 \x02(\x02R\x0borientation\x12\x1a\n\x03vel\x18\x04 \x01(\x0b\x32\x08.Vector2R\x03vel\x12\x1f\n\x0bvel_angular\x18\x05 \x01(\x02R\nvelAngularB\x0f\x42\x0b\x43ommonProtoP\x01')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -32,10 +33,8 @@ _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'crashpilot.common_pb2', _gl
 if not _descriptor._USE_C_DESCRIPTORS:
   _globals['DESCRIPTOR']._loaded_options = None
   _globals['DESCRIPTOR']._serialized_options = b'B\013CommonProtoP\001'
-  _globals['_CP_BALL']._serialized_start=27
-  _globals['_CP_BALL']._serialized_end=98
-  _globals['_CP_TRACKEDROBOT']._serialized_start=101
-  _globals['_CP_TRACKEDROBOT']._serialized_end=241
-  _globals['_CP_VECTOR2']._serialized_start=243
-  _globals['_CP_VECTOR2']._serialized_end=283
+  _globals['_CP_KICKEDBALL']._serialized_start=55
+  _globals['_CP_KICKEDBALL']._serialized_end=163
+  _globals['_CP_TRACKEDROBOT']._serialized_start=166
+  _globals['_CP_TRACKEDROBOT']._serialized_end=333
 # @@protoc_insertion_point(module_scope)

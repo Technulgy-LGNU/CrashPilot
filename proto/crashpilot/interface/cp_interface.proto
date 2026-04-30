@@ -1,39 +1,9 @@
 syntax = "proto2";
-
 import "crashpilot/cp_robot/cp_cp_robot.proto";
-import "state/ssl_gc_referee_message.proto";
-import "vision_tracked/messages_robocup_ssl_wrapper_tracked.proto";
-import "vision_tracked/messages_robocup_ssl_wrapper.proto";
 
-// buf:lint:ignore MESSAGE_PASCAL_CASE
-message CP_InterfaceWrapper {
-  optional SSL_WrapperPacket vision_raw = 1;
-  optional TrackerWrapperPacket vision_tracked = 2;
+message CP_Interface {
+  required uint32 robot_id = 1;
 
-  optional Referee gc_data = 3;
-
-  repeated CP_Robot robot_commands = 4;
+  required CP_Command command = 2;
 }
 
-// buf:lint:ignore MESSAGE_PASCAL_CASE
-message InterfaceWrapper_CP {
-  repeated InterfaceRobotCommands_CP robot_commands = 1;
-  required InterfaceCommand_CP interface_command = 2;
-}
-
-// buf:lint:ignore MESSAGE_PASCAL_CASE
-message InterfaceRobotCommands_CP {
-  optional uint32 robot_id = 1;
-  optional CP_Command command = 2;
-}
-
-// buf:lint:ignore MESSAGE_PASCAL_CASE
-message InterfaceCommand_CP {
-  // You can decide which quadrant the robot should use to test
-  // 0: -x +y || 1: +x +y || 2: +x -y || 3: -x -y
-  required bool enable_testfield = 1;
-  required uint32 testfield = 2;
-  // You can tell CP to use the raw ball data with a simple consistency filter
-  // The tracked vision doesn't work that good with multiple balls, so for testing we can switch to the raw vision
-  required bool ball_tracked = 3;
-}

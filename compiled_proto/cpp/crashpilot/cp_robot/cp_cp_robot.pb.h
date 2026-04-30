@@ -33,6 +33,7 @@
 #include "google/protobuf/unknown_field_set.h"
 #include "crashpilot/common.pb.h"
 #include "google/protobuf/timestamp.pb.h"
+#include "engine/ssl_gc_engine.pb.h"
 #include "geom/ssl_gc_geometry.pb.h"
 // @@protoc_insertion_point(includes)
 
@@ -86,18 +87,17 @@ enum CP_State : int {
   STATE_STOP = 2,
   STATE_FREE = 3,
   STATE_GOALIE = 4,
-  STATE_SUBSTITUTE = 5,
 };
 
 extern const uint32_t CP_State_internal_data_[];
 inline constexpr CP_State CP_State_MIN =
     static_cast<CP_State>(0);
 inline constexpr CP_State CP_State_MAX =
-    static_cast<CP_State>(5);
+    static_cast<CP_State>(4);
 [[nodiscard]] inline bool CP_State_IsValid(int value) {
-  return 0 <= value && value <= 5;
+  return 0 <= value && value <= 4;
 }
-inline constexpr int CP_State_ARRAYSIZE = 5 + 1;
+inline constexpr int CP_State_ARRAYSIZE = 4 + 1;
 [[nodiscard]] const ::google::protobuf::EnumDescriptor* PROTOBUF_NONNULL
 CP_State_descriptor();
 [[nodiscard]] inline auto ProtobufInternalGetEnumDescriptor(CP_State) {
@@ -112,7 +112,7 @@ template <typename T>
 }
 template <>
 [[nodiscard]] inline const ::std::string& CP_State_Name(CP_State value) {
-  return ::google::protobuf::internal::NameOfDenseEnum<CP_State_descriptor, 0, 5>(
+  return ::google::protobuf::internal::NameOfDenseEnum<CP_State_descriptor, 0, 4>(
       static_cast<int>(value));
 }
 [[nodiscard]] inline bool CP_State_Parse(
@@ -129,7 +129,9 @@ enum CP_Task : int {
   TASK_STEAL = 5,
   TASK_DRIBBLE = 6,
   TASK_PosBall = 7,
+  TASK_RecBall = 8,
   STATE_KICKOFF = 9,
+  STATE_BALLPLACEMENT = 10,
   STATE_FREEKICK = 11,
 };
 
@@ -139,7 +141,7 @@ inline constexpr CP_Task CP_Task_MIN =
 inline constexpr CP_Task CP_Task_MAX =
     static_cast<CP_Task>(11);
 [[nodiscard]] inline bool CP_Task_IsValid(int value) {
-  return 0 <= value && value <= 11 && ((2815u >> value) & 1) != 0;
+  return 0 <= value && value <= 11;
 }
 inline constexpr int CP_Task_ARRAYSIZE = 11 + 1;
 [[nodiscard]] const ::google::protobuf::EnumDescriptor* PROTOBUF_NONNULL
@@ -324,10 +326,8 @@ class  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED CP_Command final : public ::google:
     kPosFieldNumber = 3,
     kStateFieldNumber = 1,
     kTaskFieldNumber = 2,
-    kSpeedFieldNumber = 4,
-    kOrientationFieldNumber = 5,
-    kKickOrientFieldNumber = 6,
-    kKickSpeedFieldNumber = 7,
+    kOrientationFieldNumber = 4,
+    kKickOrientFieldNumber = 5,
   };
   // optional .Vector2 pos = 3 [json_name = "pos"];
   [[nodiscard]] bool has_pos()
@@ -369,59 +369,35 @@ class  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED CP_Command final : public ::google:
   void _internal_set_task(::CP_Task value);
 
   public:
-  // optional uint32 speed = 4 [json_name = "speed"];
-  [[nodiscard]] bool has_speed()
-      const;
-  void clear_speed() ;
-  [[nodiscard]] ::uint32_t speed() const;
-  void set_speed(::uint32_t value);
-
-  private:
-  ::uint32_t _internal_speed() const;
-  void _internal_set_speed(::uint32_t value);
-
-  public:
-  // optional uint32 orientation = 5 [json_name = "orientation"];
+  // optional float orientation = 4 [json_name = "orientation"];
   [[nodiscard]] bool has_orientation()
       const;
   void clear_orientation() ;
-  [[nodiscard]] ::uint32_t orientation() const;
-  void set_orientation(::uint32_t value);
+  [[nodiscard]] float orientation() const;
+  void set_orientation(float value);
 
   private:
-  ::uint32_t _internal_orientation() const;
-  void _internal_set_orientation(::uint32_t value);
+  float _internal_orientation() const;
+  void _internal_set_orientation(float value);
 
   public:
-  // optional uint32 kick_orient = 6 [json_name = "kickOrient"];
+  // optional float kick_orient = 5 [json_name = "kickOrient"];
   [[nodiscard]] bool has_kick_orient()
       const;
   void clear_kick_orient() ;
-  [[nodiscard]] ::uint32_t kick_orient() const;
-  void set_kick_orient(::uint32_t value);
+  [[nodiscard]] float kick_orient() const;
+  void set_kick_orient(float value);
 
   private:
-  ::uint32_t _internal_kick_orient() const;
-  void _internal_set_kick_orient(::uint32_t value);
-
-  public:
-  // optional uint32 kick_speed = 7 [json_name = "kickSpeed"];
-  [[nodiscard]] bool has_kick_speed()
-      const;
-  void clear_kick_speed() ;
-  [[nodiscard]] ::uint32_t kick_speed() const;
-  void set_kick_speed(::uint32_t value);
-
-  private:
-  ::uint32_t _internal_kick_speed() const;
-  void _internal_set_kick_speed(::uint32_t value);
+  float _internal_kick_orient() const;
+  void _internal_set_kick_orient(float value);
 
   public:
   // @@protoc_insertion_point(class_scope:CP_Command)
  private:
   class _Internal;
   friend class ::google::protobuf::internal::TcParser;
-  static const ::google::protobuf::internal::TcParseTable<3, 7,
+  static const ::google::protobuf::internal::TcParseTable<3, 5,
                                    3, 0,
                                    2>
       _table_;
@@ -448,10 +424,8 @@ class  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED CP_Command final : public ::google:
     ::Vector2* PROTOBUF_NULLABLE pos_;
     int state_;
     int task_;
-    ::uint32_t speed_;
-    ::uint32_t orientation_;
-    ::uint32_t kick_orient_;
-    ::uint32_t kick_speed_;
+    float orientation_;
+    float kick_orient_;
     PROTOBUF_TSAN_DECLARE_MEMBER
   };
   union { Impl_ _impl_; };
@@ -612,15 +586,16 @@ class  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED CP_Robot final : public ::google::p
 
   // accessors -------------------------------------------------------
   enum : int {
-    kRobotsYellowFieldNumber = 5,
-    kRobotsBlueFieldNumber = 6,
+    kRobotsYellowFieldNumber = 6,
+    kRobotsBlueFieldNumber = 7,
     kTimestampFieldNumber = 2,
     kBallFieldNumber = 4,
-    kCmdFieldNumber = 7,
+    kKickedBallFieldNumber = 5,
+    kCmdFieldNumber = 8,
     kRobotIdFieldNumber = 1,
     kPacketIdFieldNumber = 3,
   };
-  // repeated .CP_TrackedRobot robots_yellow = 5 [json_name = "robotsYellow"];
+  // repeated .CP_TrackedRobot robots_yellow = 6 [json_name = "robotsYellow"];
   [[nodiscard]] int robots_yellow_size()
       const;
   private:
@@ -640,7 +615,7 @@ class  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED CP_Robot final : public ::google::p
   ::CP_TrackedRobot* PROTOBUF_NONNULL add_robots_yellow();
   [[nodiscard]] const ::google::protobuf::RepeatedPtrField<::CP_TrackedRobot>& robots_yellow()
       const;
-  // repeated .CP_TrackedRobot robots_blue = 6 [json_name = "robotsBlue"];
+  // repeated .CP_TrackedRobot robots_blue = 7 [json_name = "robotsBlue"];
   [[nodiscard]] int robots_blue_size()
       const;
   private:
@@ -676,23 +651,39 @@ class  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED CP_Robot final : public ::google::p
   ::google::protobuf::Timestamp* PROTOBUF_NONNULL _internal_mutable_timestamp();
 
   public:
-  // required .CP_Ball ball = 4 [json_name = "ball"];
+  // required .Ball ball = 4 [json_name = "ball"];
   [[nodiscard]] bool has_ball()
       const;
   void clear_ball() ;
-  [[nodiscard]] const ::CP_Ball& ball() const;
-  [[nodiscard]] ::CP_Ball* PROTOBUF_NULLABLE release_ball();
-  ::CP_Ball* PROTOBUF_NONNULL mutable_ball();
-  void set_allocated_ball(::CP_Ball* PROTOBUF_NULLABLE value);
-  void unsafe_arena_set_allocated_ball(::CP_Ball* PROTOBUF_NULLABLE value);
-  ::CP_Ball* PROTOBUF_NULLABLE unsafe_arena_release_ball();
+  [[nodiscard]] const ::Ball& ball() const;
+  [[nodiscard]] ::Ball* PROTOBUF_NULLABLE release_ball();
+  ::Ball* PROTOBUF_NONNULL mutable_ball();
+  void set_allocated_ball(::Ball* PROTOBUF_NULLABLE value);
+  void unsafe_arena_set_allocated_ball(::Ball* PROTOBUF_NULLABLE value);
+  ::Ball* PROTOBUF_NULLABLE unsafe_arena_release_ball();
 
   private:
-  const ::CP_Ball& _internal_ball() const;
-  ::CP_Ball* PROTOBUF_NONNULL _internal_mutable_ball();
+  const ::Ball& _internal_ball() const;
+  ::Ball* PROTOBUF_NONNULL _internal_mutable_ball();
 
   public:
-  // required .CP_Command cmd = 7 [json_name = "cmd"];
+  // required .CP_KickedBall kicked_ball = 5 [json_name = "kickedBall"];
+  [[nodiscard]] bool has_kicked_ball()
+      const;
+  void clear_kicked_ball() ;
+  [[nodiscard]] const ::CP_KickedBall& kicked_ball() const;
+  [[nodiscard]] ::CP_KickedBall* PROTOBUF_NULLABLE release_kicked_ball();
+  ::CP_KickedBall* PROTOBUF_NONNULL mutable_kicked_ball();
+  void set_allocated_kicked_ball(::CP_KickedBall* PROTOBUF_NULLABLE value);
+  void unsafe_arena_set_allocated_kicked_ball(::CP_KickedBall* PROTOBUF_NULLABLE value);
+  ::CP_KickedBall* PROTOBUF_NULLABLE unsafe_arena_release_kicked_ball();
+
+  private:
+  const ::CP_KickedBall& _internal_kicked_ball() const;
+  ::CP_KickedBall* PROTOBUF_NONNULL _internal_mutable_kicked_ball();
+
+  public:
+  // required .CP_Command cmd = 8 [json_name = "cmd"];
   [[nodiscard]] bool has_cmd()
       const;
   void clear_cmd() ;
@@ -736,8 +727,8 @@ class  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED CP_Robot final : public ::google::p
  private:
   class _Internal;
   friend class ::google::protobuf::internal::TcParser;
-  static const ::google::protobuf::internal::TcParseTable<3, 7,
-                                   5, 0,
+  static const ::google::protobuf::internal::TcParseTable<3, 8,
+                                   6, 0,
                                    2>
       _table_;
 
@@ -763,7 +754,8 @@ class  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED CP_Robot final : public ::google::p
     ::google::protobuf::RepeatedPtrField< ::CP_TrackedRobot > robots_yellow_;
     ::google::protobuf::RepeatedPtrField< ::CP_TrackedRobot > robots_blue_;
     ::google::protobuf::Timestamp* PROTOBUF_NULLABLE timestamp_;
-    ::CP_Ball* PROTOBUF_NULLABLE ball_;
+    ::Ball* PROTOBUF_NULLABLE ball_;
+    ::CP_KickedBall* PROTOBUF_NULLABLE kicked_ball_;
     ::CP_Command* PROTOBUF_NULLABLE cmd_;
     ::uint32_t robot_id_;
     ::uint32_t packet_id_;
@@ -793,14 +785,14 @@ extern const ::google::protobuf::internal::ClassDataFull CP_Robot_class_data_;
 
 // required uint32 robot_id = 1 [json_name = "robotId"];
 inline bool CP_Robot::has_robot_id() const {
-  bool value = CheckHasBit(_impl_._has_bits_[0], 0x00000020U);
+  bool value = CheckHasBit(_impl_._has_bits_[0], 0x00000040U);
   return value;
 }
 inline void CP_Robot::clear_robot_id() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   _impl_.robot_id_ = 0u;
   ClearHasBit(_impl_._has_bits_[0],
-                  0x00000020U);
+                  0x00000040U);
 }
 inline ::uint32_t CP_Robot::robot_id() const {
   // @@protoc_insertion_point(field_get:CP_Robot.robot_id)
@@ -808,7 +800,7 @@ inline ::uint32_t CP_Robot::robot_id() const {
 }
 inline void CP_Robot::set_robot_id(::uint32_t value) {
   _internal_set_robot_id(value);
-  SetHasBit(_impl_._has_bits_[0], 0x00000020U);
+  SetHasBit(_impl_._has_bits_[0], 0x00000040U);
   // @@protoc_insertion_point(field_set:CP_Robot.robot_id)
 }
 inline ::uint32_t CP_Robot::_internal_robot_id() const {
@@ -915,14 +907,14 @@ inline void CP_Robot::set_allocated_timestamp(::google::protobuf::Timestamp* PRO
 
 // required uint32 packet_id = 3 [json_name = "packetId"];
 inline bool CP_Robot::has_packet_id() const {
-  bool value = CheckHasBit(_impl_._has_bits_[0], 0x00000040U);
+  bool value = CheckHasBit(_impl_._has_bits_[0], 0x00000080U);
   return value;
 }
 inline void CP_Robot::clear_packet_id() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   _impl_.packet_id_ = 0u;
   ClearHasBit(_impl_._has_bits_[0],
-                  0x00000040U);
+                  0x00000080U);
 }
 inline ::uint32_t CP_Robot::packet_id() const {
   // @@protoc_insertion_point(field_get:CP_Robot.packet_id)
@@ -930,7 +922,7 @@ inline ::uint32_t CP_Robot::packet_id() const {
 }
 inline void CP_Robot::set_packet_id(::uint32_t value) {
   _internal_set_packet_id(value);
-  SetHasBit(_impl_._has_bits_[0], 0x00000040U);
+  SetHasBit(_impl_._has_bits_[0], 0x00000080U);
   // @@protoc_insertion_point(field_set:CP_Robot.packet_id)
 }
 inline ::uint32_t CP_Robot::_internal_packet_id() const {
@@ -942,28 +934,28 @@ inline void CP_Robot::_internal_set_packet_id(::uint32_t value) {
   _impl_.packet_id_ = value;
 }
 
-// required .CP_Ball ball = 4 [json_name = "ball"];
+// required .Ball ball = 4 [json_name = "ball"];
 inline bool CP_Robot::has_ball() const {
   bool value = CheckHasBit(_impl_._has_bits_[0], 0x00000008U);
   PROTOBUF_ASSUME(!value || _impl_.ball_ != nullptr);
   return value;
 }
-inline const ::CP_Ball& CP_Robot::_internal_ball() const {
+inline const ::Ball& CP_Robot::_internal_ball() const {
   ::google::protobuf::internal::TSanRead(&_impl_);
-  const ::CP_Ball* p = _impl_.ball_;
-  return p != nullptr ? *p : reinterpret_cast<const ::CP_Ball&>(::_CP_Ball_default_instance_);
+  const ::Ball* p = _impl_.ball_;
+  return p != nullptr ? *p : reinterpret_cast<const ::Ball&>(::_Ball_default_instance_);
 }
-inline const ::CP_Ball& CP_Robot::ball() const ABSL_ATTRIBUTE_LIFETIME_BOUND {
+inline const ::Ball& CP_Robot::ball() const ABSL_ATTRIBUTE_LIFETIME_BOUND {
   // @@protoc_insertion_point(field_get:CP_Robot.ball)
   return _internal_ball();
 }
 inline void CP_Robot::unsafe_arena_set_allocated_ball(
-    ::CP_Ball* PROTOBUF_NULLABLE value) {
+    ::Ball* PROTOBUF_NULLABLE value) {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   if (GetArena() == nullptr) {
     delete reinterpret_cast<::google::protobuf::MessageLite*>(_impl_.ball_);
   }
-  _impl_.ball_ = reinterpret_cast<::CP_Ball*>(value);
+  _impl_.ball_ = reinterpret_cast<::Ball*>(value);
   if (value != nullptr) {
     SetHasBit(_impl_._has_bits_[0], 0x00000008U);
   } else {
@@ -971,11 +963,11 @@ inline void CP_Robot::unsafe_arena_set_allocated_ball(
   }
   // @@protoc_insertion_point(field_unsafe_arena_set_allocated:CP_Robot.ball)
 }
-inline ::CP_Ball* PROTOBUF_NULLABLE CP_Robot::release_ball() {
+inline ::Ball* PROTOBUF_NULLABLE CP_Robot::release_ball() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
 
   ClearHasBit(_impl_._has_bits_[0], 0x00000008U);
-  ::CP_Ball* released = _impl_.ball_;
+  ::Ball* released = _impl_.ball_;
   _impl_.ball_ = nullptr;
   if (::google::protobuf::internal::DebugHardenForceCopyInRelease()) {
     auto* old = reinterpret_cast<::google::protobuf::MessageLite*>(released);
@@ -990,31 +982,31 @@ inline ::CP_Ball* PROTOBUF_NULLABLE CP_Robot::release_ball() {
   }
   return released;
 }
-inline ::CP_Ball* PROTOBUF_NULLABLE CP_Robot::unsafe_arena_release_ball() {
+inline ::Ball* PROTOBUF_NULLABLE CP_Robot::unsafe_arena_release_ball() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   // @@protoc_insertion_point(field_release:CP_Robot.ball)
 
   ClearHasBit(_impl_._has_bits_[0], 0x00000008U);
-  ::CP_Ball* temp = _impl_.ball_;
+  ::Ball* temp = _impl_.ball_;
   _impl_.ball_ = nullptr;
   return temp;
 }
-inline ::CP_Ball* PROTOBUF_NONNULL CP_Robot::_internal_mutable_ball() {
+inline ::Ball* PROTOBUF_NONNULL CP_Robot::_internal_mutable_ball() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   if (_impl_.ball_ == nullptr) {
-    auto* p = ::google::protobuf::Message::DefaultConstruct<::CP_Ball>(GetArena());
-    _impl_.ball_ = reinterpret_cast<::CP_Ball*>(p);
+    auto* p = ::google::protobuf::Message::DefaultConstruct<::Ball>(GetArena());
+    _impl_.ball_ = reinterpret_cast<::Ball*>(p);
   }
   return _impl_.ball_;
 }
-inline ::CP_Ball* PROTOBUF_NONNULL CP_Robot::mutable_ball()
+inline ::Ball* PROTOBUF_NONNULL CP_Robot::mutable_ball()
     ABSL_ATTRIBUTE_LIFETIME_BOUND {
   SetHasBit(_impl_._has_bits_[0], 0x00000008U);
-  ::CP_Ball* _msg = _internal_mutable_ball();
+  ::Ball* _msg = _internal_mutable_ball();
   // @@protoc_insertion_point(field_mutable:CP_Robot.ball)
   return _msg;
 }
-inline void CP_Robot::set_allocated_ball(::CP_Ball* PROTOBUF_NULLABLE value) {
+inline void CP_Robot::set_allocated_ball(::Ball* PROTOBUF_NULLABLE value) {
   ::google::protobuf::Arena* message_arena = GetArena();
   ::google::protobuf::internal::TSanWrite(&_impl_);
   if (message_arena == nullptr) {
@@ -1031,11 +1023,104 @@ inline void CP_Robot::set_allocated_ball(::CP_Ball* PROTOBUF_NULLABLE value) {
     ClearHasBit(_impl_._has_bits_[0], 0x00000008U);
   }
 
-  _impl_.ball_ = reinterpret_cast<::CP_Ball*>(value);
+  _impl_.ball_ = reinterpret_cast<::Ball*>(value);
   // @@protoc_insertion_point(field_set_allocated:CP_Robot.ball)
 }
 
-// repeated .CP_TrackedRobot robots_yellow = 5 [json_name = "robotsYellow"];
+// required .CP_KickedBall kicked_ball = 5 [json_name = "kickedBall"];
+inline bool CP_Robot::has_kicked_ball() const {
+  bool value = CheckHasBit(_impl_._has_bits_[0], 0x00000010U);
+  PROTOBUF_ASSUME(!value || _impl_.kicked_ball_ != nullptr);
+  return value;
+}
+inline const ::CP_KickedBall& CP_Robot::_internal_kicked_ball() const {
+  ::google::protobuf::internal::TSanRead(&_impl_);
+  const ::CP_KickedBall* p = _impl_.kicked_ball_;
+  return p != nullptr ? *p : reinterpret_cast<const ::CP_KickedBall&>(::_CP_KickedBall_default_instance_);
+}
+inline const ::CP_KickedBall& CP_Robot::kicked_ball() const ABSL_ATTRIBUTE_LIFETIME_BOUND {
+  // @@protoc_insertion_point(field_get:CP_Robot.kicked_ball)
+  return _internal_kicked_ball();
+}
+inline void CP_Robot::unsafe_arena_set_allocated_kicked_ball(
+    ::CP_KickedBall* PROTOBUF_NULLABLE value) {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  if (GetArena() == nullptr) {
+    delete reinterpret_cast<::google::protobuf::MessageLite*>(_impl_.kicked_ball_);
+  }
+  _impl_.kicked_ball_ = reinterpret_cast<::CP_KickedBall*>(value);
+  if (value != nullptr) {
+    SetHasBit(_impl_._has_bits_[0], 0x00000010U);
+  } else {
+    ClearHasBit(_impl_._has_bits_[0], 0x00000010U);
+  }
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:CP_Robot.kicked_ball)
+}
+inline ::CP_KickedBall* PROTOBUF_NULLABLE CP_Robot::release_kicked_ball() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+
+  ClearHasBit(_impl_._has_bits_[0], 0x00000010U);
+  ::CP_KickedBall* released = _impl_.kicked_ball_;
+  _impl_.kicked_ball_ = nullptr;
+  if (::google::protobuf::internal::DebugHardenForceCopyInRelease()) {
+    auto* old = reinterpret_cast<::google::protobuf::MessageLite*>(released);
+    released = ::google::protobuf::internal::DuplicateIfNonNull(released);
+    if (GetArena() == nullptr) {
+      delete old;
+    }
+  } else {
+    if (GetArena() != nullptr) {
+      released = ::google::protobuf::internal::DuplicateIfNonNull(released);
+    }
+  }
+  return released;
+}
+inline ::CP_KickedBall* PROTOBUF_NULLABLE CP_Robot::unsafe_arena_release_kicked_ball() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  // @@protoc_insertion_point(field_release:CP_Robot.kicked_ball)
+
+  ClearHasBit(_impl_._has_bits_[0], 0x00000010U);
+  ::CP_KickedBall* temp = _impl_.kicked_ball_;
+  _impl_.kicked_ball_ = nullptr;
+  return temp;
+}
+inline ::CP_KickedBall* PROTOBUF_NONNULL CP_Robot::_internal_mutable_kicked_ball() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  if (_impl_.kicked_ball_ == nullptr) {
+    auto* p = ::google::protobuf::Message::DefaultConstruct<::CP_KickedBall>(GetArena());
+    _impl_.kicked_ball_ = reinterpret_cast<::CP_KickedBall*>(p);
+  }
+  return _impl_.kicked_ball_;
+}
+inline ::CP_KickedBall* PROTOBUF_NONNULL CP_Robot::mutable_kicked_ball()
+    ABSL_ATTRIBUTE_LIFETIME_BOUND {
+  SetHasBit(_impl_._has_bits_[0], 0x00000010U);
+  ::CP_KickedBall* _msg = _internal_mutable_kicked_ball();
+  // @@protoc_insertion_point(field_mutable:CP_Robot.kicked_ball)
+  return _msg;
+}
+inline void CP_Robot::set_allocated_kicked_ball(::CP_KickedBall* PROTOBUF_NULLABLE value) {
+  ::google::protobuf::Arena* message_arena = GetArena();
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  if (message_arena == nullptr) {
+    delete reinterpret_cast<::google::protobuf::MessageLite*>(_impl_.kicked_ball_);
+  }
+
+  if (value != nullptr) {
+    ::google::protobuf::Arena* submessage_arena = reinterpret_cast<::google::protobuf::Message*>(value)->GetArena();
+    if (message_arena != submessage_arena) {
+      value = ::google::protobuf::internal::GetOwnedMessage(message_arena, value, submessage_arena);
+    }
+    SetHasBit(_impl_._has_bits_[0], 0x00000010U);
+  } else {
+    ClearHasBit(_impl_._has_bits_[0], 0x00000010U);
+  }
+
+  _impl_.kicked_ball_ = reinterpret_cast<::CP_KickedBall*>(value);
+  // @@protoc_insertion_point(field_set_allocated:CP_Robot.kicked_ball)
+}
+
+// repeated .CP_TrackedRobot robots_yellow = 6 [json_name = "robotsYellow"];
 inline int CP_Robot::_internal_robots_yellow_size() const {
   return _internal_robots_yellow().size();
 }
@@ -1085,7 +1170,7 @@ CP_Robot::_internal_mutable_robots_yellow() {
   return &_impl_.robots_yellow_;
 }
 
-// repeated .CP_TrackedRobot robots_blue = 6 [json_name = "robotsBlue"];
+// repeated .CP_TrackedRobot robots_blue = 7 [json_name = "robotsBlue"];
 inline int CP_Robot::_internal_robots_blue_size() const {
   return _internal_robots_blue().size();
 }
@@ -1135,9 +1220,9 @@ CP_Robot::_internal_mutable_robots_blue() {
   return &_impl_.robots_blue_;
 }
 
-// required .CP_Command cmd = 7 [json_name = "cmd"];
+// required .CP_Command cmd = 8 [json_name = "cmd"];
 inline bool CP_Robot::has_cmd() const {
-  bool value = CheckHasBit(_impl_._has_bits_[0], 0x00000010U);
+  bool value = CheckHasBit(_impl_._has_bits_[0], 0x00000020U);
   PROTOBUF_ASSUME(!value || _impl_.cmd_ != nullptr);
   return value;
 }
@@ -1145,7 +1230,7 @@ inline void CP_Robot::clear_cmd() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   if (_impl_.cmd_ != nullptr) _impl_.cmd_->Clear();
   ClearHasBit(_impl_._has_bits_[0],
-                  0x00000010U);
+                  0x00000020U);
 }
 inline const ::CP_Command& CP_Robot::_internal_cmd() const {
   ::google::protobuf::internal::TSanRead(&_impl_);
@@ -1164,16 +1249,16 @@ inline void CP_Robot::unsafe_arena_set_allocated_cmd(
   }
   _impl_.cmd_ = reinterpret_cast<::CP_Command*>(value);
   if (value != nullptr) {
-    SetHasBit(_impl_._has_bits_[0], 0x00000010U);
+    SetHasBit(_impl_._has_bits_[0], 0x00000020U);
   } else {
-    ClearHasBit(_impl_._has_bits_[0], 0x00000010U);
+    ClearHasBit(_impl_._has_bits_[0], 0x00000020U);
   }
   // @@protoc_insertion_point(field_unsafe_arena_set_allocated:CP_Robot.cmd)
 }
 inline ::CP_Command* PROTOBUF_NULLABLE CP_Robot::release_cmd() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
 
-  ClearHasBit(_impl_._has_bits_[0], 0x00000010U);
+  ClearHasBit(_impl_._has_bits_[0], 0x00000020U);
   ::CP_Command* released = _impl_.cmd_;
   _impl_.cmd_ = nullptr;
   if (::google::protobuf::internal::DebugHardenForceCopyInRelease()) {
@@ -1193,7 +1278,7 @@ inline ::CP_Command* PROTOBUF_NULLABLE CP_Robot::unsafe_arena_release_cmd() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   // @@protoc_insertion_point(field_release:CP_Robot.cmd)
 
-  ClearHasBit(_impl_._has_bits_[0], 0x00000010U);
+  ClearHasBit(_impl_._has_bits_[0], 0x00000020U);
   ::CP_Command* temp = _impl_.cmd_;
   _impl_.cmd_ = nullptr;
   return temp;
@@ -1208,7 +1293,7 @@ inline ::CP_Command* PROTOBUF_NONNULL CP_Robot::_internal_mutable_cmd() {
 }
 inline ::CP_Command* PROTOBUF_NONNULL CP_Robot::mutable_cmd()
     ABSL_ATTRIBUTE_LIFETIME_BOUND {
-  SetHasBit(_impl_._has_bits_[0], 0x00000010U);
+  SetHasBit(_impl_._has_bits_[0], 0x00000020U);
   ::CP_Command* _msg = _internal_mutable_cmd();
   // @@protoc_insertion_point(field_mutable:CP_Robot.cmd)
   return _msg;
@@ -1225,9 +1310,9 @@ inline void CP_Robot::set_allocated_cmd(::CP_Command* PROTOBUF_NULLABLE value) {
     if (message_arena != submessage_arena) {
       value = ::google::protobuf::internal::GetOwnedMessage(message_arena, value, submessage_arena);
     }
-    SetHasBit(_impl_._has_bits_[0], 0x00000010U);
+    SetHasBit(_impl_._has_bits_[0], 0x00000020U);
   } else {
-    ClearHasBit(_impl_._has_bits_[0], 0x00000010U);
+    ClearHasBit(_impl_._has_bits_[0], 0x00000020U);
   }
 
   _impl_.cmd_ = reinterpret_cast<::CP_Command*>(value);
@@ -1395,120 +1480,62 @@ inline void CP_Command::set_allocated_pos(::Vector2* PROTOBUF_NULLABLE value) {
   // @@protoc_insertion_point(field_set_allocated:CP_Command.pos)
 }
 
-// optional uint32 speed = 4 [json_name = "speed"];
-inline bool CP_Command::has_speed() const {
-  bool value = CheckHasBit(_impl_._has_bits_[0], 0x00000008U);
-  return value;
-}
-inline void CP_Command::clear_speed() {
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-  _impl_.speed_ = 0u;
-  ClearHasBit(_impl_._has_bits_[0],
-                  0x00000008U);
-}
-inline ::uint32_t CP_Command::speed() const {
-  // @@protoc_insertion_point(field_get:CP_Command.speed)
-  return _internal_speed();
-}
-inline void CP_Command::set_speed(::uint32_t value) {
-  _internal_set_speed(value);
-  SetHasBit(_impl_._has_bits_[0], 0x00000008U);
-  // @@protoc_insertion_point(field_set:CP_Command.speed)
-}
-inline ::uint32_t CP_Command::_internal_speed() const {
-  ::google::protobuf::internal::TSanRead(&_impl_);
-  return _impl_.speed_;
-}
-inline void CP_Command::_internal_set_speed(::uint32_t value) {
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-  _impl_.speed_ = value;
-}
-
-// optional uint32 orientation = 5 [json_name = "orientation"];
+// optional float orientation = 4 [json_name = "orientation"];
 inline bool CP_Command::has_orientation() const {
-  bool value = CheckHasBit(_impl_._has_bits_[0], 0x00000010U);
+  bool value = CheckHasBit(_impl_._has_bits_[0], 0x00000008U);
   return value;
 }
 inline void CP_Command::clear_orientation() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
-  _impl_.orientation_ = 0u;
+  _impl_.orientation_ = 0;
   ClearHasBit(_impl_._has_bits_[0],
-                  0x00000010U);
+                  0x00000008U);
 }
-inline ::uint32_t CP_Command::orientation() const {
+inline float CP_Command::orientation() const {
   // @@protoc_insertion_point(field_get:CP_Command.orientation)
   return _internal_orientation();
 }
-inline void CP_Command::set_orientation(::uint32_t value) {
+inline void CP_Command::set_orientation(float value) {
   _internal_set_orientation(value);
-  SetHasBit(_impl_._has_bits_[0], 0x00000010U);
+  SetHasBit(_impl_._has_bits_[0], 0x00000008U);
   // @@protoc_insertion_point(field_set:CP_Command.orientation)
 }
-inline ::uint32_t CP_Command::_internal_orientation() const {
+inline float CP_Command::_internal_orientation() const {
   ::google::protobuf::internal::TSanRead(&_impl_);
   return _impl_.orientation_;
 }
-inline void CP_Command::_internal_set_orientation(::uint32_t value) {
+inline void CP_Command::_internal_set_orientation(float value) {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   _impl_.orientation_ = value;
 }
 
-// optional uint32 kick_orient = 6 [json_name = "kickOrient"];
+// optional float kick_orient = 5 [json_name = "kickOrient"];
 inline bool CP_Command::has_kick_orient() const {
-  bool value = CheckHasBit(_impl_._has_bits_[0], 0x00000020U);
+  bool value = CheckHasBit(_impl_._has_bits_[0], 0x00000010U);
   return value;
 }
 inline void CP_Command::clear_kick_orient() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
-  _impl_.kick_orient_ = 0u;
+  _impl_.kick_orient_ = 0;
   ClearHasBit(_impl_._has_bits_[0],
-                  0x00000020U);
+                  0x00000010U);
 }
-inline ::uint32_t CP_Command::kick_orient() const {
+inline float CP_Command::kick_orient() const {
   // @@protoc_insertion_point(field_get:CP_Command.kick_orient)
   return _internal_kick_orient();
 }
-inline void CP_Command::set_kick_orient(::uint32_t value) {
+inline void CP_Command::set_kick_orient(float value) {
   _internal_set_kick_orient(value);
-  SetHasBit(_impl_._has_bits_[0], 0x00000020U);
+  SetHasBit(_impl_._has_bits_[0], 0x00000010U);
   // @@protoc_insertion_point(field_set:CP_Command.kick_orient)
 }
-inline ::uint32_t CP_Command::_internal_kick_orient() const {
+inline float CP_Command::_internal_kick_orient() const {
   ::google::protobuf::internal::TSanRead(&_impl_);
   return _impl_.kick_orient_;
 }
-inline void CP_Command::_internal_set_kick_orient(::uint32_t value) {
+inline void CP_Command::_internal_set_kick_orient(float value) {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   _impl_.kick_orient_ = value;
-}
-
-// optional uint32 kick_speed = 7 [json_name = "kickSpeed"];
-inline bool CP_Command::has_kick_speed() const {
-  bool value = CheckHasBit(_impl_._has_bits_[0], 0x00000040U);
-  return value;
-}
-inline void CP_Command::clear_kick_speed() {
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-  _impl_.kick_speed_ = 0u;
-  ClearHasBit(_impl_._has_bits_[0],
-                  0x00000040U);
-}
-inline ::uint32_t CP_Command::kick_speed() const {
-  // @@protoc_insertion_point(field_get:CP_Command.kick_speed)
-  return _internal_kick_speed();
-}
-inline void CP_Command::set_kick_speed(::uint32_t value) {
-  _internal_set_kick_speed(value);
-  SetHasBit(_impl_._has_bits_[0], 0x00000040U);
-  // @@protoc_insertion_point(field_set:CP_Command.kick_speed)
-}
-inline ::uint32_t CP_Command::_internal_kick_speed() const {
-  ::google::protobuf::internal::TSanRead(&_impl_);
-  return _impl_.kick_speed_;
-}
-inline void CP_Command::_internal_set_kick_speed(::uint32_t value) {
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-  _impl_.kick_speed_ = value;
 }
 
 #ifdef __GNUC__

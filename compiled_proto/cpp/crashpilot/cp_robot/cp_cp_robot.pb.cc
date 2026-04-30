@@ -33,10 +33,8 @@ inline constexpr CP_Command::Impl_::Impl_(
         pos_{nullptr},
         state_{static_cast< ::CP_State >(0)},
         task_{static_cast< ::CP_Task >(0)},
-        speed_{0u},
-        orientation_{0u},
-        kick_orient_{0u},
-        kick_speed_{0u} {}
+        orientation_{0},
+        kick_orient_{0} {}
 
 template <typename>
 constexpr CP_Command::CP_Command(::_pbi::ConstantInitialized)
@@ -82,6 +80,7 @@ inline constexpr CP_Robot::Impl_::Impl_(
         ,
         timestamp_{nullptr},
         ball_{nullptr},
+        kicked_ball_{nullptr},
         cmd_{nullptr},
         robot_id_{0u},
         packet_id_{0u} {}
@@ -114,44 +113,42 @@ const ::uint32_t
         protodesc_cold) = {
         0x081, // bitmap
         PROTOBUF_FIELD_OFFSET(::CP_Robot, _impl_._has_bits_),
-        10, // hasbit index offset
+        11, // hasbit index offset
         PROTOBUF_FIELD_OFFSET(::CP_Robot, _impl_.robot_id_),
         PROTOBUF_FIELD_OFFSET(::CP_Robot, _impl_.timestamp_),
         PROTOBUF_FIELD_OFFSET(::CP_Robot, _impl_.packet_id_),
         PROTOBUF_FIELD_OFFSET(::CP_Robot, _impl_.ball_),
+        PROTOBUF_FIELD_OFFSET(::CP_Robot, _impl_.kicked_ball_),
         PROTOBUF_FIELD_OFFSET(::CP_Robot, _impl_.robots_yellow_),
         PROTOBUF_FIELD_OFFSET(::CP_Robot, _impl_.robots_blue_),
         PROTOBUF_FIELD_OFFSET(::CP_Robot, _impl_.cmd_),
-        5,
-        2,
         6,
+        2,
+        7,
         3,
+        4,
         0,
         1,
-        4,
+        5,
         0x081, // bitmap
         PROTOBUF_FIELD_OFFSET(::CP_Command, _impl_._has_bits_),
-        10, // hasbit index offset
+        8, // hasbit index offset
         PROTOBUF_FIELD_OFFSET(::CP_Command, _impl_.state_),
         PROTOBUF_FIELD_OFFSET(::CP_Command, _impl_.task_),
         PROTOBUF_FIELD_OFFSET(::CP_Command, _impl_.pos_),
-        PROTOBUF_FIELD_OFFSET(::CP_Command, _impl_.speed_),
         PROTOBUF_FIELD_OFFSET(::CP_Command, _impl_.orientation_),
         PROTOBUF_FIELD_OFFSET(::CP_Command, _impl_.kick_orient_),
-        PROTOBUF_FIELD_OFFSET(::CP_Command, _impl_.kick_speed_),
         1,
         2,
         0,
         3,
         4,
-        5,
-        6,
 };
 
 static const ::_pbi::MigrationSchema
     schemas[] ABSL_ATTRIBUTE_SECTION_VARIABLE(protodesc_cold) = {
         {0, sizeof(::CP_Robot)},
-        {17, sizeof(::CP_Command)},
+        {19, sizeof(::CP_Command)},
 };
 static const ::_pb::Message* PROTOBUF_NONNULL const file_default_instances[] = {
     &::_CP_Robot_default_instance_._instance,
@@ -161,33 +158,35 @@ const char descriptor_table_protodef_crashpilot_2fcp_5frobot_2fcp_5fcp_5frobot_2
     protodesc_cold) = {
     "\n%crashpilot/cp_robot/cp_cp_robot.proto\032"
     "\027crashpilot/common.proto\032\037google/protobu"
-    "f/timestamp.proto\032\032geom/ssl_gc_geometry."
-    "proto\"\243\002\n\010CP_Robot\022\031\n\010robot_id\030\001 \002(\rR\007ro"
-    "botId\0228\n\ttimestamp\030\002 \002(\0132\032.google.protob"
-    "uf.TimestampR\ttimestamp\022\033\n\tpacket_id\030\003 \002"
-    "(\rR\010packetId\022\034\n\004ball\030\004 \002(\0132\010.CP_BallR\004ba"
-    "ll\0225\n\rrobots_yellow\030\005 \003(\0132\020.CP_TrackedRo"
-    "botR\014robotsYellow\0221\n\013robots_blue\030\006 \003(\0132\020"
-    ".CP_TrackedRobotR\nrobotsBlue\022\035\n\003cmd\030\007 \002("
-    "\0132\013.CP_CommandR\003cmd\"\337\001\n\nCP_Command\022\037\n\005st"
-    "ate\030\001 \002(\0162\t.CP_StateR\005state\022\034\n\004task\030\002 \002("
-    "\0162\010.CP_TaskR\004task\022\032\n\003pos\030\003 \001(\0132\010.Vector2"
-    "R\003pos\022\024\n\005speed\030\004 \001(\rR\005speed\022 \n\013orientati"
-    "on\030\005 \001(\rR\013orientation\022\037\n\013kick_orient\030\006 \001"
-    "(\rR\nkickOrient\022\035\n\nkick_speed\030\007 \001(\rR\tkick"
-    "Speed*y\n\010CP_State\022\025\n\021STATE_UNSPECIFIED\020\000"
-    "\022\016\n\nSTATE_HALT\020\001\022\016\n\nSTATE_STOP\020\002\022\016\n\nSTAT"
-    "E_FREE\020\003\022\020\n\014STATE_GOALIE\020\004\022\024\n\020STATE_SUBS"
-    "TITUTE\020\005*\271\001\n\007CP_Task\022\024\n\020TASK_UNSPECIFIED"
-    "\020\000\022\014\n\010TASK_POS\020\001\022\r\n\tTASK_KICK\020\002\022\r\n\tTASK_"
-    "CHIP\020\003\022\021\n\rTASK_REC_KICK\020\004\022\016\n\nTASK_STEAL\020"
-    "\005\022\020\n\014TASK_DRIBBLE\020\006\022\020\n\014TASK_PosBall\020\007\022\021\n"
-    "\rSTATE_KICKOFF\020\t\022\022\n\016STATE_FREEKICK\020\013B\022B\016"
-    "CpCpRobotProtoP\001"
+    "f/timestamp.proto\032\032engine/ssl_gc_engine."
+    "proto\032\032geom/ssl_gc_geometry.proto\"\321\002\n\010CP"
+    "_Robot\022\031\n\010robot_id\030\001 \002(\rR\007robotId\0228\n\ttim"
+    "estamp\030\002 \002(\0132\032.google.protobuf.Timestamp"
+    "R\ttimestamp\022\033\n\tpacket_id\030\003 \002(\rR\010packetId"
+    "\022\031\n\004ball\030\004 \002(\0132\005.BallR\004ball\022/\n\013kicked_ba"
+    "ll\030\005 \002(\0132\016.CP_KickedBallR\nkickedBall\0225\n\r"
+    "robots_yellow\030\006 \003(\0132\020.CP_TrackedRobotR\014r"
+    "obotsYellow\0221\n\013robots_blue\030\007 \003(\0132\020.CP_Tr"
+    "ackedRobotR\nrobotsBlue\022\035\n\003cmd\030\010 \002(\0132\013.CP"
+    "_CommandR\003cmd\"\252\001\n\nCP_Command\022\037\n\005state\030\001 "
+    "\002(\0162\t.CP_StateR\005state\022\034\n\004task\030\002 \002(\0162\010.CP"
+    "_TaskR\004task\022\032\n\003pos\030\003 \001(\0132\010.Vector2R\003pos\022"
+    " \n\013orientation\030\004 \001(\002R\013orientation\022\037\n\013kic"
+    "k_orient\030\005 \001(\002R\nkickOrient*c\n\010CP_State\022\025"
+    "\n\021STATE_UNSPECIFIED\020\000\022\016\n\nSTATE_HALT\020\001\022\016\n"
+    "\nSTATE_STOP\020\002\022\016\n\nSTATE_FREE\020\003\022\020\n\014STATE_G"
+    "OALIE\020\004*\344\001\n\007CP_Task\022\024\n\020TASK_UNSPECIFIED\020"
+    "\000\022\014\n\010TASK_POS\020\001\022\r\n\tTASK_KICK\020\002\022\r\n\tTASK_C"
+    "HIP\020\003\022\021\n\rTASK_REC_KICK\020\004\022\016\n\nTASK_STEAL\020\005"
+    "\022\020\n\014TASK_DRIBBLE\020\006\022\020\n\014TASK_PosBall\020\007\022\020\n\014"
+    "TASK_RecBall\020\010\022\021\n\rSTATE_KICKOFF\020\t\022\027\n\023STA"
+    "TE_BALLPLACEMENT\020\n\022\022\n\016STATE_FREEKICK\020\013B\022"
+    "B\016CpCpRobotProtoP\001"
 };
 static const ::_pbi::DescriptorTable* PROTOBUF_NONNULL const
-    descriptor_table_crashpilot_2fcp_5frobot_2fcp_5fcp_5frobot_2eproto_deps[3] = {
+    descriptor_table_crashpilot_2fcp_5frobot_2fcp_5fcp_5frobot_2eproto_deps[4] = {
         &::descriptor_table_crashpilot_2fcommon_2eproto,
+        &::descriptor_table_engine_2fssl_5fgc_5fengine_2eproto,
         &::descriptor_table_geom_2fssl_5fgc_5fgeometry_2eproto,
         &::descriptor_table_google_2fprotobuf_2ftimestamp_2eproto,
 };
@@ -195,12 +194,12 @@ static ::absl::once_flag descriptor_table_crashpilot_2fcp_5frobot_2fcp_5fcp_5fro
 PROTOBUF_CONSTINIT const ::_pbi::DescriptorTable descriptor_table_crashpilot_2fcp_5frobot_2fcp_5fcp_5frobot_2eproto = {
     false,
     false,
-    976,
+    1018,
     descriptor_table_protodef_crashpilot_2fcp_5frobot_2fcp_5fcp_5frobot_2eproto,
     "crashpilot/cp_robot/cp_cp_robot.proto",
     &descriptor_table_crashpilot_2fcp_5frobot_2fcp_5fcp_5frobot_2eproto_once,
     descriptor_table_crashpilot_2fcp_5frobot_2fcp_5fcp_5frobot_2eproto_deps,
-    3,
+    4,
     2,
     schemas,
     file_default_instances,
@@ -214,14 +213,14 @@ CP_State_descriptor() {
   return file_level_enum_descriptors_crashpilot_2fcp_5frobot_2fcp_5fcp_5frobot_2eproto[0];
 }
 PROTOBUF_CONSTINIT const uint32_t CP_State_internal_data_[] = {
-    393216u, 0u, };
+    327680u, 0u, };
 [[nodiscard]] const ::google::protobuf::EnumDescriptor* PROTOBUF_NONNULL
 CP_Task_descriptor() {
   ::google::protobuf::internal::AssignDescriptors(&descriptor_table_crashpilot_2fcp_5frobot_2fcp_5fcp_5frobot_2eproto);
   return file_level_enum_descriptors_crashpilot_2fcp_5frobot_2fcp_5fcp_5frobot_2eproto[1];
 }
 PROTOBUF_CONSTINIT const uint32_t CP_Task_internal_data_[] = {
-    524288u, 32u, 10u, };
+    786432u, 0u, };
 // ===================================================================
 
 class CP_Robot::_Internal {
@@ -231,7 +230,7 @@ class CP_Robot::_Internal {
   static constexpr ::int32_t kHasBitsOffset =
       8 * PROTOBUF_FIELD_OFFSET(CP_Robot, _impl_._has_bits_);
   static bool MissingRequiredFields(const HasBits& has_bits) {
-    return ((has_bits[0] & 0x0000007c) ^ 0x0000007c) != 0;
+    return ((has_bits[0] & 0x000000fc) ^ 0x000000fc) != 0;
   }
 };
 
@@ -246,6 +245,12 @@ void CP_Robot::clear_ball() {
   if (_impl_.ball_ != nullptr) _impl_.ball_->Clear();
   ClearHasBit(_impl_._has_bits_[0],
                   0x00000008U);
+}
+void CP_Robot::clear_kicked_ball() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  if (_impl_.kicked_ball_ != nullptr) _impl_.kicked_ball_->Clear();
+  ClearHasBit(_impl_._has_bits_[0],
+                  0x00000010U);
 }
 void CP_Robot::clear_robots_yellow() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
@@ -313,7 +318,10 @@ CP_Robot::CP_Robot(
   _impl_.ball_ = (CheckHasBit(cached_has_bits, 0x00000008U))
                 ? ::google::protobuf::Message::CopyConstruct(arena, *from._impl_.ball_)
                 : nullptr;
-  _impl_.cmd_ = (CheckHasBit(cached_has_bits, 0x00000010U))
+  _impl_.kicked_ball_ = (CheckHasBit(cached_has_bits, 0x00000010U))
+                ? ::google::protobuf::Message::CopyConstruct(arena, *from._impl_.kicked_ball_)
+                : nullptr;
+  _impl_.cmd_ = (CheckHasBit(cached_has_bits, 0x00000020U))
                 ? ::google::protobuf::Message::CopyConstruct(arena, *from._impl_.cmd_)
                 : nullptr;
   ::memcpy(reinterpret_cast<char*>(&_impl_) +
@@ -371,6 +379,7 @@ inline void CP_Robot::SharedDtor(MessageLite& self) {
   ABSL_DCHECK(this_.GetArena() == nullptr);
   delete this_._impl_.timestamp_;
   delete this_._impl_.ball_;
+  delete this_._impl_.kicked_ball_;
   delete this_._impl_.cmd_;
   this_._impl_.~Impl_();
 }
@@ -440,17 +449,17 @@ CP_Robot::GetClassData() const {
   return CP_Robot_class_data_.base();
 }
 PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1
-const ::_pbi::TcParseTable<3, 7, 5, 0, 2>
+const ::_pbi::TcParseTable<3, 8, 6, 0, 2>
 CP_Robot::_table_ = {
   {
     PROTOBUF_FIELD_OFFSET(CP_Robot, _impl_._has_bits_),
     0, // no _extensions_
-    7, 56,  // max_field_number, fast_idx_mask
+    8, 56,  // max_field_number, fast_idx_mask
     offsetof(decltype(_table_), field_lookup_table),
-    4294967168,  // skipmap
+    4294967040,  // skipmap
     offsetof(decltype(_table_), field_entries),
-    7,  // num_field_entries
-    5,  // num_aux_entries
+    8,  // num_field_entries
+    6,  // num_aux_entries
     offsetof(decltype(_table_), aux_entries),
     CP_Robot_class_data_.base(),
     nullptr,  // post_loop_handler
@@ -459,56 +468,62 @@ CP_Robot::_table_ = {
     ::_pbi::TcParser::GetTable<::CP_Robot>(),  // to_prefetch
     #endif  // PROTOBUF_PREFETCH_PARSE_TABLE
   }, {{
-    {::_pbi::TcParser::MiniParse, {}},
+    // required .CP_Command cmd = 8 [json_name = "cmd"];
+    {::_pbi::TcParser::FastMtS1,
+     {66, 5, 5,
+      PROTOBUF_FIELD_OFFSET(CP_Robot, _impl_.cmd_)}},
     // required uint32 robot_id = 1 [json_name = "robotId"];
-    {::_pbi::TcParser::SingularVarintNoZag1<::uint32_t, offsetof(CP_Robot, _impl_.robot_id_), 5>(),
-     {8, 5, 0,
+    {::_pbi::TcParser::SingularVarintNoZag1<::uint32_t, offsetof(CP_Robot, _impl_.robot_id_), 6>(),
+     {8, 6, 0,
       PROTOBUF_FIELD_OFFSET(CP_Robot, _impl_.robot_id_)}},
     // required .google.protobuf.Timestamp timestamp = 2 [json_name = "timestamp"];
     {::_pbi::TcParser::FastMtS1,
      {18, 2, 0,
       PROTOBUF_FIELD_OFFSET(CP_Robot, _impl_.timestamp_)}},
     // required uint32 packet_id = 3 [json_name = "packetId"];
-    {::_pbi::TcParser::SingularVarintNoZag1<::uint32_t, offsetof(CP_Robot, _impl_.packet_id_), 6>(),
-     {24, 6, 0,
+    {::_pbi::TcParser::SingularVarintNoZag1<::uint32_t, offsetof(CP_Robot, _impl_.packet_id_), 7>(),
+     {24, 7, 0,
       PROTOBUF_FIELD_OFFSET(CP_Robot, _impl_.packet_id_)}},
-    // required .CP_Ball ball = 4 [json_name = "ball"];
+    // required .Ball ball = 4 [json_name = "ball"];
     {::_pbi::TcParser::FastMtS1,
      {34, 3, 1,
       PROTOBUF_FIELD_OFFSET(CP_Robot, _impl_.ball_)}},
-    // repeated .CP_TrackedRobot robots_yellow = 5 [json_name = "robotsYellow"];
-    {::_pbi::TcParser::FastMtR1,
-     {42, 0, 2,
-      PROTOBUF_FIELD_OFFSET(CP_Robot, _impl_.robots_yellow_)}},
-    // repeated .CP_TrackedRobot robots_blue = 6 [json_name = "robotsBlue"];
-    {::_pbi::TcParser::FastMtR1,
-     {50, 1, 3,
-      PROTOBUF_FIELD_OFFSET(CP_Robot, _impl_.robots_blue_)}},
-    // required .CP_Command cmd = 7 [json_name = "cmd"];
+    // required .CP_KickedBall kicked_ball = 5 [json_name = "kickedBall"];
     {::_pbi::TcParser::FastMtS1,
-     {58, 4, 4,
-      PROTOBUF_FIELD_OFFSET(CP_Robot, _impl_.cmd_)}},
+     {42, 4, 2,
+      PROTOBUF_FIELD_OFFSET(CP_Robot, _impl_.kicked_ball_)}},
+    // repeated .CP_TrackedRobot robots_yellow = 6 [json_name = "robotsYellow"];
+    {::_pbi::TcParser::FastMtR1,
+     {50, 0, 3,
+      PROTOBUF_FIELD_OFFSET(CP_Robot, _impl_.robots_yellow_)}},
+    // repeated .CP_TrackedRobot robots_blue = 7 [json_name = "robotsBlue"];
+    {::_pbi::TcParser::FastMtR1,
+     {58, 1, 4,
+      PROTOBUF_FIELD_OFFSET(CP_Robot, _impl_.robots_blue_)}},
   }}, {{
     65535, 65535
   }}, {{
     // required uint32 robot_id = 1 [json_name = "robotId"];
-    {PROTOBUF_FIELD_OFFSET(CP_Robot, _impl_.robot_id_), _Internal::kHasBitsOffset + 5, 0, (0 | ::_fl::kFcOptional | ::_fl::kUInt32)},
+    {PROTOBUF_FIELD_OFFSET(CP_Robot, _impl_.robot_id_), _Internal::kHasBitsOffset + 6, 0, (0 | ::_fl::kFcOptional | ::_fl::kUInt32)},
     // required .google.protobuf.Timestamp timestamp = 2 [json_name = "timestamp"];
     {PROTOBUF_FIELD_OFFSET(CP_Robot, _impl_.timestamp_), _Internal::kHasBitsOffset + 2, 0, (0 | ::_fl::kFcOptional | ::_fl::kMessage | ::_fl::kTvTable)},
     // required uint32 packet_id = 3 [json_name = "packetId"];
-    {PROTOBUF_FIELD_OFFSET(CP_Robot, _impl_.packet_id_), _Internal::kHasBitsOffset + 6, 0, (0 | ::_fl::kFcOptional | ::_fl::kUInt32)},
-    // required .CP_Ball ball = 4 [json_name = "ball"];
+    {PROTOBUF_FIELD_OFFSET(CP_Robot, _impl_.packet_id_), _Internal::kHasBitsOffset + 7, 0, (0 | ::_fl::kFcOptional | ::_fl::kUInt32)},
+    // required .Ball ball = 4 [json_name = "ball"];
     {PROTOBUF_FIELD_OFFSET(CP_Robot, _impl_.ball_), _Internal::kHasBitsOffset + 3, 1, (0 | ::_fl::kFcOptional | ::_fl::kMessage | ::_fl::kTvTable)},
-    // repeated .CP_TrackedRobot robots_yellow = 5 [json_name = "robotsYellow"];
-    {PROTOBUF_FIELD_OFFSET(CP_Robot, _impl_.robots_yellow_), _Internal::kHasBitsOffset + 0, 2, (0 | ::_fl::kFcRepeated | ::_fl::kMessage | ::_fl::kTvTable)},
-    // repeated .CP_TrackedRobot robots_blue = 6 [json_name = "robotsBlue"];
-    {PROTOBUF_FIELD_OFFSET(CP_Robot, _impl_.robots_blue_), _Internal::kHasBitsOffset + 1, 3, (0 | ::_fl::kFcRepeated | ::_fl::kMessage | ::_fl::kTvTable)},
-    // required .CP_Command cmd = 7 [json_name = "cmd"];
-    {PROTOBUF_FIELD_OFFSET(CP_Robot, _impl_.cmd_), _Internal::kHasBitsOffset + 4, 4, (0 | ::_fl::kFcOptional | ::_fl::kMessage | ::_fl::kTvTable)},
+    // required .CP_KickedBall kicked_ball = 5 [json_name = "kickedBall"];
+    {PROTOBUF_FIELD_OFFSET(CP_Robot, _impl_.kicked_ball_), _Internal::kHasBitsOffset + 4, 2, (0 | ::_fl::kFcOptional | ::_fl::kMessage | ::_fl::kTvTable)},
+    // repeated .CP_TrackedRobot robots_yellow = 6 [json_name = "robotsYellow"];
+    {PROTOBUF_FIELD_OFFSET(CP_Robot, _impl_.robots_yellow_), _Internal::kHasBitsOffset + 0, 3, (0 | ::_fl::kFcRepeated | ::_fl::kMessage | ::_fl::kTvTable)},
+    // repeated .CP_TrackedRobot robots_blue = 7 [json_name = "robotsBlue"];
+    {PROTOBUF_FIELD_OFFSET(CP_Robot, _impl_.robots_blue_), _Internal::kHasBitsOffset + 1, 4, (0 | ::_fl::kFcRepeated | ::_fl::kMessage | ::_fl::kTvTable)},
+    // required .CP_Command cmd = 8 [json_name = "cmd"];
+    {PROTOBUF_FIELD_OFFSET(CP_Robot, _impl_.cmd_), _Internal::kHasBitsOffset + 5, 5, (0 | ::_fl::kFcOptional | ::_fl::kMessage | ::_fl::kTvTable)},
   }},
   {{
       {::_pbi::TcParser::GetTable<::google::protobuf::Timestamp>()},
-      {::_pbi::TcParser::GetTable<::CP_Ball>()},
+      {::_pbi::TcParser::GetTable<::Ball>()},
+      {::_pbi::TcParser::GetTable<::CP_KickedBall>()},
       {::_pbi::TcParser::GetTable<::CP_TrackedRobot>()},
       {::_pbi::TcParser::GetTable<::CP_TrackedRobot>()},
       {::_pbi::TcParser::GetTable<::CP_Command>()},
@@ -524,7 +539,7 @@ PROTOBUF_NOINLINE void CP_Robot::Clear() {
   (void) cached_has_bits;
 
   cached_has_bits = _impl_._has_bits_[0];
-  if (BatchCheckHasBit(cached_has_bits, 0x0000001fU)) {
+  if (BatchCheckHasBit(cached_has_bits, 0x0000003fU)) {
     if (CheckHasBitForRepeated(cached_has_bits, 0x00000001U)) {
       _impl_.robots_yellow_.Clear();
     }
@@ -540,11 +555,15 @@ PROTOBUF_NOINLINE void CP_Robot::Clear() {
       _impl_.ball_->Clear();
     }
     if (CheckHasBit(cached_has_bits, 0x00000010U)) {
+      ABSL_DCHECK(_impl_.kicked_ball_ != nullptr);
+      _impl_.kicked_ball_->Clear();
+    }
+    if (CheckHasBit(cached_has_bits, 0x00000020U)) {
       ABSL_DCHECK(_impl_.cmd_ != nullptr);
       _impl_.cmd_->Clear();
     }
   }
-  if (BatchCheckHasBit(cached_has_bits, 0x00000060U)) {
+  if (BatchCheckHasBit(cached_has_bits, 0x000000c0U)) {
     ::memset(&_impl_.robot_id_, 0, static_cast<::size_t>(
         reinterpret_cast<char*>(&_impl_.packet_id_) -
         reinterpret_cast<char*>(&_impl_.robot_id_)) + sizeof(_impl_.packet_id_));
@@ -573,7 +592,7 @@ PROTOBUF_NOINLINE void CP_Robot::Clear() {
 
   cached_has_bits = this_._impl_._has_bits_[0];
   // required uint32 robot_id = 1 [json_name = "robotId"];
-  if (CheckHasBit(cached_has_bits, 0x00000020U)) {
+  if (CheckHasBit(cached_has_bits, 0x00000040U)) {
     target = stream->EnsureSpace(target);
     target = ::_pbi::WireFormatLite::WriteUInt32ToArray(
         1, this_._internal_robot_id(), target);
@@ -587,20 +606,27 @@ PROTOBUF_NOINLINE void CP_Robot::Clear() {
   }
 
   // required uint32 packet_id = 3 [json_name = "packetId"];
-  if (CheckHasBit(cached_has_bits, 0x00000040U)) {
+  if (CheckHasBit(cached_has_bits, 0x00000080U)) {
     target = stream->EnsureSpace(target);
     target = ::_pbi::WireFormatLite::WriteUInt32ToArray(
         3, this_._internal_packet_id(), target);
   }
 
-  // required .CP_Ball ball = 4 [json_name = "ball"];
+  // required .Ball ball = 4 [json_name = "ball"];
   if (CheckHasBit(cached_has_bits, 0x00000008U)) {
     target = ::google::protobuf::internal::WireFormatLite::InternalWriteMessage(
         4, *this_._impl_.ball_, this_._impl_.ball_->GetCachedSize(), target,
         stream);
   }
 
-  // repeated .CP_TrackedRobot robots_yellow = 5 [json_name = "robotsYellow"];
+  // required .CP_KickedBall kicked_ball = 5 [json_name = "kickedBall"];
+  if (CheckHasBit(cached_has_bits, 0x00000010U)) {
+    target = ::google::protobuf::internal::WireFormatLite::InternalWriteMessage(
+        5, *this_._impl_.kicked_ball_, this_._impl_.kicked_ball_->GetCachedSize(), target,
+        stream);
+  }
+
+  // repeated .CP_TrackedRobot robots_yellow = 6 [json_name = "robotsYellow"];
   if (CheckHasBitForRepeated(cached_has_bits, 0x00000001U)) {
     for (unsigned i = 0, n = static_cast<unsigned>(
                              this_._internal_robots_yellow_size());
@@ -608,12 +634,12 @@ PROTOBUF_NOINLINE void CP_Robot::Clear() {
       const auto& repfield = this_._internal_robots_yellow().Get(i);
       target =
           ::google::protobuf::internal::WireFormatLite::InternalWriteMessage(
-              5, repfield, repfield.GetCachedSize(),
+              6, repfield, repfield.GetCachedSize(),
               target, stream);
     }
   }
 
-  // repeated .CP_TrackedRobot robots_blue = 6 [json_name = "robotsBlue"];
+  // repeated .CP_TrackedRobot robots_blue = 7 [json_name = "robotsBlue"];
   if (CheckHasBitForRepeated(cached_has_bits, 0x00000002U)) {
     for (unsigned i = 0, n = static_cast<unsigned>(
                              this_._internal_robots_blue_size());
@@ -621,15 +647,15 @@ PROTOBUF_NOINLINE void CP_Robot::Clear() {
       const auto& repfield = this_._internal_robots_blue().Get(i);
       target =
           ::google::protobuf::internal::WireFormatLite::InternalWriteMessage(
-              6, repfield, repfield.GetCachedSize(),
+              7, repfield, repfield.GetCachedSize(),
               target, stream);
     }
   }
 
-  // required .CP_Command cmd = 7 [json_name = "cmd"];
-  if (CheckHasBit(cached_has_bits, 0x00000010U)) {
+  // required .CP_Command cmd = 8 [json_name = "cmd"];
+  if (CheckHasBit(cached_has_bits, 0x00000020U)) {
     target = ::google::protobuf::internal::WireFormatLite::InternalWriteMessage(
-        7, *this_._impl_.cmd_, this_._impl_.cmd_->GetCachedSize(), target,
+        8, *this_._impl_.cmd_, this_._impl_.cmd_->GetCachedSize(), target,
         stream);
   }
 
@@ -659,14 +685,14 @@ PROTOBUF_NOINLINE void CP_Robot::Clear() {
   ::_pbi::Prefetch5LinesFrom7Lines(&this_);
   cached_has_bits = this_._impl_._has_bits_[0];
   if (BatchCheckHasBit(cached_has_bits, 0x00000003U)) {
-    // repeated .CP_TrackedRobot robots_yellow = 5 [json_name = "robotsYellow"];
+    // repeated .CP_TrackedRobot robots_yellow = 6 [json_name = "robotsYellow"];
     if (CheckHasBitForRepeated(cached_has_bits, 0x00000001U)) {
       total_size += 1UL * this_._internal_robots_yellow_size();
       for (const auto& msg : this_._internal_robots_yellow()) {
         total_size += ::google::protobuf::internal::WireFormatLite::MessageSize(msg);
       }
     }
-    // repeated .CP_TrackedRobot robots_blue = 6 [json_name = "robotsBlue"];
+    // repeated .CP_TrackedRobot robots_blue = 7 [json_name = "robotsBlue"];
     if (CheckHasBitForRepeated(cached_has_bits, 0x00000002U)) {
       total_size += 1UL * this_._internal_robots_blue_size();
       for (const auto& msg : this_._internal_robots_blue()) {
@@ -674,29 +700,34 @@ PROTOBUF_NOINLINE void CP_Robot::Clear() {
       }
     }
   }
-  if (BatchCheckHasBit(cached_has_bits, 0x0000007cU)) {
+  if (BatchCheckHasBit(cached_has_bits, 0x000000fcU)) {
     // required .google.protobuf.Timestamp timestamp = 2 [json_name = "timestamp"];
     if (CheckHasBit(cached_has_bits, 0x00000004U)) {
       total_size += 1 +
                     ::google::protobuf::internal::WireFormatLite::MessageSize(*this_._impl_.timestamp_);
     }
-    // required .CP_Ball ball = 4 [json_name = "ball"];
+    // required .Ball ball = 4 [json_name = "ball"];
     if (CheckHasBit(cached_has_bits, 0x00000008U)) {
       total_size += 1 +
                     ::google::protobuf::internal::WireFormatLite::MessageSize(*this_._impl_.ball_);
     }
-    // required .CP_Command cmd = 7 [json_name = "cmd"];
+    // required .CP_KickedBall kicked_ball = 5 [json_name = "kickedBall"];
     if (CheckHasBit(cached_has_bits, 0x00000010U)) {
+      total_size += 1 +
+                    ::google::protobuf::internal::WireFormatLite::MessageSize(*this_._impl_.kicked_ball_);
+    }
+    // required .CP_Command cmd = 8 [json_name = "cmd"];
+    if (CheckHasBit(cached_has_bits, 0x00000020U)) {
       total_size += 1 +
                     ::google::protobuf::internal::WireFormatLite::MessageSize(*this_._impl_.cmd_);
     }
     // required uint32 robot_id = 1 [json_name = "robotId"];
-    if (CheckHasBit(cached_has_bits, 0x00000020U)) {
+    if (CheckHasBit(cached_has_bits, 0x00000040U)) {
       total_size += ::_pbi::WireFormatLite::UInt32SizePlusOne(
           this_._internal_robot_id());
     }
     // required uint32 packet_id = 3 [json_name = "packetId"];
-    if (CheckHasBit(cached_has_bits, 0x00000040U)) {
+    if (CheckHasBit(cached_has_bits, 0x00000080U)) {
       total_size += ::_pbi::WireFormatLite::UInt32SizePlusOne(
           this_._internal_packet_id());
     }
@@ -720,7 +751,7 @@ void CP_Robot::MergeImpl(::google::protobuf::MessageLite& to_msg,
   (void)cached_has_bits;
 
   cached_has_bits = from._impl_._has_bits_[0];
-  if (BatchCheckHasBit(cached_has_bits, 0x0000007fU)) {
+  if (BatchCheckHasBit(cached_has_bits, 0x000000ffU)) {
     if (CheckHasBitForRepeated(cached_has_bits, 0x00000001U)) {
       _this->_internal_mutable_robots_yellow()->InternalMergeFromWithArena(
           ::google::protobuf::MessageLite::internal_visibility(), arena,
@@ -748,6 +779,14 @@ void CP_Robot::MergeImpl(::google::protobuf::MessageLite& to_msg,
       }
     }
     if (CheckHasBit(cached_has_bits, 0x00000010U)) {
+      ABSL_DCHECK(from._impl_.kicked_ball_ != nullptr);
+      if (_this->_impl_.kicked_ball_ == nullptr) {
+        _this->_impl_.kicked_ball_ = ::google::protobuf::Message::CopyConstruct(arena, *from._impl_.kicked_ball_);
+      } else {
+        _this->_impl_.kicked_ball_->MergeFrom(*from._impl_.kicked_ball_);
+      }
+    }
+    if (CheckHasBit(cached_has_bits, 0x00000020U)) {
       ABSL_DCHECK(from._impl_.cmd_ != nullptr);
       if (_this->_impl_.cmd_ == nullptr) {
         _this->_impl_.cmd_ = ::google::protobuf::Message::CopyConstruct(arena, *from._impl_.cmd_);
@@ -755,10 +794,10 @@ void CP_Robot::MergeImpl(::google::protobuf::MessageLite& to_msg,
         _this->_impl_.cmd_->MergeFrom(*from._impl_.cmd_);
       }
     }
-    if (CheckHasBit(cached_has_bits, 0x00000020U)) {
+    if (CheckHasBit(cached_has_bits, 0x00000040U)) {
       _this->_impl_.robot_id_ = from._impl_.robot_id_;
     }
-    if (CheckHasBit(cached_has_bits, 0x00000040U)) {
+    if (CheckHasBit(cached_has_bits, 0x00000080U)) {
       _this->_impl_.packet_id_ = from._impl_.packet_id_;
     }
   }
@@ -788,6 +827,9 @@ PROTOBUF_NOINLINE bool CP_Robot::IsInitializedImpl(
     if (!this_._impl_.ball_->IsInitialized()) return false;
   }
   if (CheckHasBit(this_._impl_._has_bits_[0], 0x00000010U)) {
+    if (!this_._impl_.kicked_ball_->IsInitialized()) return false;
+  }
+  if (CheckHasBit(this_._impl_._has_bits_[0], 0x00000020U)) {
     if (!this_._impl_.cmd_->IsInitialized()) return false;
   }
   return true;
@@ -866,9 +908,9 @@ CP_Command::CP_Command(
                offsetof(Impl_, state_),
            reinterpret_cast<const char*>(&from._impl_) +
                offsetof(Impl_, state_),
-           offsetof(Impl_, kick_speed_) -
+           offsetof(Impl_, kick_orient_) -
                offsetof(Impl_, state_) +
-               sizeof(Impl_::kick_speed_));
+               sizeof(Impl_::kick_orient_));
 
   // @@protoc_insertion_point(copy_constructor:CP_Command)
 }
@@ -882,9 +924,9 @@ inline void CP_Command::SharedCtor(::_pb::Arena* PROTOBUF_NULLABLE arena) {
   ::memset(reinterpret_cast<char*>(&_impl_) +
                offsetof(Impl_, pos_),
            0,
-           offsetof(Impl_, kick_speed_) -
+           offsetof(Impl_, kick_orient_) -
                offsetof(Impl_, pos_) +
-               sizeof(Impl_::kick_speed_));
+               sizeof(Impl_::kick_orient_));
 }
 CP_Command::~CP_Command() {
   // @@protoc_insertion_point(destructor:CP_Command)
@@ -943,16 +985,16 @@ CP_Command::GetClassData() const {
   return CP_Command_class_data_.base();
 }
 PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1
-const ::_pbi::TcParseTable<3, 7, 3, 0, 2>
+const ::_pbi::TcParseTable<3, 5, 3, 0, 2>
 CP_Command::_table_ = {
   {
     PROTOBUF_FIELD_OFFSET(CP_Command, _impl_._has_bits_),
     0, // no _extensions_
-    7, 56,  // max_field_number, fast_idx_mask
+    5, 56,  // max_field_number, fast_idx_mask
     offsetof(decltype(_table_), field_lookup_table),
-    4294967168,  // skipmap
+    4294967264,  // skipmap
     offsetof(decltype(_table_), field_entries),
-    7,  // num_field_entries
+    5,  // num_field_entries
     3,  // num_aux_entries
     offsetof(decltype(_table_), aux_entries),
     CP_Command_class_data_.base(),
@@ -965,54 +1007,44 @@ CP_Command::_table_ = {
     {::_pbi::TcParser::MiniParse, {}},
     // required .CP_State state = 1 [json_name = "state"];
     {::_pbi::TcParser::FastEr0S1,
-     {8, 1, 5,
+     {8, 1, 4,
       PROTOBUF_FIELD_OFFSET(CP_Command, _impl_.state_)}},
     // required .CP_Task task = 2 [json_name = "task"];
-    {::_pbi::TcParser::FastEvS1,
-     {16, 2, 2,
+    {::_pbi::TcParser::FastEr0S1,
+     {16, 2, 11,
       PROTOBUF_FIELD_OFFSET(CP_Command, _impl_.task_)}},
     // optional .Vector2 pos = 3 [json_name = "pos"];
     {::_pbi::TcParser::FastMtS1,
      {26, 0, 0,
       PROTOBUF_FIELD_OFFSET(CP_Command, _impl_.pos_)}},
-    // optional uint32 speed = 4 [json_name = "speed"];
-    {::_pbi::TcParser::SingularVarintNoZag1<::uint32_t, offsetof(CP_Command, _impl_.speed_), 3>(),
-     {32, 3, 0,
-      PROTOBUF_FIELD_OFFSET(CP_Command, _impl_.speed_)}},
-    // optional uint32 orientation = 5 [json_name = "orientation"];
-    {::_pbi::TcParser::SingularVarintNoZag1<::uint32_t, offsetof(CP_Command, _impl_.orientation_), 4>(),
-     {40, 4, 0,
+    // optional float orientation = 4 [json_name = "orientation"];
+    {::_pbi::TcParser::FastF32S1,
+     {37, 3, 0,
       PROTOBUF_FIELD_OFFSET(CP_Command, _impl_.orientation_)}},
-    // optional uint32 kick_orient = 6 [json_name = "kickOrient"];
-    {::_pbi::TcParser::SingularVarintNoZag1<::uint32_t, offsetof(CP_Command, _impl_.kick_orient_), 5>(),
-     {48, 5, 0,
+    // optional float kick_orient = 5 [json_name = "kickOrient"];
+    {::_pbi::TcParser::FastF32S1,
+     {45, 4, 0,
       PROTOBUF_FIELD_OFFSET(CP_Command, _impl_.kick_orient_)}},
-    // optional uint32 kick_speed = 7 [json_name = "kickSpeed"];
-    {::_pbi::TcParser::SingularVarintNoZag1<::uint32_t, offsetof(CP_Command, _impl_.kick_speed_), 6>(),
-     {56, 6, 0,
-      PROTOBUF_FIELD_OFFSET(CP_Command, _impl_.kick_speed_)}},
+    {::_pbi::TcParser::MiniParse, {}},
+    {::_pbi::TcParser::MiniParse, {}},
   }}, {{
     65535, 65535
   }}, {{
     // required .CP_State state = 1 [json_name = "state"];
     {PROTOBUF_FIELD_OFFSET(CP_Command, _impl_.state_), _Internal::kHasBitsOffset + 1, 1, (0 | ::_fl::kFcOptional | ::_fl::kEnumRange)},
     // required .CP_Task task = 2 [json_name = "task"];
-    {PROTOBUF_FIELD_OFFSET(CP_Command, _impl_.task_), _Internal::kHasBitsOffset + 2, 2, (0 | ::_fl::kFcOptional | ::_fl::kEnum)},
+    {PROTOBUF_FIELD_OFFSET(CP_Command, _impl_.task_), _Internal::kHasBitsOffset + 2, 2, (0 | ::_fl::kFcOptional | ::_fl::kEnumRange)},
     // optional .Vector2 pos = 3 [json_name = "pos"];
     {PROTOBUF_FIELD_OFFSET(CP_Command, _impl_.pos_), _Internal::kHasBitsOffset + 0, 0, (0 | ::_fl::kFcOptional | ::_fl::kMessage | ::_fl::kTvTable)},
-    // optional uint32 speed = 4 [json_name = "speed"];
-    {PROTOBUF_FIELD_OFFSET(CP_Command, _impl_.speed_), _Internal::kHasBitsOffset + 3, 0, (0 | ::_fl::kFcOptional | ::_fl::kUInt32)},
-    // optional uint32 orientation = 5 [json_name = "orientation"];
-    {PROTOBUF_FIELD_OFFSET(CP_Command, _impl_.orientation_), _Internal::kHasBitsOffset + 4, 0, (0 | ::_fl::kFcOptional | ::_fl::kUInt32)},
-    // optional uint32 kick_orient = 6 [json_name = "kickOrient"];
-    {PROTOBUF_FIELD_OFFSET(CP_Command, _impl_.kick_orient_), _Internal::kHasBitsOffset + 5, 0, (0 | ::_fl::kFcOptional | ::_fl::kUInt32)},
-    // optional uint32 kick_speed = 7 [json_name = "kickSpeed"];
-    {PROTOBUF_FIELD_OFFSET(CP_Command, _impl_.kick_speed_), _Internal::kHasBitsOffset + 6, 0, (0 | ::_fl::kFcOptional | ::_fl::kUInt32)},
+    // optional float orientation = 4 [json_name = "orientation"];
+    {PROTOBUF_FIELD_OFFSET(CP_Command, _impl_.orientation_), _Internal::kHasBitsOffset + 3, 0, (0 | ::_fl::kFcOptional | ::_fl::kFloat)},
+    // optional float kick_orient = 5 [json_name = "kickOrient"];
+    {PROTOBUF_FIELD_OFFSET(CP_Command, _impl_.kick_orient_), _Internal::kHasBitsOffset + 4, 0, (0 | ::_fl::kFcOptional | ::_fl::kFloat)},
   }},
   {{
       {::_pbi::TcParser::GetTable<::Vector2>()},
-      {0, 5},
-      {::_pbi::FieldAuxEnumData{}, ::CP_Task_internal_data_},
+      {0, 4},
+      {0, 11},
   }},
   {{
   }},
@@ -1029,10 +1061,10 @@ PROTOBUF_NOINLINE void CP_Command::Clear() {
     ABSL_DCHECK(_impl_.pos_ != nullptr);
     _impl_.pos_->Clear();
   }
-  if (BatchCheckHasBit(cached_has_bits, 0x0000007eU)) {
+  if (BatchCheckHasBit(cached_has_bits, 0x0000001eU)) {
     ::memset(&_impl_.state_, 0, static_cast<::size_t>(
-        reinterpret_cast<char*>(&_impl_.kick_speed_) -
-        reinterpret_cast<char*>(&_impl_.state_)) + sizeof(_impl_.kick_speed_));
+        reinterpret_cast<char*>(&_impl_.kick_orient_) -
+        reinterpret_cast<char*>(&_impl_.state_)) + sizeof(_impl_.kick_orient_));
   }
   _impl_._has_bits_.Clear();
   _internal_metadata_.Clear<::google::protobuf::UnknownFieldSet>();
@@ -1078,32 +1110,18 @@ PROTOBUF_NOINLINE void CP_Command::Clear() {
         stream);
   }
 
-  // optional uint32 speed = 4 [json_name = "speed"];
+  // optional float orientation = 4 [json_name = "orientation"];
   if (CheckHasBit(cached_has_bits, 0x00000008U)) {
     target = stream->EnsureSpace(target);
-    target = ::_pbi::WireFormatLite::WriteUInt32ToArray(
-        4, this_._internal_speed(), target);
+    target = ::_pbi::WireFormatLite::WriteFloatToArray(
+        4, this_._internal_orientation(), target);
   }
 
-  // optional uint32 orientation = 5 [json_name = "orientation"];
+  // optional float kick_orient = 5 [json_name = "kickOrient"];
   if (CheckHasBit(cached_has_bits, 0x00000010U)) {
     target = stream->EnsureSpace(target);
-    target = ::_pbi::WireFormatLite::WriteUInt32ToArray(
-        5, this_._internal_orientation(), target);
-  }
-
-  // optional uint32 kick_orient = 6 [json_name = "kickOrient"];
-  if (CheckHasBit(cached_has_bits, 0x00000020U)) {
-    target = stream->EnsureSpace(target);
-    target = ::_pbi::WireFormatLite::WriteUInt32ToArray(
-        6, this_._internal_kick_orient(), target);
-  }
-
-  // optional uint32 kick_speed = 7 [json_name = "kickSpeed"];
-  if (CheckHasBit(cached_has_bits, 0x00000040U)) {
-    target = stream->EnsureSpace(target);
-    target = ::_pbi::WireFormatLite::WriteUInt32ToArray(
-        7, this_._internal_kick_speed(), target);
+    target = ::_pbi::WireFormatLite::WriteFloatToArray(
+        5, this_._internal_kick_orient(), target);
   }
 
   if (ABSL_PREDICT_FALSE(this_._internal_metadata_.have_unknown_fields())) {
@@ -1130,9 +1148,10 @@ PROTOBUF_NOINLINE void CP_Command::Clear() {
   (void)cached_has_bits;
 
   ::_pbi::Prefetch5LinesFrom7Lines(&this_);
+  cached_has_bits = this_._impl_._has_bits_[0];
+  total_size += ::absl::popcount(0x00000018U & cached_has_bits) * 5;
    {
     // optional .Vector2 pos = 3 [json_name = "pos"];
-    cached_has_bits = this_._impl_._has_bits_[0];
     if (CheckHasBit(cached_has_bits, 0x00000001U)) {
       total_size += 1 +
                     ::google::protobuf::internal::WireFormatLite::MessageSize(*this_._impl_.pos_);
@@ -1148,28 +1167,6 @@ PROTOBUF_NOINLINE void CP_Command::Clear() {
     if (CheckHasBit(cached_has_bits, 0x00000004U)) {
       total_size += 1 +
                     ::_pbi::WireFormatLite::EnumSize(this_._internal_task());
-    }
-  }
-  if (BatchCheckHasBit(cached_has_bits, 0x00000078U)) {
-    // optional uint32 speed = 4 [json_name = "speed"];
-    if (CheckHasBit(cached_has_bits, 0x00000008U)) {
-      total_size += ::_pbi::WireFormatLite::UInt32SizePlusOne(
-          this_._internal_speed());
-    }
-    // optional uint32 orientation = 5 [json_name = "orientation"];
-    if (CheckHasBit(cached_has_bits, 0x00000010U)) {
-      total_size += ::_pbi::WireFormatLite::UInt32SizePlusOne(
-          this_._internal_orientation());
-    }
-    // optional uint32 kick_orient = 6 [json_name = "kickOrient"];
-    if (CheckHasBit(cached_has_bits, 0x00000020U)) {
-      total_size += ::_pbi::WireFormatLite::UInt32SizePlusOne(
-          this_._internal_kick_orient());
-    }
-    // optional uint32 kick_speed = 7 [json_name = "kickSpeed"];
-    if (CheckHasBit(cached_has_bits, 0x00000040U)) {
-      total_size += ::_pbi::WireFormatLite::UInt32SizePlusOne(
-          this_._internal_kick_speed());
     }
   }
   return this_.MaybeComputeUnknownFieldsSize(total_size,
@@ -1191,7 +1188,7 @@ void CP_Command::MergeImpl(::google::protobuf::MessageLite& to_msg,
   (void)cached_has_bits;
 
   cached_has_bits = from._impl_._has_bits_[0];
-  if (BatchCheckHasBit(cached_has_bits, 0x0000007fU)) {
+  if (BatchCheckHasBit(cached_has_bits, 0x0000001fU)) {
     if (CheckHasBit(cached_has_bits, 0x00000001U)) {
       ABSL_DCHECK(from._impl_.pos_ != nullptr);
       if (_this->_impl_.pos_ == nullptr) {
@@ -1207,16 +1204,10 @@ void CP_Command::MergeImpl(::google::protobuf::MessageLite& to_msg,
       _this->_impl_.task_ = from._impl_.task_;
     }
     if (CheckHasBit(cached_has_bits, 0x00000008U)) {
-      _this->_impl_.speed_ = from._impl_.speed_;
-    }
-    if (CheckHasBit(cached_has_bits, 0x00000010U)) {
       _this->_impl_.orientation_ = from._impl_.orientation_;
     }
-    if (CheckHasBit(cached_has_bits, 0x00000020U)) {
+    if (CheckHasBit(cached_has_bits, 0x00000010U)) {
       _this->_impl_.kick_orient_ = from._impl_.kick_orient_;
-    }
-    if (CheckHasBit(cached_has_bits, 0x00000040U)) {
-      _this->_impl_.kick_speed_ = from._impl_.kick_speed_;
     }
   }
   _this->_impl_._has_bits_[0] |= cached_has_bits;
@@ -1248,8 +1239,8 @@ void CP_Command::InternalSwap(CP_Command* PROTOBUF_RESTRICT PROTOBUF_NONNULL oth
   _internal_metadata_.InternalSwap(&other->_internal_metadata_);
   swap(_impl_._has_bits_[0], other->_impl_._has_bits_[0]);
   ::google::protobuf::internal::memswap<
-      PROTOBUF_FIELD_OFFSET(CP_Command, _impl_.kick_speed_)
-      + sizeof(CP_Command::_impl_.kick_speed_)
+      PROTOBUF_FIELD_OFFSET(CP_Command, _impl_.kick_orient_)
+      + sizeof(CP_Command::_impl_.kick_orient_)
       - PROTOBUF_FIELD_OFFSET(CP_Command, _impl_.pos_)>(
           reinterpret_cast<char*>(&_impl_.pos_),
           reinterpret_cast<char*>(&other->_impl_.pos_));
