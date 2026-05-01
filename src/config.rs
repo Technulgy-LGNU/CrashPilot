@@ -30,18 +30,22 @@ impl Default for Config {
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct SslConfig {
-  pub ssl_vision_ip: Ipv4Addr,
-  pub ssl_vision_port: u16,
+  pub ssl_vision_raw_ip: Ipv4Addr,
+  pub ssl_vision_raw_port: u16,
+  pub ssl_vision_tracked_ip: Ipv4Addr,
+  pub ssl_vision_tracked_port: u16,
   pub ssl_gc_ip: Ipv4Addr,
   pub ssl_gc_port: u16,
 }
 impl Default for SslConfig {
   fn default() -> Self {
     Self {
-      ssl_vision_ip: Ipv4Addr::new(224, 5, 23, 1),
-      ssl_vision_port: 10003,
+      ssl_vision_raw_ip: Ipv4Addr::new(224, 5, 23, 2),
+      ssl_vision_raw_port: 10006,
+      ssl_vision_tracked_ip: Ipv4Addr::new(224, 5, 23, 1),
+      ssl_vision_tracked_port: 10010,
       ssl_gc_ip: Ipv4Addr::new(224, 5, 23, 2),
-      ssl_gc_port: 10006,
+      ssl_gc_port: 10003,
     }
   }
 }

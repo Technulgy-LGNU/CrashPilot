@@ -74,14 +74,20 @@ async fn main() {
 
   println!("Starting robots...");
   // Data packets
+  let mut vis_raw: proto::SslWrapperPacket = Default::default();
+  let mut vis_tracked: proto::TrackerWrapperPacket = Default::default();
+  let mut interface_command: proto::InterfaceCommandCp = Default::default();
   let mut referee: proto::Referee = Default::default();
-  let mut ssl_wrapper: proto::TrackerWrapperPacket = Default::default();
-  let mut interface_command: InterfaceCommandCp = Default::default();
 
   loop {
     let mut lock = rx.lock().await;
 
-    let event = lock.0.take().map(Event::SslWrapper).or_else(|| lock.1.take().map(Event::Websocket));
+    let event = lock.0.take().map(Event::RawVision)
+      .or_else(|| lock.1.take().map(Event::TrackedVision)
+        .or_else(|| lock.2.take().map(Event::Websocket)
+          .or_else(|| lock.3.take().map(Event::Referee))
+        )
+      );
 
     drop(lock);
 
@@ -93,11 +99,11 @@ async fn main() {
 
     // Receive all packets and store them in the corresponding variables
     match event {
-      Event::Referee(packet) => {
-        referee = packet;
+      Event::RawVision(packet) => {
+        vis_raw = packet;
       }
-      Event::SslWrapper(packet) => {
-        ssl_wrapper = packet;
+      Event::TrackedVision(packet) => {
+        vis_tracked = packet;
       }
       Event::Websocket(packet) => {
         println!("Received Websocket packet: {:?}", packet);
@@ -108,6 +114,9 @@ async fn main() {
         }
         interface_command = packet.interface_command;
       }
+      Event::Referee(packet) => {
+        referee = packet;
+      }
     }
 
     // Create data for each robot
@@ -117,7 +126,7 @@ async fn main() {
       robot.timestamp = Timestamp::from(SystemTime::now());
 
       // Tracked frame, if not empty
-      match ssl_wrapper.tracked_frame.clone() {
+      match vis_tracked.tracked_frame.clone() {
         Some(frame) => {
           // Robot
           // Clear robots already in array
