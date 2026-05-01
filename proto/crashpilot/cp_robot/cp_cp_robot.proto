@@ -27,7 +27,7 @@ message CP_Command {
   required CP_State state = 1;
   required CP_Task task = 2;
 
-  optional Vector2 pos = 3;
+  optional CP_Vector2 pos = 3;
   optional uint32 speed = 4;
   optional uint32 orientation = 5;
 

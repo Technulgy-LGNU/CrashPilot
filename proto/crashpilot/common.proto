@@ -15,7 +15,7 @@ message CP_TrackedRobot {
   // The position [m,] in the ssl-vision coordinate system
   required CP_Vector2 pos = 2;
   // The orientation [rad] in the ssl-vision coordinate system
-  required float orientation = 3;
+  required int32 orientation = 3;
 
   // The velocity [m/s] in the ssl-vision coordinate system
   optional CP_Vector2 vel = 4;

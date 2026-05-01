@@ -2980,7 +2980,7 @@ pub struct CpBall {
 }
 /// From the tracked ssl vision packet, removed unnecessary fields
 /// A single tracked robot
-#[derive(Clone, Copy, PartialEq, ::prost::Message)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct CpTrackedRobot {
     #[prost(uint32, required, tag="1")]
     pub robot_id: u32,
@@ -2988,8 +2988,8 @@ pub struct CpTrackedRobot {
     #[prost(message, required, tag="2")]
     pub pos: CpVector2,
     /// The orientation \[rad\] in the ssl-vision coordinate system
-    #[prost(float, required, tag="3")]
-    pub orientation: f32,
+    #[prost(int32, required, tag="3")]
+    pub orientation: i32,
     /// The velocity \[m/s\] in the ssl-vision coordinate system
     #[prost(message, optional, tag="4")]
     pub vel: ::core::option::Option<CpVector2>,
@@ -3006,7 +3006,7 @@ pub struct CpVector2 {
 pub struct CpRobot {
     /// Some fields to check stuff, drop all packets that are really late (for now 400ms) and the packet id should also be newer than the last one
     #[prost(uint32, required, tag="1")]
-    pub robot_id: u8,
+    pub robot_id: u32,
     #[prost(message, required, tag="2")]
     pub timestamp: ::prost_types::Timestamp,
     #[prost(uint32, required, tag="3")]
@@ -3024,25 +3024,25 @@ pub struct CpRobot {
     pub cmd: CpCommand,
 }
 /// The commands as enums and the fields are for stuff like drive to position and kick
-#[derive(Clone, Copy, PartialEq, ::prost::Message)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct CpCommand {
     #[prost(enumeration="CpState", required, tag="1")]
-    pub state: i16,
+    pub state: i32,
     #[prost(enumeration="CpTask", required, tag="2")]
-    pub task: i16,
+    pub task: i32,
     #[prost(message, optional, tag="3")]
-    pub pos: ::core::option::Option<Vector2>,
+    pub pos: ::core::option::Option<CpVector2>,
     #[prost(uint32, optional, tag="4")]
-    pub speed: ::core::option::Option<u16>,
+    pub speed: ::core::option::Option<u32>,
     #[prost(uint32, optional, tag="5")]
-    pub orientation: ::core::option::Option<u16>,
+    pub orientation: ::core::option::Option<u32>,
     #[prost(uint32, optional, tag="6")]
-    pub kick_orient: ::core::option::Option<u16>,
+    pub kick_orient: ::core::option::Option<u32>,
     #[prost(uint32, optional, tag="7")]
-    pub kick_speed: ::core::option::Option<u16>,
+    pub kick_speed: ::core::option::Option<u32>,
 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
-#[repr(i16)]
+#[repr(i32)]
 pub enum CpState {
     StateUnspecified = 0,
     /// The GameController Halt Command
@@ -3088,7 +3088,7 @@ impl CpState {
     }
 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
-#[repr(i16)]
+#[repr(i32)]
 pub enum CpTask {
     TaskUnspecified = 0,
     /// Drive to that position, if CP_State::STOP, max velocity is 1.5m/s
@@ -3215,7 +3215,7 @@ pub struct InterfaceWrapperCp {
     pub interface_command: InterfaceCommandCp,
 }
 /// buf:lint:ignore MESSAGE_PASCAL_CASE
-#[derive(Clone, Copy, PartialEq, ::prost::Message)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct InterfaceRobotCommandsCp {
     #[prost(uint32, optional, tag="1")]
     pub robot_id: ::core::option::Option<u32>,
