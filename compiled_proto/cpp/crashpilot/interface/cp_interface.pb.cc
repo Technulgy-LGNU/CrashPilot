@@ -32,7 +32,8 @@ inline constexpr InterfaceCommand_CP::Impl_::Impl_(
       : _cached_size_{0},
         testfield_{0u},
         enable_testfield_{false},
-        ball_tracked_{false} {}
+        ball_tracked_{false},
+        gc_data_{false} {}
 
 template <typename>
 constexpr InterfaceCommand_CP::InterfaceCommand_CP(::_pbi::ConstantInitialized)
@@ -186,13 +187,15 @@ const ::uint32_t
         0,
         0x081, // bitmap
         PROTOBUF_FIELD_OFFSET(::InterfaceCommand_CP, _impl_._has_bits_),
-        6, // hasbit index offset
+        7, // hasbit index offset
         PROTOBUF_FIELD_OFFSET(::InterfaceCommand_CP, _impl_.enable_testfield_),
         PROTOBUF_FIELD_OFFSET(::InterfaceCommand_CP, _impl_.testfield_),
         PROTOBUF_FIELD_OFFSET(::InterfaceCommand_CP, _impl_.ball_tracked_),
+        PROTOBUF_FIELD_OFFSET(::InterfaceCommand_CP, _impl_.gc_data_),
         1,
         0,
         2,
+        3,
 };
 
 static const ::_pbi::MigrationSchema
@@ -227,11 +230,11 @@ const char descriptor_table_protodef_crashpilot_2finterface_2fcp_5finterface_2ep
     "\030\002 \002(\0132\024.InterfaceCommand_CPR\020interfaceC"
     "ommand\"]\n\031InterfaceRobotCommands_CP\022\031\n\010r"
     "obot_id\030\001 \001(\rR\007robotId\022%\n\007command\030\002 \001(\0132"
-    "\013.CP_CommandR\007command\"\201\001\n\023InterfaceComma"
+    "\013.CP_CommandR\007command\"\232\001\n\023InterfaceComma"
     "nd_CP\022)\n\020enable_testfield\030\001 \002(\010R\017enableT"
     "estfield\022\034\n\ttestfield\030\002 \002(\rR\ttestfield\022!"
-    "\n\014ball_tracked\030\003 \002(\010R\013ballTrackedB\024B\020CpI"
-    "nterfaceProtoP\001"
+    "\n\014ball_tracked\030\003 \002(\010R\013ballTracked\022\027\n\007gc_"
+    "data\030\004 \002(\010R\006gcDataB\024B\020CpInterfaceProtoP\001"
 };
 static const ::_pbi::DescriptorTable* PROTOBUF_NONNULL const
     descriptor_table_crashpilot_2finterface_2fcp_5finterface_2eproto_deps[4] = {
@@ -244,7 +247,7 @@ static ::absl::once_flag descriptor_table_crashpilot_2finterface_2fcp_5finterfac
 PROTOBUF_CONSTINIT const ::_pbi::DescriptorTable descriptor_table_crashpilot_2finterface_2fcp_5finterface_2eproto = {
     false,
     false,
-    855,
+    880,
     descriptor_table_protodef_crashpilot_2finterface_2fcp_5finterface_2eproto,
     "crashpilot/interface/cp_interface.proto",
     &descriptor_table_crashpilot_2finterface_2fcp_5finterface_2eproto_once,
@@ -1420,7 +1423,7 @@ class InterfaceCommand_CP::_Internal {
   static constexpr ::int32_t kHasBitsOffset =
       8 * PROTOBUF_FIELD_OFFSET(InterfaceCommand_CP, _impl_._has_bits_);
   static bool MissingRequiredFields(const HasBits& has_bits) {
-    return ((has_bits[0] & 0x00000007) ^ 0x00000007) != 0;
+    return ((has_bits[0] & 0x0000000f) ^ 0x0000000f) != 0;
   }
 };
 
@@ -1454,9 +1457,9 @@ inline void InterfaceCommand_CP::SharedCtor(::_pb::Arena* PROTOBUF_NULLABLE aren
   ::memset(reinterpret_cast<char*>(&_impl_) +
                offsetof(Impl_, testfield_),
            0,
-           offsetof(Impl_, ball_tracked_) -
+           offsetof(Impl_, gc_data_) -
                offsetof(Impl_, testfield_) +
-               sizeof(Impl_::ball_tracked_));
+               sizeof(Impl_::gc_data_));
 }
 InterfaceCommand_CP::~InterfaceCommand_CP() {
   // @@protoc_insertion_point(destructor:InterfaceCommand_CP)
@@ -1514,16 +1517,16 @@ InterfaceCommand_CP::GetClassData() const {
   return InterfaceCommand_CP_class_data_.base();
 }
 PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1
-const ::_pbi::TcParseTable<2, 3, 0, 0, 2>
+const ::_pbi::TcParseTable<2, 4, 0, 0, 2>
 InterfaceCommand_CP::_table_ = {
   {
     PROTOBUF_FIELD_OFFSET(InterfaceCommand_CP, _impl_._has_bits_),
     0, // no _extensions_
-    3, 24,  // max_field_number, fast_idx_mask
+    4, 24,  // max_field_number, fast_idx_mask
     offsetof(decltype(_table_), field_lookup_table),
-    4294967288,  // skipmap
+    4294967280,  // skipmap
     offsetof(decltype(_table_), field_entries),
-    3,  // num_field_entries
+    4,  // num_field_entries
     0,  // num_aux_entries
     offsetof(decltype(_table_), field_names),  // no aux_entries
     InterfaceCommand_CP_class_data_.base(),
@@ -1533,7 +1536,10 @@ InterfaceCommand_CP::_table_ = {
     ::_pbi::TcParser::GetTable<::InterfaceCommand_CP>(),  // to_prefetch
     #endif  // PROTOBUF_PREFETCH_PARSE_TABLE
   }, {{
-    {::_pbi::TcParser::MiniParse, {}},
+    // required bool gc_data = 4 [json_name = "gcData"];
+    {::_pbi::TcParser::SingularVarintNoZag1<bool, offsetof(InterfaceCommand_CP, _impl_.gc_data_), 3>(),
+     {32, 3, 0,
+      PROTOBUF_FIELD_OFFSET(InterfaceCommand_CP, _impl_.gc_data_)}},
     // required bool enable_testfield = 1 [json_name = "enableTestfield"];
     {::_pbi::TcParser::SingularVarintNoZag1<bool, offsetof(InterfaceCommand_CP, _impl_.enable_testfield_), 1>(),
      {8, 1, 0,
@@ -1555,6 +1561,8 @@ InterfaceCommand_CP::_table_ = {
     {PROTOBUF_FIELD_OFFSET(InterfaceCommand_CP, _impl_.testfield_), _Internal::kHasBitsOffset + 0, 0, (0 | ::_fl::kFcOptional | ::_fl::kUInt32)},
     // required bool ball_tracked = 3 [json_name = "ballTracked"];
     {PROTOBUF_FIELD_OFFSET(InterfaceCommand_CP, _impl_.ball_tracked_), _Internal::kHasBitsOffset + 2, 0, (0 | ::_fl::kFcOptional | ::_fl::kBool)},
+    // required bool gc_data = 4 [json_name = "gcData"];
+    {PROTOBUF_FIELD_OFFSET(InterfaceCommand_CP, _impl_.gc_data_), _Internal::kHasBitsOffset + 3, 0, (0 | ::_fl::kFcOptional | ::_fl::kBool)},
   }},
   // no aux_entries
   {{
@@ -1568,10 +1576,10 @@ PROTOBUF_NOINLINE void InterfaceCommand_CP::Clear() {
   (void) cached_has_bits;
 
   cached_has_bits = _impl_._has_bits_[0];
-  if (BatchCheckHasBit(cached_has_bits, 0x00000007U)) {
+  if (BatchCheckHasBit(cached_has_bits, 0x0000000fU)) {
     ::memset(&_impl_.testfield_, 0, static_cast<::size_t>(
-        reinterpret_cast<char*>(&_impl_.ball_tracked_) -
-        reinterpret_cast<char*>(&_impl_.testfield_)) + sizeof(_impl_.ball_tracked_));
+        reinterpret_cast<char*>(&_impl_.gc_data_) -
+        reinterpret_cast<char*>(&_impl_.testfield_)) + sizeof(_impl_.gc_data_));
   }
   _impl_._has_bits_.Clear();
   _internal_metadata_.Clear<::google::protobuf::UnknownFieldSet>();
@@ -1617,6 +1625,13 @@ PROTOBUF_NOINLINE void InterfaceCommand_CP::Clear() {
         3, this_._internal_ball_tracked(), target);
   }
 
+  // required bool gc_data = 4 [json_name = "gcData"];
+  if (CheckHasBit(cached_has_bits, 0x00000008U)) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteBoolToArray(
+        4, this_._internal_gc_data(), target);
+  }
+
   if (ABSL_PREDICT_FALSE(this_._internal_metadata_.have_unknown_fields())) {
     target =
         ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
@@ -1642,7 +1657,7 @@ PROTOBUF_NOINLINE void InterfaceCommand_CP::Clear() {
 
   ::_pbi::Prefetch5LinesFrom7Lines(&this_);
   cached_has_bits = this_._impl_._has_bits_[0];
-  total_size += ::absl::popcount(0x00000006U & cached_has_bits) * 2;
+  total_size += ::absl::popcount(0x0000000eU & cached_has_bits) * 2;
    {
     // required uint32 testfield = 2 [json_name = "testfield"];
     if (CheckHasBit(cached_has_bits, 0x00000001U)) {
@@ -1668,7 +1683,7 @@ void InterfaceCommand_CP::MergeImpl(::google::protobuf::MessageLite& to_msg,
   (void)cached_has_bits;
 
   cached_has_bits = from._impl_._has_bits_[0];
-  if (BatchCheckHasBit(cached_has_bits, 0x00000007U)) {
+  if (BatchCheckHasBit(cached_has_bits, 0x0000000fU)) {
     if (CheckHasBit(cached_has_bits, 0x00000001U)) {
       _this->_impl_.testfield_ = from._impl_.testfield_;
     }
@@ -1677,6 +1692,9 @@ void InterfaceCommand_CP::MergeImpl(::google::protobuf::MessageLite& to_msg,
     }
     if (CheckHasBit(cached_has_bits, 0x00000004U)) {
       _this->_impl_.ball_tracked_ = from._impl_.ball_tracked_;
+    }
+    if (CheckHasBit(cached_has_bits, 0x00000008U)) {
+      _this->_impl_.gc_data_ = from._impl_.gc_data_;
     }
   }
   _this->_impl_._has_bits_[0] |= cached_has_bits;
@@ -1705,8 +1723,8 @@ void InterfaceCommand_CP::InternalSwap(InterfaceCommand_CP* PROTOBUF_RESTRICT PR
   _internal_metadata_.InternalSwap(&other->_internal_metadata_);
   swap(_impl_._has_bits_[0], other->_impl_._has_bits_[0]);
   ::google::protobuf::internal::memswap<
-      PROTOBUF_FIELD_OFFSET(InterfaceCommand_CP, _impl_.ball_tracked_)
-      + sizeof(InterfaceCommand_CP::_impl_.ball_tracked_)
+      PROTOBUF_FIELD_OFFSET(InterfaceCommand_CP, _impl_.gc_data_)
+      + sizeof(InterfaceCommand_CP::_impl_.gc_data_)
       - PROTOBUF_FIELD_OFFSET(InterfaceCommand_CP, _impl_.testfield_)>(
           reinterpret_cast<char*>(&_impl_.testfield_),
           reinterpret_cast<char*>(&other->_impl_.testfield_));

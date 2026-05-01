@@ -238,6 +238,7 @@ class  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED InterfaceCommand_CP final : public 
     kTestfieldFieldNumber = 2,
     kEnableTestfieldFieldNumber = 1,
     kBallTrackedFieldNumber = 3,
+    kGcDataFieldNumber = 4,
   };
   // required uint32 testfield = 2 [json_name = "testfield"];
   [[nodiscard]] bool has_testfield()
@@ -275,11 +276,23 @@ class  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED InterfaceCommand_CP final : public 
   void _internal_set_ball_tracked(bool value);
 
   public:
+  // required bool gc_data = 4 [json_name = "gcData"];
+  [[nodiscard]] bool has_gc_data()
+      const;
+  void clear_gc_data() ;
+  [[nodiscard]] bool gc_data() const;
+  void set_gc_data(bool value);
+
+  private:
+  bool _internal_gc_data() const;
+  void _internal_set_gc_data(bool value);
+
+  public:
   // @@protoc_insertion_point(class_scope:InterfaceCommand_CP)
  private:
   class _Internal;
   friend class ::google::protobuf::internal::TcParser;
-  static const ::google::protobuf::internal::TcParseTable<2, 3,
+  static const ::google::protobuf::internal::TcParseTable<2, 4,
                                    0, 0,
                                    2>
       _table_;
@@ -306,6 +319,7 @@ class  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED InterfaceCommand_CP final : public 
     ::uint32_t testfield_;
     bool enable_testfield_;
     bool ball_tracked_;
+    bool gc_data_;
     PROTOBUF_TSAN_DECLARE_MEMBER
   };
   union { Impl_ _impl_; };
@@ -1748,6 +1762,35 @@ inline bool InterfaceCommand_CP::_internal_ball_tracked() const {
 inline void InterfaceCommand_CP::_internal_set_ball_tracked(bool value) {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   _impl_.ball_tracked_ = value;
+}
+
+// required bool gc_data = 4 [json_name = "gcData"];
+inline bool InterfaceCommand_CP::has_gc_data() const {
+  bool value = CheckHasBit(_impl_._has_bits_[0], 0x00000008U);
+  return value;
+}
+inline void InterfaceCommand_CP::clear_gc_data() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  _impl_.gc_data_ = false;
+  ClearHasBit(_impl_._has_bits_[0],
+                  0x00000008U);
+}
+inline bool InterfaceCommand_CP::gc_data() const {
+  // @@protoc_insertion_point(field_get:InterfaceCommand_CP.gc_data)
+  return _internal_gc_data();
+}
+inline void InterfaceCommand_CP::set_gc_data(bool value) {
+  _internal_set_gc_data(value);
+  SetHasBit(_impl_._has_bits_[0], 0x00000008U);
+  // @@protoc_insertion_point(field_set:InterfaceCommand_CP.gc_data)
+}
+inline bool InterfaceCommand_CP::_internal_gc_data() const {
+  ::google::protobuf::internal::TSanRead(&_impl_);
+  return _impl_.gc_data_;
+}
+inline void InterfaceCommand_CP::_internal_set_gc_data(bool value) {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  _impl_.gc_data_ = value;
 }
 
 #ifdef __GNUC__

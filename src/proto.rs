@@ -3235,6 +3235,9 @@ pub struct InterfaceCommandCp {
     /// The tracked vision doesn't work that good with multiple balls, so for testing we can switch to the raw vision
     #[prost(bool, required, tag="3")]
     pub ball_tracked: bool,
+    /// Enable listening to the game controller data, for testing you can switch it off to test the behaviour without the game controller data
+    #[prost(bool, required, tag="4")]
+    pub gc_data: bool,
 }
 /// The packet the robot should send back
 #[derive(Clone, PartialEq, ::prost::Message)]
