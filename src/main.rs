@@ -6,7 +6,7 @@ use prost_types::Timestamp;
 use std::collections::HashMap;
 use std::io::ErrorKind;
 use std::time::SystemTime;
-use crate::proto::{Ball, CpBall, CpTrackedRobot, CpVector2, InterfaceCommandCp, TrackedBall, Vector2};
+use crate::proto::{CpBall, CpTrackedRobot, CpVector2, InterfaceCommandCp, SslDetectionBall, TrackedBall, Vector2, Vector3};
 
 mod communication;
 mod config;
@@ -76,7 +76,7 @@ async fn main() {
   // Data packets
   let mut vis_raw: proto::SslWrapperPacket = Default::default();
   let mut vis_tracked: proto::TrackerWrapperPacket = Default::default();
-  let mut interface_command: proto::InterfaceCommandCp = Default::default();
+  let mut interface_command: InterfaceCommandCp = Default::default();
   let mut referee: proto::Referee = Default::default();
 
   loop {
@@ -161,10 +161,9 @@ async fn main() {
 
           // Ball
           if interface_command.ball_tracked {
-            robot.ball = convert_tracked_ball(frame.balls, interface_command);
+            robot.ball = convert_ball(VisionBalls::Tracked(frame.balls), interface_command);
           } else {
-            // ToDo: Implement normal vision data to switch between tracked and normal for testing
-            // robot.ball = convert_normal_ball(vis_balls, interface_command);
+            robot.ball = convert_ball(VisionBalls::Raw(vis_raw.detection.clone().unwrap().balls), interface_command);
           }
         }
         None => (),
@@ -206,38 +205,67 @@ fn as_cp_vec2(v2: Vector2) -> CpVector2 {
   }
 }
 
+enum VisionBalls {
+  Raw(Vec<SslDetectionBall>),
+  Tracked(Vec<TrackedBall>)
+}
 /// Convert a tracked ball into a CpBall
 /// Also does only select the ball who is in the designated test area, if test mode is enabled
-fn convert_tracked_ball(balls: Vec<TrackedBall>, interface_command: InterfaceCommandCp) -> CpBall {
+fn convert_ball(balls: VisionBalls, interface_command: InterfaceCommandCp) -> CpBall {
+  // The correct ball, that gets passed on
   let mut correct_ball: TrackedBall = Default::default();
+  // Converts all balls to the TrackedBall, so the function works with the default vision
+  let mut balls_generic: Vec<TrackedBall> = vec![];
+
+  // Matches the raw vision balls
+  match balls {
+    VisionBalls::Raw(balls) => {
+      for ball in balls {
+        balls_generic.push(TrackedBall {
+          pos: Vector3 {
+            x: ball.x,
+            y: ball.y,
+            z: 0.0,
+          },
+          vel: None,
+          visibility: None,
+        });
+      }
+    },
+    VisionBalls::Tracked(balls) => {
+      balls_generic = balls;
+    }
+  }
+
+  // Test field check, filters for the a specific part of the field
   if interface_command.enable_testfield {
-    // Correct Balls
     let mut correct_balls: Vec<&TrackedBall> = vec![];
+    // Correct Balls
 
     // Switch between the test areas
     // We different between the four areas with their omen
     match interface_command.testfield {
       // -x || +y
       0 => {
-        correct_balls = balls.iter()
+        correct_balls = balls_generic.iter()
           .filter(|ball| ball.pos.x < 0.0 && ball.pos.y > 0.0)
           .collect::<Vec<&TrackedBall>>();
       },
       // +x || +y
       1 => {
-        correct_balls = balls.iter()
+        correct_balls = balls_generic.iter()
           .filter(|ball| ball.pos.x > 0.0 && ball.pos.y > 0.0)
           .collect::<Vec<&TrackedBall>>();
       },
       // +x || -y
       2 => {
-        correct_balls = balls.iter()
+        correct_balls = balls_generic.iter()
           .filter(|ball| ball.pos.x > 0.0 && ball.pos.y < 0.0)
           .collect::<Vec<&TrackedBall>>();
       },
       // -x || -y
       3 => {
-        correct_balls = balls.iter()
+        correct_balls = balls_generic.iter()
           .filter(|ball| ball.pos.x < 0.0 && ball.pos.y < 0.0)
           .collect::<Vec<&TrackedBall>>();
       },
@@ -247,7 +275,7 @@ fn convert_tracked_ball(balls: Vec<TrackedBall>, interface_command: InterfaceCom
       correct_ball = *correct_balls[0];
     }
   } else {
-    correct_ball = balls[0];
+    correct_ball = balls_generic[0];
   }
   CpBall {
     pos: CpVector2 {
@@ -257,22 +285,6 @@ fn convert_tracked_ball(balls: Vec<TrackedBall>, interface_command: InterfaceCom
     vel: Option::from(CpVector2 {
       x: correct_ball.vel.unwrap().x as i32,
       y: correct_ball.vel.unwrap().y as i32,
-    }),
-  }
-}
-
-
-/// Converts a ball from the raw vision into an CpBall
-/// Also applies a simple filter to smoother data
-fn convert_normal_ball(balls: Vec<Ball>, interface_command: InterfaceCommandCp) -> CpBall {
- CpBall {
-    pos: CpVector2 {
-      x: balls[0].pos.unwrap().x as i32,
-      y: balls[0].pos.unwrap().y as i32,
-    },
-    vel: Option::from(CpVector2 {
-      x: balls[0].vel.unwrap().x as i32,
-      y: balls[0].vel.unwrap().y as i32,
     }),
   }
 }
