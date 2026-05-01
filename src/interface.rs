@@ -52,7 +52,7 @@ pub async fn spawn_websocket(cfg: &config::Config, tx: EventShare) {
 
                   let mut lock = tx.lock().await;
 
-                  lock.1 = Some(decoded);
+                  lock.2 = Some(decoded);
                 }
                 Err(e) => {
                   eprintln!("Protobuf decode error: {}", e);
