@@ -3,7 +3,7 @@ use prost::Message;
 use tokio::net::TcpListener;
 use crate::communication::EventShare;
 use crate::config;
-use crate::proto::CpInterface;
+use crate::proto::{InterfaceWrapperCp};
 
 pub async fn spawn_websocket(cfg: &config::Config, tx: EventShare) {
   let addr = format!("{}:{}", cfg.server.websocket_host, cfg.server.websocket_port);
@@ -47,7 +47,7 @@ pub async fn spawn_websocket(cfg: &config::Config, tx: EventShare) {
             Ok(msg) if msg.is_binary() => {
               let data = msg.into_data();
 
-              match CpInterface::decode(&*data) {
+              match InterfaceWrapperCp::decode(&*data) {
                 Ok(decoded) => {
 
                   let mut lock = tx.lock().await;

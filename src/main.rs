@@ -6,7 +6,7 @@ use prost_types::Timestamp;
 use std::collections::HashMap;
 use std::io::ErrorKind;
 use std::time::SystemTime;
-use crate::proto::CpTrackedRobot;
+use crate::proto::{ CpBall, CpTrackedRobot, CpVector2, TrackedBall, Vector2};
 
 mod communication;
 mod config;
@@ -25,7 +25,7 @@ async fn main() {
   };
 
   // Receiver for the communication
-  let mut rx = match communication_receiver(&config).await {
+  let rx = match communication_receiver(&config).await {
     Ok(rx) => rx,
     Err(e) => panic!("{}", e),
   };
@@ -59,7 +59,6 @@ async fn main() {
         timestamp: Default::default(),
         packet_id,
         ball: Default::default(),
-        kicked_ball: Default::default(),
         robots_yellow: vec![],
         robots_blue: vec![],
         cmd: Default::default(),
@@ -67,7 +66,7 @@ async fn main() {
     );
   }
   // Initialize the hashmap for the websocket data, which will be used to store the last command received for each robot
-  let mut robots_ws_data: HashMap<u32, proto::CpInterface> = HashMap::new();
+  let mut robots_ws_data: HashMap<u32, proto::CpCommand> = HashMap::new();
   for robot in config.robots.iter() {
     robots_ws_data.insert(*robot.0, Default::default());
   }
@@ -77,6 +76,7 @@ async fn main() {
   // Data packets
   let mut referee: proto::Referee = Default::default();
   let mut ssl_wrapper: proto::TrackerWrapperPacket = Default::default();
+  let mut interface_command: proto::InterfaceCommandCp = Default::default();
 
   loop {
     let mut lock = rx.lock().await;
@@ -99,17 +99,14 @@ async fn main() {
       Event::SslWrapper(packet) => {
         ssl_wrapper = packet;
       }
-      Event::Websocket(mut packet) => {
+      Event::Websocket(packet) => {
         println!("Received Websocket packet: {:?}", packet);
-        // Check if robot exists in hashmap
-        if robots_ws_data.contains_key(&packet.robot_id) {
-          packet.command.pos.as_mut().map(|pos| {
-            pos.x /= 1000.0;
-            pos.y /= 1000.0;
-          });
-
-          robots_ws_data.insert(packet.robot_id, packet);
+        for robot_command in packet.robot_commands {
+          if robots_ws_data.contains_key(&robot_command.robot_id.unwrap()) {
+            robots_ws_data.insert(robot_command.robot_id.unwrap(), robot_command.command.unwrap());
+          }
         }
+        interface_command = packet.interface_command;
       }
     }
 
@@ -127,52 +124,34 @@ async fn main() {
           robot.robots_yellow = vec![];
           robot.robots_blue = vec![];
           for robot_tracked in frame.robots {
-            // Yellow  Team
-            if robot_tracked.robot_id.team == Some(proto::Team::Yellow as i32) {
-              let robot_yellow: CpTrackedRobot = CpTrackedRobot {
-                robot_id: robot_tracked.robot_id.id.unwrap(),
-                pos: robot_tracked.pos,
-                orientation: robot_tracked.orientation,
-                vel: robot_tracked.vel,
-                vel_angular: robot_tracked.vel_angular,
-              };
-              robot.robots_yellow.push(robot_yellow);
+            let robot_vis: CpTrackedRobot = CpTrackedRobot {
+              robot_id: robot.robot_id,
+              pos: as_cp_vec2(robot_tracked.pos),
+              orientation: robot_tracked.orientation as i32,
+              vel: Option::from(as_cp_vec2(robot_tracked.vel.unwrap())),
+            };
 
-            // Blue Team
-            } else if robot_tracked.robot_id.team == Some(proto::Team::Blue as i32) {
-              let robot_blue: CpTrackedRobot = CpTrackedRobot {
-                robot_id: robot_tracked.robot_id.id.unwrap(),
-                pos: robot_tracked.pos,
-                orientation: robot_tracked.orientation,
-                vel: robot_tracked.vel,
-                vel_angular: robot_tracked.vel_angular,
-              };
-              let mut robot_exists = false;
-              for rb in &robot.robots_blue {
-                if rb.robot_id == robot_blue.robot_id {
-                  robot_exists = true;
+            match robot_tracked.robot_id.team {
+              // Yellow robots
+              Some(1) => {
+                // Check if this yellow robot already exists
+                if !robot.robots_yellow.iter().any(|robot| robot.robot_id == robot_vis.robot_id) {
+                    robot.robots_yellow.push(robot_vis);
                 }
-              }
-              if !robot_exists {
-                robot.robots_blue.push(robot_blue);
-              }
+              },
+              // Blue Robots
+              Some(2) => {
+                // Check if this blue robot already exists
+                if !robot.robots_blue.iter().any(|robot| robot.robot_id == robot_vis.robot_id) {
+                  robot.robots_yellow.push(robot_vis);
+                }
+              },
+              _ => (),
             }
           }
 
           // Balls
-          if frame.balls.len() != 0 {
-            robot.ball.pos = Option::from(frame.balls[0].pos);
-            robot.ball.vel = frame.balls[0].vel;
-          }
-
-          match frame.kicked_ball {
-            Some(kicked_ball) => {
-              robot.kicked_ball.pos = kicked_ball.pos;
-              robot.kicked_ball.vel = kicked_ball.vel;
-              robot.kicked_ball.stop_pos = kicked_ball.stop_pos;
-            }
-            None => (),
-          }
+          robot.ball = convert_and_locate_ball(frame.balls);
         }
         None => (),
       };
@@ -180,18 +159,18 @@ async fn main() {
       // Commands
       // Check for the referee command and overwrite cp commands
       // HALT Command, all robots stop
-      if referee.command == 0 {
-        robot.cmd = robots_ws_data.get(&robot.robot_id).unwrap().command;
+      if referee.command == 0 && interface_command.gc_data {
+        robot.cmd = *robots_ws_data.get(&robot.robot_id).unwrap();
         robot.cmd.state = 0;
 
       // STOP Command, all robots are only allowed to move with a max velocity of 1.5m/s and should avoid the ball with a clearance of 0.5m
-      } else if referee.command == 1 {
-        robot.cmd = robots_ws_data.get(&robot.robot_id).unwrap().command;
+      } else if referee.command == 1 && interface_command.gc_data {
+        robot.cmd = *robots_ws_data.get(&robot.robot_id).unwrap();
         robot.cmd.state = 1;
 
       // Send the last command received by the interface
       } else {
-        robot.cmd = robots_ws_data.get(&robot.robot_id).unwrap().command;
+        robot.cmd = *robots_ws_data.get(&robot.robot_id).unwrap();
       }
     }
 
@@ -203,5 +182,25 @@ async fn main() {
     network_sender.send_to_all_robots(&config).await;
     // So the next packet has a higher id
     packet_id += 1;
+  }
+}
+
+fn as_cp_vec2(v2: Vector2) -> CpVector2 {
+  CpVector2 {
+    x: v2.x as i32,
+    y: v2.y as i32,
+  }
+}
+
+fn convert_and_locate_ball(balls: Vec<TrackedBall>) -> CpBall {
+  CpBall{
+    pos: CpVector2 {
+      x: 0,
+      y: 0,
+    },
+    vel: Option::from(CpVector2 {
+      x: 0,
+      y: 0,
+    }),
   }
 }
