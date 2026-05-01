@@ -6,7 +6,7 @@ use prost_types::Timestamp;
 use std::collections::HashMap;
 use std::io::ErrorKind;
 use std::time::SystemTime;
-use crate::proto::{ CpBall, CpTrackedRobot, CpVector2, TrackedBall, Vector2};
+use crate::proto::{Ball, CpBall, CpTrackedRobot, CpVector2, InterfaceCommandCp, TrackedBall, Vector2};
 
 mod communication;
 mod config;
@@ -159,8 +159,13 @@ async fn main() {
             }
           }
 
-          // Balls
-          robot.ball = convert_and_locate_ball(frame.balls);
+          // Ball
+          if interface_command.ball_tracked {
+            robot.ball = convert_tracked_ball(frame.balls, interface_command);
+          } else {
+            // ToDo: Implement normal vision data to switch between tracked and normal for testing
+            // robot.ball = convert_normal_ball(vis_balls, interface_command);
+          }
         }
         None => (),
       };
@@ -201,15 +206,73 @@ fn as_cp_vec2(v2: Vector2) -> CpVector2 {
   }
 }
 
-fn convert_and_locate_ball(balls: Vec<TrackedBall>) -> CpBall {
-  CpBall{
+/// Convert a tracked ball into a CpBall
+/// Also does only select the ball who is in the designated test area, if test mode is enabled
+fn convert_tracked_ball(balls: Vec<TrackedBall>, interface_command: InterfaceCommandCp) -> CpBall {
+  let mut correct_ball: TrackedBall = Default::default();
+  if interface_command.enable_testfield {
+    // Correct Balls
+    let mut correct_balls: Vec<&TrackedBall> = vec![];
+
+    // Switch between the test areas
+    // We different between the four areas with their omen
+    match interface_command.testfield {
+      // -x || +y
+      0 => {
+        correct_balls = balls.iter()
+          .filter(|ball| ball.pos.x < 0.0 && ball.pos.y > 0.0)
+          .collect::<Vec<&TrackedBall>>();
+      },
+      // +x || +y
+      1 => {
+        correct_balls = balls.iter()
+          .filter(|ball| ball.pos.x > 0.0 && ball.pos.y > 0.0)
+          .collect::<Vec<&TrackedBall>>();
+      },
+      // +x || -y
+      2 => {
+        correct_balls = balls.iter()
+          .filter(|ball| ball.pos.x > 0.0 && ball.pos.y < 0.0)
+          .collect::<Vec<&TrackedBall>>();
+      },
+      // -x || -y
+      3 => {
+        correct_balls = balls.iter()
+          .filter(|ball| ball.pos.x < 0.0 && ball.pos.y < 0.0)
+          .collect::<Vec<&TrackedBall>>();
+      },
+      _ => (),
+    }
+    if !correct_balls.is_empty() {
+      correct_ball = *correct_balls[0];
+    }
+  } else {
+    correct_ball = balls[0];
+  }
+  CpBall {
     pos: CpVector2 {
-      x: 0,
-      y: 0,
+      x: correct_ball.pos.x as i32,
+      y: correct_ball.pos.y as i32,
     },
     vel: Option::from(CpVector2 {
-      x: 0,
-      y: 0,
+      x: correct_ball.vel.unwrap().x as i32,
+      y: correct_ball.vel.unwrap().y as i32,
+    }),
+  }
+}
+
+
+/// Converts a ball from the raw vision into an CpBall
+/// Also applies a simple filter to smoother data
+fn convert_normal_ball(balls: Vec<Ball>, interface_command: InterfaceCommandCp) -> CpBall {
+ CpBall {
+    pos: CpVector2 {
+      x: balls[0].pos.unwrap().x as i32,
+      y: balls[0].pos.unwrap().y as i32,
+    },
+    vel: Option::from(CpVector2 {
+      x: balls[0].vel.unwrap().x as i32,
+      y: balls[0].vel.unwrap().y as i32,
     }),
   }
 }
