@@ -493,16 +493,16 @@ class  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED CP_TrackedRobot final : public ::go
   void _internal_set_robot_id(::uint32_t value);
 
   public:
-  // required float orientation = 3 [json_name = "orientation"];
+  // required int32 orientation = 3 [json_name = "orientation"];
   [[nodiscard]] bool has_orientation()
       const;
   void clear_orientation() ;
-  [[nodiscard]] float orientation() const;
-  void set_orientation(float value);
+  [[nodiscard]] ::int32_t orientation() const;
+  void set_orientation(::int32_t value);
 
   private:
-  float _internal_orientation() const;
-  void _internal_set_orientation(float value);
+  ::int32_t _internal_orientation() const;
+  void _internal_set_orientation(::int32_t value);
 
   public:
   // @@protoc_insertion_point(class_scope:CP_TrackedRobot)
@@ -536,7 +536,7 @@ class  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED CP_TrackedRobot final : public ::go
     ::CP_Vector2* PROTOBUF_NULLABLE pos_;
     ::CP_Vector2* PROTOBUF_NULLABLE vel_;
     ::uint32_t robot_id_;
-    float orientation_;
+    ::int32_t orientation_;
     PROTOBUF_TSAN_DECLARE_MEMBER
   };
   union { Impl_ _impl_; };
@@ -1116,7 +1116,7 @@ inline void CP_TrackedRobot::set_allocated_pos(::CP_Vector2* PROTOBUF_NULLABLE v
   // @@protoc_insertion_point(field_set_allocated:CP_TrackedRobot.pos)
 }
 
-// required float orientation = 3 [json_name = "orientation"];
+// required int32 orientation = 3 [json_name = "orientation"];
 inline bool CP_TrackedRobot::has_orientation() const {
   bool value = CheckHasBit(_impl_._has_bits_[0], 0x00000008U);
   return value;
@@ -1127,20 +1127,20 @@ inline void CP_TrackedRobot::clear_orientation() {
   ClearHasBit(_impl_._has_bits_[0],
                   0x00000008U);
 }
-inline float CP_TrackedRobot::orientation() const {
+inline ::int32_t CP_TrackedRobot::orientation() const {
   // @@protoc_insertion_point(field_get:CP_TrackedRobot.orientation)
   return _internal_orientation();
 }
-inline void CP_TrackedRobot::set_orientation(float value) {
+inline void CP_TrackedRobot::set_orientation(::int32_t value) {
   _internal_set_orientation(value);
   SetHasBit(_impl_._has_bits_[0], 0x00000008U);
   // @@protoc_insertion_point(field_set:CP_TrackedRobot.orientation)
 }
-inline float CP_TrackedRobot::_internal_orientation() const {
+inline ::int32_t CP_TrackedRobot::_internal_orientation() const {
   ::google::protobuf::internal::TSanRead(&_impl_);
   return _impl_.orientation_;
 }
-inline void CP_TrackedRobot::_internal_set_orientation(float value) {
+inline void CP_TrackedRobot::_internal_set_orientation(::int32_t value) {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   _impl_.orientation_ = value;
 }

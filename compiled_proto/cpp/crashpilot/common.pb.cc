@@ -159,7 +159,7 @@ const char descriptor_table_protodef_crashpilot_2fcommon_2eproto[] ABSL_ATTRIBUT
     "pos\030\001 \002(\0132\013.CP_Vector2R\003pos\022\035\n\003vel\030\002 \001(\013"
     "2\013.CP_Vector2R\003vel\"\214\001\n\017CP_TrackedRobot\022\031"
     "\n\010robot_id\030\001 \002(\rR\007robotId\022\035\n\003pos\030\002 \002(\0132\013"
-    ".CP_Vector2R\003pos\022 \n\013orientation\030\003 \002(\002R\013o"
+    ".CP_Vector2R\003pos\022 \n\013orientation\030\003 \002(\005R\013o"
     "rientation\022\035\n\003vel\030\004 \001(\0132\013.CP_Vector2R\003ve"
     "l\"(\n\nCP_Vector2\022\014\n\001x\030\001 \002(\005R\001x\022\014\n\001y\030\002 \002(\005"
     "R\001yB\017B\013CommonProtoP\001"
@@ -682,9 +682,9 @@ CP_TrackedRobot::_table_ = {
     {::_pbi::TcParser::FastMtS1,
      {18, 0, 0,
       PROTOBUF_FIELD_OFFSET(CP_TrackedRobot, _impl_.pos_)}},
-    // required float orientation = 3 [json_name = "orientation"];
-    {::_pbi::TcParser::FastF32S1,
-     {29, 3, 0,
+    // required int32 orientation = 3 [json_name = "orientation"];
+    {::_pbi::TcParser::SingularVarintNoZag1<::uint32_t, offsetof(CP_TrackedRobot, _impl_.orientation_), 3>(),
+     {24, 3, 0,
       PROTOBUF_FIELD_OFFSET(CP_TrackedRobot, _impl_.orientation_)}},
   }}, {{
     65535, 65535
@@ -693,8 +693,8 @@ CP_TrackedRobot::_table_ = {
     {PROTOBUF_FIELD_OFFSET(CP_TrackedRobot, _impl_.robot_id_), _Internal::kHasBitsOffset + 2, 0, (0 | ::_fl::kFcOptional | ::_fl::kUInt32)},
     // required .CP_Vector2 pos = 2 [json_name = "pos"];
     {PROTOBUF_FIELD_OFFSET(CP_TrackedRobot, _impl_.pos_), _Internal::kHasBitsOffset + 0, 0, (0 | ::_fl::kFcOptional | ::_fl::kMessage | ::_fl::kTvTable)},
-    // required float orientation = 3 [json_name = "orientation"];
-    {PROTOBUF_FIELD_OFFSET(CP_TrackedRobot, _impl_.orientation_), _Internal::kHasBitsOffset + 3, 0, (0 | ::_fl::kFcOptional | ::_fl::kFloat)},
+    // required int32 orientation = 3 [json_name = "orientation"];
+    {PROTOBUF_FIELD_OFFSET(CP_TrackedRobot, _impl_.orientation_), _Internal::kHasBitsOffset + 3, 0, (0 | ::_fl::kFcOptional | ::_fl::kInt32)},
     // optional .CP_Vector2 vel = 4 [json_name = "vel"];
     {PROTOBUF_FIELD_OFFSET(CP_TrackedRobot, _impl_.vel_), _Internal::kHasBitsOffset + 1, 1, (0 | ::_fl::kFcOptional | ::_fl::kMessage | ::_fl::kTvTable)},
   }},
@@ -765,11 +765,11 @@ PROTOBUF_NOINLINE void CP_TrackedRobot::Clear() {
         stream);
   }
 
-  // required float orientation = 3 [json_name = "orientation"];
+  // required int32 orientation = 3 [json_name = "orientation"];
   if (CheckHasBit(cached_has_bits, 0x00000008U)) {
-    target = stream->EnsureSpace(target);
-    target = ::_pbi::WireFormatLite::WriteFloatToArray(
-        3, this_._internal_orientation(), target);
+    target =
+        ::google::protobuf::internal::WireFormatLite::WriteInt32ToArrayWithField<3>(
+            stream, this_._internal_orientation(), target);
   }
 
   // optional .CP_Vector2 vel = 4 [json_name = "vel"];
@@ -803,10 +803,9 @@ PROTOBUF_NOINLINE void CP_TrackedRobot::Clear() {
   (void)cached_has_bits;
 
   ::_pbi::Prefetch5LinesFrom7Lines(&this_);
-  cached_has_bits = this_._impl_._has_bits_[0];
-  total_size += static_cast<bool>(0x00000008U & cached_has_bits) * 5;
    {
     // required .CP_Vector2 pos = 2 [json_name = "pos"];
+    cached_has_bits = this_._impl_._has_bits_[0];
     if (CheckHasBit(cached_has_bits, 0x00000001U)) {
       total_size += 1 +
                     ::google::protobuf::internal::WireFormatLite::MessageSize(*this_._impl_.pos_);
@@ -819,11 +818,16 @@ PROTOBUF_NOINLINE void CP_TrackedRobot::Clear() {
                     ::google::protobuf::internal::WireFormatLite::MessageSize(*this_._impl_.vel_);
     }
   }
-   {
+  if (BatchCheckHasBit(cached_has_bits, 0x0000000cU)) {
     // required uint32 robot_id = 1 [json_name = "robotId"];
     if (CheckHasBit(cached_has_bits, 0x00000004U)) {
       total_size += ::_pbi::WireFormatLite::UInt32SizePlusOne(
           this_._internal_robot_id());
+    }
+    // required int32 orientation = 3 [json_name = "orientation"];
+    if (CheckHasBit(cached_has_bits, 0x00000008U)) {
+      total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(
+          this_._internal_orientation());
     }
   }
   return this_.MaybeComputeUnknownFieldsSize(total_size,
