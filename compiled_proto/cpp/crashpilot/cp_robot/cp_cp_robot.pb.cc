@@ -169,21 +169,21 @@ const char descriptor_table_protodef_crashpilot_2fcp_5frobot_2fcp_5fcp_5frobot_2
     "ll\0225\n\rrobots_yellow\030\005 \003(\0132\020.CP_TrackedRo"
     "botR\014robotsYellow\0221\n\013robots_blue\030\006 \003(\0132\020"
     ".CP_TrackedRobotR\nrobotsBlue\022\035\n\003cmd\030\007 \002("
-    "\0132\013.CP_CommandR\003cmd\"\337\001\n\nCP_Command\022\037\n\005st"
+    "\0132\013.CP_CommandR\003cmd\"\342\001\n\nCP_Command\022\037\n\005st"
     "ate\030\001 \002(\0162\t.CP_StateR\005state\022\034\n\004task\030\002 \002("
-    "\0162\010.CP_TaskR\004task\022\032\n\003pos\030\003 \001(\0132\010.Vector2"
-    "R\003pos\022\024\n\005speed\030\004 \001(\rR\005speed\022 \n\013orientati"
-    "on\030\005 \001(\rR\013orientation\022\037\n\013kick_orient\030\006 \001"
-    "(\rR\nkickOrient\022\035\n\nkick_speed\030\007 \001(\rR\tkick"
-    "Speed*y\n\010CP_State\022\025\n\021STATE_UNSPECIFIED\020\000"
-    "\022\016\n\nSTATE_HALT\020\001\022\016\n\nSTATE_STOP\020\002\022\016\n\nSTAT"
-    "E_FREE\020\003\022\020\n\014STATE_GOALIE\020\004\022\024\n\020STATE_SUBS"
-    "TITUTE\020\005*\271\001\n\007CP_Task\022\024\n\020TASK_UNSPECIFIED"
-    "\020\000\022\014\n\010TASK_POS\020\001\022\r\n\tTASK_KICK\020\002\022\r\n\tTASK_"
-    "CHIP\020\003\022\021\n\rTASK_REC_KICK\020\004\022\016\n\nTASK_STEAL\020"
-    "\005\022\020\n\014TASK_DRIBBLE\020\006\022\020\n\014TASK_PosBall\020\007\022\021\n"
-    "\rSTATE_KICKOFF\020\t\022\022\n\016STATE_FREEKICK\020\013B\022B\016"
-    "CpCpRobotProtoP\001"
+    "\0162\010.CP_TaskR\004task\022\035\n\003pos\030\003 \001(\0132\013.CP_Vect"
+    "or2R\003pos\022\024\n\005speed\030\004 \001(\rR\005speed\022 \n\013orient"
+    "ation\030\005 \001(\rR\013orientation\022\037\n\013kick_orient\030"
+    "\006 \001(\rR\nkickOrient\022\035\n\nkick_speed\030\007 \001(\rR\tk"
+    "ickSpeed*y\n\010CP_State\022\025\n\021STATE_UNSPECIFIE"
+    "D\020\000\022\016\n\nSTATE_HALT\020\001\022\016\n\nSTATE_STOP\020\002\022\016\n\nS"
+    "TATE_FREE\020\003\022\020\n\014STATE_GOALIE\020\004\022\024\n\020STATE_S"
+    "UBSTITUTE\020\005*\271\001\n\007CP_Task\022\024\n\020TASK_UNSPECIF"
+    "IED\020\000\022\014\n\010TASK_POS\020\001\022\r\n\tTASK_KICK\020\002\022\r\n\tTA"
+    "SK_CHIP\020\003\022\021\n\rTASK_REC_KICK\020\004\022\016\n\nTASK_STE"
+    "AL\020\005\022\020\n\014TASK_DRIBBLE\020\006\022\020\n\014TASK_PosBall\020\007"
+    "\022\021\n\rSTATE_KICKOFF\020\t\022\022\n\016STATE_FREEKICK\020\013B"
+    "\022B\016CpCpRobotProtoP\001"
 };
 static const ::_pbi::DescriptorTable* PROTOBUF_NONNULL const
     descriptor_table_crashpilot_2fcp_5frobot_2fcp_5fcp_5frobot_2eproto_deps[3] = {
@@ -195,7 +195,7 @@ static ::absl::once_flag descriptor_table_crashpilot_2fcp_5frobot_2fcp_5fcp_5fro
 PROTOBUF_CONSTINIT const ::_pbi::DescriptorTable descriptor_table_crashpilot_2fcp_5frobot_2fcp_5fcp_5frobot_2eproto = {
     false,
     false,
-    976,
+    979,
     descriptor_table_protodef_crashpilot_2fcp_5frobot_2fcp_5fcp_5frobot_2eproto,
     "crashpilot/cp_robot/cp_cp_robot.proto",
     &descriptor_table_crashpilot_2fcp_5frobot_2fcp_5fcp_5frobot_2eproto_once,
@@ -971,7 +971,7 @@ CP_Command::_table_ = {
     {::_pbi::TcParser::FastEvS1,
      {16, 2, 2,
       PROTOBUF_FIELD_OFFSET(CP_Command, _impl_.task_)}},
-    // optional .Vector2 pos = 3 [json_name = "pos"];
+    // optional .CP_Vector2 pos = 3 [json_name = "pos"];
     {::_pbi::TcParser::FastMtS1,
      {26, 0, 0,
       PROTOBUF_FIELD_OFFSET(CP_Command, _impl_.pos_)}},
@@ -998,7 +998,7 @@ CP_Command::_table_ = {
     {PROTOBUF_FIELD_OFFSET(CP_Command, _impl_.state_), _Internal::kHasBitsOffset + 1, 1, (0 | ::_fl::kFcOptional | ::_fl::kEnumRange)},
     // required .CP_Task task = 2 [json_name = "task"];
     {PROTOBUF_FIELD_OFFSET(CP_Command, _impl_.task_), _Internal::kHasBitsOffset + 2, 2, (0 | ::_fl::kFcOptional | ::_fl::kEnum)},
-    // optional .Vector2 pos = 3 [json_name = "pos"];
+    // optional .CP_Vector2 pos = 3 [json_name = "pos"];
     {PROTOBUF_FIELD_OFFSET(CP_Command, _impl_.pos_), _Internal::kHasBitsOffset + 0, 0, (0 | ::_fl::kFcOptional | ::_fl::kMessage | ::_fl::kTvTable)},
     // optional uint32 speed = 4 [json_name = "speed"];
     {PROTOBUF_FIELD_OFFSET(CP_Command, _impl_.speed_), _Internal::kHasBitsOffset + 3, 0, (0 | ::_fl::kFcOptional | ::_fl::kUInt32)},
@@ -1010,7 +1010,7 @@ CP_Command::_table_ = {
     {PROTOBUF_FIELD_OFFSET(CP_Command, _impl_.kick_speed_), _Internal::kHasBitsOffset + 6, 0, (0 | ::_fl::kFcOptional | ::_fl::kUInt32)},
   }},
   {{
-      {::_pbi::TcParser::GetTable<::Vector2>()},
+      {::_pbi::TcParser::GetTable<::CP_Vector2>()},
       {0, 5},
       {::_pbi::FieldAuxEnumData{}, ::CP_Task_internal_data_},
   }},
@@ -1071,7 +1071,7 @@ PROTOBUF_NOINLINE void CP_Command::Clear() {
         2, this_._internal_task(), target);
   }
 
-  // optional .Vector2 pos = 3 [json_name = "pos"];
+  // optional .CP_Vector2 pos = 3 [json_name = "pos"];
   if (CheckHasBit(cached_has_bits, 0x00000001U)) {
     target = ::google::protobuf::internal::WireFormatLite::InternalWriteMessage(
         3, *this_._impl_.pos_, this_._impl_.pos_->GetCachedSize(), target,
@@ -1131,7 +1131,7 @@ PROTOBUF_NOINLINE void CP_Command::Clear() {
 
   ::_pbi::Prefetch5LinesFrom7Lines(&this_);
    {
-    // optional .Vector2 pos = 3 [json_name = "pos"];
+    // optional .CP_Vector2 pos = 3 [json_name = "pos"];
     cached_has_bits = this_._impl_._has_bits_[0];
     if (CheckHasBit(cached_has_bits, 0x00000001U)) {
       total_size += 1 +

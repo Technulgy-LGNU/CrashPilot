@@ -329,20 +329,20 @@ class  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED CP_Command final : public ::google:
     kKickOrientFieldNumber = 6,
     kKickSpeedFieldNumber = 7,
   };
-  // optional .Vector2 pos = 3 [json_name = "pos"];
+  // optional .CP_Vector2 pos = 3 [json_name = "pos"];
   [[nodiscard]] bool has_pos()
       const;
   void clear_pos() ;
-  [[nodiscard]] const ::Vector2& pos() const;
-  [[nodiscard]] ::Vector2* PROTOBUF_NULLABLE release_pos();
-  ::Vector2* PROTOBUF_NONNULL mutable_pos();
-  void set_allocated_pos(::Vector2* PROTOBUF_NULLABLE value);
-  void unsafe_arena_set_allocated_pos(::Vector2* PROTOBUF_NULLABLE value);
-  ::Vector2* PROTOBUF_NULLABLE unsafe_arena_release_pos();
+  [[nodiscard]] const ::CP_Vector2& pos() const;
+  [[nodiscard]] ::CP_Vector2* PROTOBUF_NULLABLE release_pos();
+  ::CP_Vector2* PROTOBUF_NONNULL mutable_pos();
+  void set_allocated_pos(::CP_Vector2* PROTOBUF_NULLABLE value);
+  void unsafe_arena_set_allocated_pos(::CP_Vector2* PROTOBUF_NULLABLE value);
+  ::CP_Vector2* PROTOBUF_NULLABLE unsafe_arena_release_pos();
 
   private:
-  const ::Vector2& _internal_pos() const;
-  ::Vector2* PROTOBUF_NONNULL _internal_mutable_pos();
+  const ::CP_Vector2& _internal_pos() const;
+  ::CP_Vector2* PROTOBUF_NONNULL _internal_mutable_pos();
 
   public:
   // required .CP_State state = 1 [json_name = "state"];
@@ -445,7 +445,7 @@ class  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED CP_Command final : public ::google:
         const CP_Command& from_msg);
     ::google::protobuf::internal::HasBits<1> _has_bits_;
     ::google::protobuf::internal::CachedSize _cached_size_;
-    ::Vector2* PROTOBUF_NULLABLE pos_;
+    ::CP_Vector2* PROTOBUF_NULLABLE pos_;
     int state_;
     int task_;
     ::uint32_t speed_;
@@ -1302,28 +1302,28 @@ inline void CP_Command::_internal_set_task(::CP_Task value) {
                                           _impl_.task_ = value;
 }
 
-// optional .Vector2 pos = 3 [json_name = "pos"];
+// optional .CP_Vector2 pos = 3 [json_name = "pos"];
 inline bool CP_Command::has_pos() const {
   bool value = CheckHasBit(_impl_._has_bits_[0], 0x00000001U);
   PROTOBUF_ASSUME(!value || _impl_.pos_ != nullptr);
   return value;
 }
-inline const ::Vector2& CP_Command::_internal_pos() const {
+inline const ::CP_Vector2& CP_Command::_internal_pos() const {
   ::google::protobuf::internal::TSanRead(&_impl_);
-  const ::Vector2* p = _impl_.pos_;
-  return p != nullptr ? *p : reinterpret_cast<const ::Vector2&>(::_Vector2_default_instance_);
+  const ::CP_Vector2* p = _impl_.pos_;
+  return p != nullptr ? *p : reinterpret_cast<const ::CP_Vector2&>(::_CP_Vector2_default_instance_);
 }
-inline const ::Vector2& CP_Command::pos() const ABSL_ATTRIBUTE_LIFETIME_BOUND {
+inline const ::CP_Vector2& CP_Command::pos() const ABSL_ATTRIBUTE_LIFETIME_BOUND {
   // @@protoc_insertion_point(field_get:CP_Command.pos)
   return _internal_pos();
 }
 inline void CP_Command::unsafe_arena_set_allocated_pos(
-    ::Vector2* PROTOBUF_NULLABLE value) {
+    ::CP_Vector2* PROTOBUF_NULLABLE value) {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   if (GetArena() == nullptr) {
     delete reinterpret_cast<::google::protobuf::MessageLite*>(_impl_.pos_);
   }
-  _impl_.pos_ = reinterpret_cast<::Vector2*>(value);
+  _impl_.pos_ = reinterpret_cast<::CP_Vector2*>(value);
   if (value != nullptr) {
     SetHasBit(_impl_._has_bits_[0], 0x00000001U);
   } else {
@@ -1331,11 +1331,11 @@ inline void CP_Command::unsafe_arena_set_allocated_pos(
   }
   // @@protoc_insertion_point(field_unsafe_arena_set_allocated:CP_Command.pos)
 }
-inline ::Vector2* PROTOBUF_NULLABLE CP_Command::release_pos() {
+inline ::CP_Vector2* PROTOBUF_NULLABLE CP_Command::release_pos() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
 
   ClearHasBit(_impl_._has_bits_[0], 0x00000001U);
-  ::Vector2* released = _impl_.pos_;
+  ::CP_Vector2* released = _impl_.pos_;
   _impl_.pos_ = nullptr;
   if (::google::protobuf::internal::DebugHardenForceCopyInRelease()) {
     auto* old = reinterpret_cast<::google::protobuf::MessageLite*>(released);
@@ -1350,31 +1350,31 @@ inline ::Vector2* PROTOBUF_NULLABLE CP_Command::release_pos() {
   }
   return released;
 }
-inline ::Vector2* PROTOBUF_NULLABLE CP_Command::unsafe_arena_release_pos() {
+inline ::CP_Vector2* PROTOBUF_NULLABLE CP_Command::unsafe_arena_release_pos() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   // @@protoc_insertion_point(field_release:CP_Command.pos)
 
   ClearHasBit(_impl_._has_bits_[0], 0x00000001U);
-  ::Vector2* temp = _impl_.pos_;
+  ::CP_Vector2* temp = _impl_.pos_;
   _impl_.pos_ = nullptr;
   return temp;
 }
-inline ::Vector2* PROTOBUF_NONNULL CP_Command::_internal_mutable_pos() {
+inline ::CP_Vector2* PROTOBUF_NONNULL CP_Command::_internal_mutable_pos() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   if (_impl_.pos_ == nullptr) {
-    auto* p = ::google::protobuf::Message::DefaultConstruct<::Vector2>(GetArena());
-    _impl_.pos_ = reinterpret_cast<::Vector2*>(p);
+    auto* p = ::google::protobuf::Message::DefaultConstruct<::CP_Vector2>(GetArena());
+    _impl_.pos_ = reinterpret_cast<::CP_Vector2*>(p);
   }
   return _impl_.pos_;
 }
-inline ::Vector2* PROTOBUF_NONNULL CP_Command::mutable_pos()
+inline ::CP_Vector2* PROTOBUF_NONNULL CP_Command::mutable_pos()
     ABSL_ATTRIBUTE_LIFETIME_BOUND {
   SetHasBit(_impl_._has_bits_[0], 0x00000001U);
-  ::Vector2* _msg = _internal_mutable_pos();
+  ::CP_Vector2* _msg = _internal_mutable_pos();
   // @@protoc_insertion_point(field_mutable:CP_Command.pos)
   return _msg;
 }
-inline void CP_Command::set_allocated_pos(::Vector2* PROTOBUF_NULLABLE value) {
+inline void CP_Command::set_allocated_pos(::CP_Vector2* PROTOBUF_NULLABLE value) {
   ::google::protobuf::Arena* message_arena = GetArena();
   ::google::protobuf::internal::TSanWrite(&_impl_);
   if (message_arena == nullptr) {
@@ -1391,7 +1391,7 @@ inline void CP_Command::set_allocated_pos(::Vector2* PROTOBUF_NULLABLE value) {
     ClearHasBit(_impl_._has_bits_[0], 0x00000001U);
   }
 
-  _impl_.pos_ = reinterpret_cast<::Vector2*>(value);
+  _impl_.pos_ = reinterpret_cast<::CP_Vector2*>(value);
   // @@protoc_insertion_point(field_set_allocated:CP_Command.pos)
 }
 

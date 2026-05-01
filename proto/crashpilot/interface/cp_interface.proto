@@ -36,4 +36,6 @@ message InterfaceCommand_CP {
   // You can tell CP to use the raw ball data with a simple consistency filter
   // The tracked vision doesn't work that good with multiple balls, so for testing we can switch to the raw vision
   required bool ball_tracked = 3;
+  // Enable listening to the game controller data, for testing you can switch it off to test the behaviour without the game controller data
+  required bool gc_data = 4;
 }
