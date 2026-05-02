@@ -1,13 +1,15 @@
-use std::option::Option;
-use crate::communication::Event;
 use crate::communication::communication_receiver;
+use crate::communication::Event;
+use crate::proto::{CpInterfaceWrapper, CpTrackedRobot, InterfaceCommandCp, SslDetectionBall};
 use crate::robot_communication::robot_sender::{NetworkSender, RobotSender};
+use crate::utils::as_cp_vec2;
 use prost::Message;
 use prost_types::Timestamp;
 use std::collections::HashMap;
 use std::io::ErrorKind;
+use std::option::Option;
 use std::time::SystemTime;
-use crate::proto::{CpBall, CpInterfaceWrapper, CpTrackedRobot, CpVector2, InterfaceCommandCp, SslDetectionBall, TrackedBall, Vector2, Vector3};
+use crate::data_handler::ball_data::{convert_ball, VisionBalls};
 
 mod communication;
 mod config;
@@ -16,6 +18,7 @@ mod proto;
 mod robot_communication;
 mod ssl_communication;
 mod utils;
+mod data_handler;
 
 #[tokio::main]
 async fn main() {
@@ -112,9 +115,7 @@ async fn main() {
       Event::Websocket(packet) => {
         println!("Received Websocket packet: {:?}", packet);
         for robot_command in packet.robot_commands {
-          if robots_ws_data.contains_key(&robot_command.robot_id.unwrap()) {
-            robots_ws_data.insert(robot_command.robot_id.unwrap(), robot_command.command.unwrap());
-          }
+          robots_ws_data.insert(robot_command.robot_id, robot_command.command);
         }
         interface_command = packet.interface_command;
       }
@@ -141,7 +142,7 @@ async fn main() {
               robot_id: robot.robot_id,
               pos: as_cp_vec2(robot_tracked.pos),
               orientation: robot_tracked.orientation as i32,
-              vel: Option::from(as_cp_vec2(robot_tracked.vel.unwrap())),
+              vel: Option::from(as_cp_vec2(robot_tracked.vel.unwrap_or_default())),
             };
 
             match robot_tracked.robot_id.team {
@@ -167,7 +168,11 @@ async fn main() {
           if interface_command.ball_tracked {
             robot.ball = convert_ball(VisionBalls::Tracked(frame.balls), interface_command);
           } else {
-            robot.ball = convert_ball(VisionBalls::Raw(vis_raw.detection.clone().unwrap().balls), interface_command);
+            let vis_raw_balls: Vec<SslDetectionBall> = match vis_raw.detection.clone() {
+              Some(frame) => frame.balls,
+              None => vec![],
+            };
+            robot.ball = convert_ball(VisionBalls::Raw(vis_raw_balls), interface_command);
           }
         }
         None => (),
@@ -177,17 +182,26 @@ async fn main() {
       // Check for the referee command and overwrite cp commands
       // HALT Command, all robots stop
       if referee.command == 0 && interface_command.gc_data {
-        robot.cmd = *robots_ws_data.get(&robot.robot_id).unwrap();
+        robot.cmd = match robots_ws_data.get(&robot.robot_id) {
+          Some(cmd) => *cmd,
+          None => Default::default(),
+        };
         robot.cmd.state = 0;
 
       // STOP Command, all robots are only allowed to move with a max velocity of 1.5m/s and should avoid the ball with a clearance of 0.5m
       } else if referee.command == 1 && interface_command.gc_data {
-        robot.cmd = *robots_ws_data.get(&robot.robot_id).unwrap();
+        robot.cmd = match robots_ws_data.get(&robot.robot_id) {
+          Some(cmd) => *cmd,
+          None => Default::default(),
+        };
         robot.cmd.state = 1;
 
       // Send the last command received by the interface
       } else {
-        robot.cmd = *robots_ws_data.get(&robot.robot_id).unwrap();
+        robot.cmd = match robots_ws_data.get(&robot.robot_id) {
+          Some(cmd) => *cmd,
+          None => Default::default(),
+        };
       }
     }
 
@@ -196,7 +210,17 @@ async fn main() {
       socket: &robot_socket,
       data: robots.clone(),
     };
-    network_sender.send_to_all_robots(&config).await;
+    let send_report = network_sender.send_to_all_robots(&config).await;
+    if !send_report.failed.is_empty() {
+      eprintln!(
+        "Robot send: {} ok, {} failed",
+        send_report.sent,
+        send_report.failed.len()
+      );
+      for failure in send_report.failed {
+        eprintln!("  robot {}: {:#}", failure.robot_id, failure.error);
+      }
+    }
 
     // Broadcast the latest state to all websocket clients (CP -> interface)
     // Note: if no clients are connected, send() returns an error; that's fine.
@@ -215,96 +239,5 @@ async fn main() {
 
     // So the next packet has a higher id
     packet_id += 1;
-  }
-}
-
-fn as_cp_vec2(v2: Vector2) -> CpVector2 {
-  CpVector2 {
-    x: v2.x as i32,
-    y: v2.y as i32,
-  }
-}
-
-enum VisionBalls {
-  Raw(Vec<SslDetectionBall>),
-  Tracked(Vec<TrackedBall>)
-}
-/// Convert a tracked ball into a CpBall
-/// Also does only select the ball who is in the designated test area, if test mode is enabled
-fn convert_ball(balls: VisionBalls, interface_command: InterfaceCommandCp) -> CpBall {
-  // The correct ball, that gets passed on
-  let mut correct_ball: TrackedBall = Default::default();
-  // Converts all balls to the TrackedBall, so the function works with the default vision
-  let mut balls_generic: Vec<TrackedBall> = vec![];
-
-  // Matches the raw vision balls
-  match balls {
-    VisionBalls::Raw(balls) => {
-      for ball in balls {
-        balls_generic.push(TrackedBall {
-          pos: Vector3 {
-            x: ball.x,
-            y: ball.y,
-            z: 0.0,
-          },
-          vel: None,
-          visibility: None,
-        });
-      }
-    },
-    VisionBalls::Tracked(balls) => {
-      balls_generic = balls;
-    }
-  }
-
-  // Test field check, filters for the a specific part of the field
-  if interface_command.enable_testfield {
-    let mut correct_balls: Vec<&TrackedBall> = vec![];
-    // Correct Balls
-
-    // Switch between the test areas
-    // We different between the four areas with their omen
-    match interface_command.testfield {
-      // -x || +y
-      0 => {
-        correct_balls = balls_generic.iter()
-          .filter(|ball| ball.pos.x < 0.0 && ball.pos.y > 0.0)
-          .collect::<Vec<&TrackedBall>>();
-      },
-      // +x || +y
-      1 => {
-        correct_balls = balls_generic.iter()
-          .filter(|ball| ball.pos.x > 0.0 && ball.pos.y > 0.0)
-          .collect::<Vec<&TrackedBall>>();
-      },
-      // +x || -y
-      2 => {
-        correct_balls = balls_generic.iter()
-          .filter(|ball| ball.pos.x > 0.0 && ball.pos.y < 0.0)
-          .collect::<Vec<&TrackedBall>>();
-      },
-      // -x || -y
-      3 => {
-        correct_balls = balls_generic.iter()
-          .filter(|ball| ball.pos.x < 0.0 && ball.pos.y < 0.0)
-          .collect::<Vec<&TrackedBall>>();
-      },
-      _ => (),
-    }
-    if !correct_balls.is_empty() {
-      correct_ball = *correct_balls[0];
-    }
-  } else {
-    correct_ball = balls_generic[0];
-  }
-  CpBall {
-    pos: CpVector2 {
-      x: correct_ball.pos.x as i32,
-      y: correct_ball.pos.y as i32,
-    },
-    vel: Option::from(CpVector2 {
-      x: correct_ball.vel.unwrap().x as i32,
-      y: correct_ball.vel.unwrap().y as i32,
-    }),
   }
 }
