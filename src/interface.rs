@@ -1,11 +1,12 @@
-use futures_util::StreamExt;
+use futures_util::{SinkExt, StreamExt};
 use prost::Message;
 use tokio::net::TcpListener;
 use crate::communication::EventShare;
+use crate::communication::WebsocketOut;
 use crate::config;
 use crate::proto::{InterfaceWrapperCp};
 
-pub async fn spawn_websocket(cfg: &config::Config, tx: EventShare) {
+pub async fn spawn_websocket(cfg: &config::Config, tx: EventShare, ws_out: WebsocketOut) {
   let addr = format!("{}:{}", cfg.server.websocket_host, cfg.server.websocket_port);
 
   // Create raw TCP Stream
@@ -37,7 +38,27 @@ pub async fn spawn_websocket(cfg: &config::Config, tx: EventShare) {
         }
       };
 
-      let (_, mut incoming) =  ws_stream.split();
+      let (mut outgoing, mut incoming) = ws_stream.split();
+
+      // Outgoing messages (CP -> interface)
+      let ws_out = ws_out.clone();
+      tokio::spawn(async move {
+        let mut last_seq: u64 = 0;
+
+        loop {
+          // Wait for at least one newer message and then send exactly that newest snapshot.
+          let (seq, payload) = ws_out.wait_latest_after(last_seq).await;
+          last_seq = seq;
+
+          if let Err(e) = outgoing
+            .send(tokio_tungstenite::tungstenite::Message::Binary(payload))
+            .await
+          {
+            eprintln!("WebSocket send error to {}: {}", peer_addr, e);
+            break;
+          }
+        }
+      });
 
       // Process incoming messages
       let tx = tx.clone();

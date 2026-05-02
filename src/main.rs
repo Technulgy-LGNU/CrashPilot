@@ -2,11 +2,12 @@ use std::option::Option;
 use crate::communication::Event;
 use crate::communication::communication_receiver;
 use crate::robot_communication::robot_sender::{NetworkSender, RobotSender};
+use prost::Message;
 use prost_types::Timestamp;
 use std::collections::HashMap;
 use std::io::ErrorKind;
 use std::time::SystemTime;
-use crate::proto::{CpBall, CpTrackedRobot, CpVector2, InterfaceCommandCp, SslDetectionBall, TrackedBall, Vector2, Vector3};
+use crate::proto::{CpBall, CpInterfaceWrapper, CpTrackedRobot, CpVector2, InterfaceCommandCp, SslDetectionBall, TrackedBall, Vector2, Vector3};
 
 mod communication;
 mod config;
@@ -25,10 +26,13 @@ async fn main() {
   };
 
   // Receiver for the communication
-  let rx = match communication_receiver(&config).await {
-    Ok(rx) => rx,
+  let comm = match communication_receiver(&config).await {
+    Ok(comm) => comm,
     Err(e) => panic!("{}", e),
   };
+
+  let rx = comm.events;
+  let ws_out = comm.ws_out;
 
   // UDPSocket for robot communication
   let robot_socket = match tokio::net::UdpSocket::bind(
@@ -193,6 +197,22 @@ async fn main() {
       data: robots.clone(),
     };
     network_sender.send_to_all_robots(&config).await;
+
+    // Broadcast the latest state to all websocket clients (CP -> interface)
+    // Note: if no clients are connected, send() returns an error; that's fine.
+    let ws_packet = CpInterfaceWrapper {
+      vision_raw: Some(vis_raw.clone()),
+      vision_tracked: Some(vis_tracked.clone()),
+      gc_data: if referee.packet_timestamp != 0 { Some(referee.clone()) } else { None },
+      robot_commands: robots.values().cloned().collect(),
+    };
+    let mut buf = Vec::with_capacity(ws_packet.encoded_len());
+    if let Err(e) = ws_packet.encode(&mut buf) {
+      eprintln!("Failed to encode websocket packet: {}", e);
+    } else {
+      ws_out.publish(buf.into()).await;
+    }
+
     // So the next packet has a higher id
     packet_id += 1;
   }
