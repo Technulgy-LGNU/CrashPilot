@@ -483,7 +483,7 @@ class  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED InterfaceRobotCommands_CP final : p
     kCommandFieldNumber = 2,
     kRobotIdFieldNumber = 1,
   };
-  // optional .CP_Command command = 2 [json_name = "command"];
+  // required .CP_Command command = 2 [json_name = "command"];
   [[nodiscard]] bool has_command()
       const;
   void clear_command() ;
@@ -499,7 +499,7 @@ class  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED InterfaceRobotCommands_CP final : p
   ::CP_Command* PROTOBUF_NONNULL _internal_mutable_command();
 
   public:
-  // optional uint32 robot_id = 1 [json_name = "robotId"];
+  // required uint32 robot_id = 1 [json_name = "robotId"];
   [[nodiscard]] bool has_robot_id()
       const;
   void clear_robot_id() ;
@@ -1551,7 +1551,7 @@ inline void InterfaceWrapper_CP::set_allocated_interface_command(::InterfaceComm
 
 // InterfaceRobotCommands_CP
 
-// optional uint32 robot_id = 1 [json_name = "robotId"];
+// required uint32 robot_id = 1 [json_name = "robotId"];
 inline bool InterfaceRobotCommands_CP::has_robot_id() const {
   bool value = CheckHasBit(_impl_._has_bits_[0], 0x00000002U);
   return value;
@@ -1580,7 +1580,7 @@ inline void InterfaceRobotCommands_CP::_internal_set_robot_id(::uint32_t value) 
   _impl_.robot_id_ = value;
 }
 
-// optional .CP_Command command = 2 [json_name = "command"];
+// required .CP_Command command = 2 [json_name = "command"];
 inline bool InterfaceRobotCommands_CP::has_command() const {
   bool value = CheckHasBit(_impl_._has_bits_[0], 0x00000001U);
   PROTOBUF_ASSUME(!value || _impl_.command_ != nullptr);
