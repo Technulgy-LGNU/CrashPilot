@@ -70,16 +70,24 @@ pub fn convert_ball(balls: VisionBalls, interface_command: InterfaceCommandCp) -
       correct_ball = *correct_balls[0];
     }
   } else {
-    correct_ball = balls_generic[0];
+    if balls_generic.is_empty() {
+      correct_ball = TrackedBall {
+        pos: Default::default(),
+        vel: None,
+        visibility: None,
+      }
+    } else {
+      correct_ball = balls_generic[0];
+    }
   }
   CpBall {
     pos: CpVector2 {
-      x: correct_ball.pos.x as i32,
-      y: correct_ball.pos.y as i32,
+      x: (correct_ball.pos.x * 1000.0) as i32,
+      y: (correct_ball.pos.y * 1000.0) as i32,
     },
     vel: Option::from(CpVector2 {
-      x: correct_ball.vel.unwrap_or_default().x as i32,
-      y: correct_ball.vel.unwrap_or_default().y as i32,
+      x: (correct_ball.vel.unwrap_or_default().x * 1000.0) as i32,
+      y: (correct_ball.vel.unwrap_or_default().y * 1000.0) as i32,
     }),
   }
 }

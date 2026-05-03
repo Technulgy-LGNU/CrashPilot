@@ -1,5 +1,4 @@
 use crate::communication::communication_receiver;
-use crate::communication::Event;
 use crate::proto::{CpInterfaceWrapper, CpTrackedRobot, InterfaceCommandCp, SslDetectionBall};
 use crate::robot_communication::robot_sender::{NetworkSender, RobotSender};
 use crate::utils::as_cp_vec2;
@@ -9,6 +8,7 @@ use std::collections::HashMap;
 use std::io::ErrorKind;
 use std::option::Option;
 use std::time::SystemTime;
+use tokio::time::{interval, Duration, MissedTickBehavior};
 use crate::data_handler::ball_data::{convert_ball, VisionBalls};
 
 mod communication;
@@ -86,42 +86,39 @@ async fn main() {
   let mut interface_command: InterfaceCommandCp = Default::default();
   let mut referee: proto::Referee = Default::default();
 
+  // Sending should not depend on receiving new packets: when vision/GC packets pause,
+  // we still want to keep sending the latest known command/state to the robots.
+  // Also, waiting on an interval prevents busy-spinning on `rx.lock()`.
+  let mut tick = interval(Duration::from_millis(8)); // ~120 Hz
+  tick.set_missed_tick_behavior(MissedTickBehavior::Skip);
+
   loop {
-    let mut lock = rx.lock().await;
+    tick.tick().await;
 
-    let event = lock.0.take().map(Event::RawVision)
-      .or_else(|| lock.1.take().map(Event::TrackedVision)
-        .or_else(|| lock.2.take().map(Event::Websocket)
-          .or_else(|| lock.3.take().map(Event::Referee))
-        )
-      );
-
-    drop(lock);
-
-    let Some(event) = event else {
-      continue;
+    // Drain the *latest* events from the shared state. We handle all types each tick,
+    // not just one, so state stays fresh.
+    let (raw, tracked, ws, gc) = {
+      let mut lock = rx.lock().await;
+      (lock.0.take(), lock.1.take(), lock.2.take(), lock.3.take())
     };
 
-
-
-    // Receive all packets and store them in the corresponding variables
-    match event {
-      Event::RawVision(packet) => {
-        vis_raw = packet;
+    if let Some(packet) = raw {
+      vis_raw = packet;
+    }
+    if let Some(packet) = tracked {
+      vis_tracked = packet;
+    }
+    if let Some(packet) = ws {
+      // Avoid printing every packet: stdout can become a bottleneck and make the
+      // program *look* like it stops sending.
+      // eprintln!("Received Websocket packet: {:?}", packet);
+      for robot_command in packet.robot_commands {
+        robots_ws_data.insert(robot_command.robot_id, robot_command.command);
       }
-      Event::TrackedVision(packet) => {
-        vis_tracked = packet;
-      }
-      Event::Websocket(packet) => {
-        println!("Received Websocket packet: {:?}", packet);
-        for robot_command in packet.robot_commands {
-          robots_ws_data.insert(robot_command.robot_id, robot_command.command);
-        }
-        interface_command = packet.interface_command;
-      }
-      Event::Referee(packet) => {
-        referee = packet;
-      }
+      interface_command = packet.interface_command;
+    }
+    if let Some(packet) = gc {
+      referee = packet;
     }
 
     // Create data for each robot
@@ -131,6 +128,7 @@ async fn main() {
       robot.timestamp = Timestamp::from(SystemTime::now());
 
       // Tracked frame, if not empty
+      // Robot Position Data
       match vis_tracked.tracked_frame.clone() {
         Some(frame) => {
           // Robot
@@ -139,9 +137,9 @@ async fn main() {
           robot.robots_blue = vec![];
           for robot_tracked in frame.robots {
             let robot_vis: CpTrackedRobot = CpTrackedRobot {
-              robot_id: robot.robot_id,
+              robot_id: robot_tracked.robot_id.id.unwrap_or_default(),
               pos: as_cp_vec2(robot_tracked.pos),
-              orientation: robot_tracked.orientation as i32,
+              orientation: robot_tracked.orientation.to_degrees() as i32,
               vel: Option::from(as_cp_vec2(robot_tracked.vel.unwrap_or_default())),
             };
 
@@ -164,15 +162,17 @@ async fn main() {
             }
           }
 
+          // Raw or Tracked vision can be used here
+          // Tracked vision is superior and will be used by default
           // Ball
-          if interface_command.ball_tracked {
-            robot.ball = convert_ball(VisionBalls::Tracked(frame.balls), interface_command);
-          } else {
+          if !interface_command.ball_tracked {
             let vis_raw_balls: Vec<SslDetectionBall> = match vis_raw.detection.clone() {
               Some(frame) => frame.balls,
               None => vec![],
             };
             robot.ball = convert_ball(VisionBalls::Raw(vis_raw_balls), interface_command);
+          } else {
+            robot.ball = convert_ball(VisionBalls::Tracked(frame.balls), interface_command);
           }
         }
         None => (),
@@ -206,9 +206,9 @@ async fn main() {
     }
 
     // Send the data to the robots
-    let mut network_sender: NetworkSender = NetworkSender {
+    let network_sender: NetworkSender = NetworkSender {
       socket: &robot_socket,
-      data: robots.clone(),
+      data: &robots,
     };
     let send_report = network_sender.send_to_all_robots(&config).await;
     if !send_report.failed.is_empty() {

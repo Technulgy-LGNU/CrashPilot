@@ -8,7 +8,7 @@ use tokio::net::UdpSocket;
 
 pub struct NetworkSender<'a> {
   pub(crate) socket: &'a UdpSocket,
-  pub(crate) data: HashMap<u32, CpRobot>,
+  pub(crate) data: &'a HashMap<u32, CpRobot>,
 }
 
 #[derive(Debug, Default)]
@@ -36,11 +36,11 @@ pub trait RobotSender {
   ///
   /// The function is **best-effort**: it will continue sending even if some robots fail.
   /// Returned `SendReport` describes successes and failures.
-  async fn send_to_all_robots(&mut self, cfg: &Config) -> SendReport;
+  async fn send_to_all_robots(&self, cfg: &Config) -> SendReport;
 }
 
 impl RobotSender for NetworkSender<'_> {
-  async fn send_to_all_robots(&mut self, cfg: &Config) -> SendReport {
+  async fn send_to_all_robots(&self, cfg: &Config) -> SendReport {
     let mut report = SendReport::default();
     let mut buf = Vec::new();
 
@@ -69,6 +69,12 @@ impl RobotSender for NetworkSender<'_> {
         report.push_failure(robot_id, anyhow!("encoded CpRobot message is empty"));
         continue;
       }
+
+      // Print data, for current testing
+      // println!("====================");
+      // println!("Robot ID: {}", robot_id);
+      // println!("Encoded CpRobot ({} bytes): {:02X?}", buf.len(), buf);
+      // println!("====================");
 
       let robot_cfg = match cfg.robots.get(&robot_id) {
         Some(c) => c,
@@ -144,9 +150,10 @@ mod tests {
     let recv_addr = receiver.local_addr().expect("receiver local addr");
 
     let sender_socket = UdpSocket::bind("127.0.0.1:0").await.expect("bind sender");
-    let mut sender: NetworkSender = NetworkSender {
+    let data = HashMap::from([(1u32, sample_robot(1))]);
+    let sender: NetworkSender = NetworkSender {
       socket: &sender_socket,
-      data: HashMap::from([(1u32, sample_robot(1))]),
+      data: &data,
     };
 
     let mut cfg = Config::default();
@@ -176,9 +183,10 @@ mod tests {
   #[tokio::test]
   async fn reports_missing_robot_config_without_panicking() {
     let sender_socket = UdpSocket::bind("127.0.0.1:0").await.expect("bind sender");
-    let mut sender: NetworkSender = NetworkSender {
+    let data = HashMap::from([(123u32, sample_robot(123))]);
+    let sender: NetworkSender = NetworkSender {
       socket: &sender_socket,
-      data: HashMap::from([(123u32, sample_robot(123))]),
+      data: &data,
     };
 
     let mut cfg = Config::default();
