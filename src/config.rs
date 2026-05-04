@@ -15,10 +15,10 @@ impl Default for Config {
   fn default() -> Self {
     let mut robots = HashMap::new();
 
-    robots.insert(1, RobotConfig { ip: Ipv4Addr::new(10, 0, 64, 101) });
-    robots.insert(2, RobotConfig { ip: Ipv4Addr::new(10, 0, 64, 102) });
-    robots.insert(3, RobotConfig { ip: Ipv4Addr::new(10, 0, 64, 103) });
-    robots.insert(4, RobotConfig { ip: Ipv4Addr::new(10, 0, 64, 104) });
+    robots.insert(1, RobotConfig { ip: Ipv4Addr::new(10, 0, 64, 101), substitution_pos: Default::default() });
+    robots.insert(2, RobotConfig { ip: Ipv4Addr::new(10, 0, 64, 102), substitution_pos: Default::default() });
+    robots.insert(3, RobotConfig { ip: Ipv4Addr::new(10, 0, 64, 103), substitution_pos: Default::default() });
+    robots.insert(4, RobotConfig { ip: Ipv4Addr::new(10, 0, 64, 104), substitution_pos: Default::default() });
 
     Self {
       ssl: SslConfig::default(),
@@ -73,12 +73,25 @@ impl Default for ServerConfig {
 #[derive(Debug, Deserialize, Serialize)]
 pub struct RobotConfig {
   pub ip: Ipv4Addr,
+  pub substitution_pos: Vector2,
 }
 impl Default for RobotConfig {
   fn default() -> Self {
     Self {
       ip: Ipv4Addr::new(10, 0, 64, 101),
+      substitution_pos: Vector2::default(),
     }
+  }
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct Vector2 {
+  pub x: i32,
+  pub y: i32,
+}
+impl Default for Vector2 {
+  fn default() -> Self {
+    Self { x: 6200, y: 400 }
   }
 }
 

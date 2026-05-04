@@ -162,6 +162,7 @@ mod tests {
       1,
       RobotConfig {
         ip: Ipv4Addr::new(127, 0, 0, 1),
+        substitution_pos: Default::default(),
       },
     );
 
