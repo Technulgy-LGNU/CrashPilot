@@ -2,7 +2,6 @@ syntax = "proto2";
 
 import "crashpilot/common.proto";
 import "google/protobuf/timestamp.proto";
-import "geom/ssl_gc_geometry.proto";
 
 // The message from the crash pilot to the robot
 message CP_Robot {

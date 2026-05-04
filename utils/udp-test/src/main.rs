@@ -1,26 +1,10 @@
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
-use tokio::net::UdpSocket;
 use prost::Message;
-use prost_types::Timestamp;
-use std::fs::OpenOptions;
-use std::io::Write;
+use tokio::net::UdpSocket;
 
 mod proto;
 
 #[tokio::main]
 async fn main() {
-  // Open (or create) CSV file in append mode
-  let mut file = OpenOptions::new()
-    .append(true)
-    .create(true)
-    .open("network_delays.csv")
-    .expect("Failed to open CSV file");
-
-  // Write header if the file is empty
-  if file.metadata().unwrap().len() == 0 {
-    writeln!(file, "timestamp_ms,delay_ms").expect("Failed to write CSV header");
-  }
-
   let socket = UdpSocket::bind("0.0.0.0:1024").await.expect("failed to bind socket");
   println!("Listening on UDP port 1024...");
 
@@ -32,14 +16,10 @@ async fn main() {
 
     match proto::CpRobot::decode(&buf[..size]) {
       Ok(msg) => {
-        println!("Command: {:?}", msg.cmd.pos);
+        println!("Command: {:?}", msg);
       }
       Err(e) => eprintln!("Failed to decode protobuf: {}", e),
     }
   }
 }
 
-fn timestamp_to_system_time(ts: &Timestamp) -> SystemTime {
-  let duration = Duration::new(ts.seconds as u64, ts.nanos as u32);
-  UNIX_EPOCH + duration
-}

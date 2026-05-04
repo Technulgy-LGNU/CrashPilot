@@ -14,8 +14,6 @@ pub(crate) fn spawn_udp_listener<T>(
   tokio::spawn(async move {
     let mut buf = [0u8; 65536];
 
-    dbg!("UDP listener started on {}", socket.local_addr().unwrap());
-
     loop {
       match socket.recv_from(&mut buf).await {
         Ok((size, _)) => {

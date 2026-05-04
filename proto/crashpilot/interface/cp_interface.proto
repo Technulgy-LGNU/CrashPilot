@@ -23,8 +23,8 @@ message InterfaceWrapper_CP {
 
 // buf:lint:ignore MESSAGE_PASCAL_CASE
 message InterfaceRobotCommands_CP {
-  optional uint32 robot_id = 1;
-  optional CP_Command command = 2;
+  required uint32 robot_id = 1;
+  required CP_Command command = 2;
 }
 
 // buf:lint:ignore MESSAGE_PASCAL_CASE

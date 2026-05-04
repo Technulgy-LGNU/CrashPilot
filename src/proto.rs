@@ -3217,10 +3217,10 @@ pub struct InterfaceWrapperCp {
 /// buf:lint:ignore MESSAGE_PASCAL_CASE
 #[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct InterfaceRobotCommandsCp {
-    #[prost(uint32, optional, tag="1")]
-    pub robot_id: ::core::option::Option<u32>,
-    #[prost(message, optional, tag="2")]
-    pub command: ::core::option::Option<CpCommand>,
+    #[prost(uint32, required, tag="1")]
+    pub robot_id: u32,
+    #[prost(message, required, tag="2")]
+    pub command: CpCommand,
 }
 /// buf:lint:ignore MESSAGE_PASCAL_CASE
 #[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]

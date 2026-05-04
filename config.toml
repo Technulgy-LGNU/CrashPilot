@@ -1,6 +1,6 @@
 [ssl]
 ssl_vision_raw_ip = "224.5.23.2"
-ssl_vision_raw_port = "10006"
+ssl_vision_raw_port = 10006
 ssl_vision_tracked_ip = "224.5.23.2"
 ssl_vision_tracked_port = 10010
 ssl_gc_ip = "224.5.23.1"
@@ -8,13 +8,13 @@ ssl_gc_port = 10003
 
 
 [server]
-robot_socket_host = "10.0.64.242"
+robot_socket_host = "0.0.0.0"
 robot_socket_port = 8192
 robots_port = 1024
 websocket_host = "0.0.0.0"
 websocket_port = 4096
 
 [robots]
-1 = { ip = "127.0.0.1" }
-2 = { ip = "10.0.64.101" }
+1 = { ip = "127.0.0.1", vector2 = { x = 6200, y = 200 } }
+2 = { ip = "10.0.64.101", vector2 = { x = 6200, y = 400 } }
 

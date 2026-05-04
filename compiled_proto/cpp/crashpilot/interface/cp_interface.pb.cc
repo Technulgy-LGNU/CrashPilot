@@ -229,7 +229,7 @@ const char descriptor_table_protodef_crashpilot_2finterface_2fcp_5finterface_2ep
     "s_CPR\rrobotCommands\022A\n\021interface_command"
     "\030\002 \002(\0132\024.InterfaceCommand_CPR\020interfaceC"
     "ommand\"]\n\031InterfaceRobotCommands_CP\022\031\n\010r"
-    "obot_id\030\001 \001(\rR\007robotId\022%\n\007command\030\002 \001(\0132"
+    "obot_id\030\001 \002(\rR\007robotId\022%\n\007command\030\002 \002(\0132"
     "\013.CP_CommandR\007command\"\232\001\n\023InterfaceComma"
     "nd_CP\022)\n\020enable_testfield\030\001 \002(\010R\017enableT"
     "estfield\022\034\n\ttestfield\030\002 \002(\rR\ttestfield\022!"
@@ -1102,6 +1102,9 @@ class InterfaceRobotCommands_CP::_Internal {
       decltype(::std::declval<InterfaceRobotCommands_CP>()._impl_._has_bits_);
   static constexpr ::int32_t kHasBitsOffset =
       8 * PROTOBUF_FIELD_OFFSET(InterfaceRobotCommands_CP, _impl_._has_bits_);
+  static bool MissingRequiredFields(const HasBits& has_bits) {
+    return ((has_bits[0] & 0x00000003) ^ 0x00000003) != 0;
+  }
 };
 
 void InterfaceRobotCommands_CP::clear_command() {
@@ -1237,20 +1240,20 @@ InterfaceRobotCommands_CP::_table_ = {
     ::_pbi::TcParser::GetTable<::InterfaceRobotCommands_CP>(),  // to_prefetch
     #endif  // PROTOBUF_PREFETCH_PARSE_TABLE
   }, {{
-    // optional .CP_Command command = 2 [json_name = "command"];
+    // required .CP_Command command = 2 [json_name = "command"];
     {::_pbi::TcParser::FastMtS1,
      {18, 0, 0,
       PROTOBUF_FIELD_OFFSET(InterfaceRobotCommands_CP, _impl_.command_)}},
-    // optional uint32 robot_id = 1 [json_name = "robotId"];
+    // required uint32 robot_id = 1 [json_name = "robotId"];
     {::_pbi::TcParser::SingularVarintNoZag1<::uint32_t, offsetof(InterfaceRobotCommands_CP, _impl_.robot_id_), 1>(),
      {8, 1, 0,
       PROTOBUF_FIELD_OFFSET(InterfaceRobotCommands_CP, _impl_.robot_id_)}},
   }}, {{
     65535, 65535
   }}, {{
-    // optional uint32 robot_id = 1 [json_name = "robotId"];
+    // required uint32 robot_id = 1 [json_name = "robotId"];
     {PROTOBUF_FIELD_OFFSET(InterfaceRobotCommands_CP, _impl_.robot_id_), _Internal::kHasBitsOffset + 1, 0, (0 | ::_fl::kFcOptional | ::_fl::kUInt32)},
-    // optional .CP_Command command = 2 [json_name = "command"];
+    // required .CP_Command command = 2 [json_name = "command"];
     {PROTOBUF_FIELD_OFFSET(InterfaceRobotCommands_CP, _impl_.command_), _Internal::kHasBitsOffset + 0, 0, (0 | ::_fl::kFcOptional | ::_fl::kMessage | ::_fl::kTvTable)},
   }},
   {{
@@ -1295,14 +1298,14 @@ PROTOBUF_NOINLINE void InterfaceRobotCommands_CP::Clear() {
   (void)cached_has_bits;
 
   cached_has_bits = this_._impl_._has_bits_[0];
-  // optional uint32 robot_id = 1 [json_name = "robotId"];
+  // required uint32 robot_id = 1 [json_name = "robotId"];
   if (CheckHasBit(cached_has_bits, 0x00000002U)) {
     target = stream->EnsureSpace(target);
     target = ::_pbi::WireFormatLite::WriteUInt32ToArray(
         1, this_._internal_robot_id(), target);
   }
 
-  // optional .CP_Command command = 2 [json_name = "command"];
+  // required .CP_Command command = 2 [json_name = "command"];
   if (CheckHasBit(cached_has_bits, 0x00000001U)) {
     target = ::google::protobuf::internal::WireFormatLite::InternalWriteMessage(
         2, *this_._impl_.command_, this_._impl_.command_->GetCachedSize(), target,
@@ -1335,12 +1338,12 @@ PROTOBUF_NOINLINE void InterfaceRobotCommands_CP::Clear() {
   ::_pbi::Prefetch5LinesFrom7Lines(&this_);
   cached_has_bits = this_._impl_._has_bits_[0];
   if (BatchCheckHasBit(cached_has_bits, 0x00000003U)) {
-    // optional .CP_Command command = 2 [json_name = "command"];
+    // required .CP_Command command = 2 [json_name = "command"];
     if (CheckHasBit(cached_has_bits, 0x00000001U)) {
       total_size += 1 +
                     ::google::protobuf::internal::WireFormatLite::MessageSize(*this_._impl_.command_);
     }
-    // optional uint32 robot_id = 1 [json_name = "robotId"];
+    // required uint32 robot_id = 1 [json_name = "robotId"];
     if (CheckHasBit(cached_has_bits, 0x00000002U)) {
       total_size += ::_pbi::WireFormatLite::UInt32SizePlusOne(
           this_._internal_robot_id());
@@ -1393,6 +1396,9 @@ void InterfaceRobotCommands_CP::CopyFrom(const InterfaceRobotCommands_CP& from) 
 PROTOBUF_NOINLINE bool InterfaceRobotCommands_CP::IsInitializedImpl(
     const MessageLite& msg) {
   auto& this_ = static_cast<const InterfaceRobotCommands_CP&>(msg);
+  if (_Internal::MissingRequiredFields(this_._impl_._has_bits_)) {
+    return false;
+  }
   if (CheckHasBit(this_._impl_._has_bits_[0], 0x00000001U)) {
     if (!this_._impl_.command_->IsInitialized()) return false;
   }
