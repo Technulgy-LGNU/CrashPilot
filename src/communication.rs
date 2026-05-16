@@ -9,14 +9,6 @@ use crate::interface::spawn_websocket;
 use crate::proto::{InterfaceWrapperCp, Referee, SslWrapperPacket, TrackerWrapperPacket};
 use crate::ssl_communication::get_ssl_data;
 
-#[derive(Debug)]
-pub enum Event {
-  RawVision(SslWrapperPacket),
-  TrackedVision(TrackerWrapperPacket),
-  Websocket(InterfaceWrapperCp),
-  Referee(Referee),
-}
-
 pub type EventShare = Arc<Mutex<(Option<SslWrapperPacket>, Option<TrackerWrapperPacket>, Option<InterfaceWrapperCp>, Option<Referee>)>>;
 
 #[derive(Default)]

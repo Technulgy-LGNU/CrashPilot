@@ -15,6 +15,6 @@ websocket_host = "0.0.0.0"
 websocket_port = 4096
 
 [robots]
-1 = { ip = "127.0.0.1", vector2 = { x = 6200, y = 200 } }
-2 = { ip = "10.0.64.101", vector2 = { x = 6200, y = 400 } }
+1 = { ip = "127.0.0.1", substitution_pos = { x = 6200, y = 200 } }
+2 = { ip = "10.0.64.101", substitution_pos = { x = 6200, y = 400 } }    
 

@@ -112,6 +112,7 @@ async fn main() {
       // Avoid printing every packet: stdout can become a bottleneck and make the
       // program *look* like it stops sending.
       // eprintln!("Received Websocket packet: {:?}", packet);
+      println!("{:?}", packet);
       for robot_command in packet.robot_commands {
         robots_ws_data.insert(robot_command.robot_id, robot_command.command);
       }

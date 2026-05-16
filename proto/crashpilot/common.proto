@@ -12,9 +12,9 @@ message CP_Ball {
 message CP_TrackedRobot {
   required uint32 robot_id = 1;
 
-  // The position [m,] in the ssl-vision coordinate system
+  // The position [mm] in the ssl-vision coordinate system
   required CP_Vector2 pos = 2;
-  // The orientation [rad] in the ssl-vision coordinate system
+  // The orientation [degree] in the ssl-vision coordinate system
   required int32 orientation = 3;
 
   // The velocity [m/s] in the ssl-vision coordinate system
