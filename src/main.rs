@@ -89,7 +89,7 @@ async fn main() {
   // Sending should not depend on receiving new packets: when vision/GC packets pause,
   // we still want to keep sending the latest known command/state to the robots.
   // Also, waiting on an interval prevents busy-spinning on `rx.lock()`.
-  let mut tick = interval(Duration::from_millis(8)); // ~120 Hz
+  let mut tick = interval(Duration::from_millis(4)); // ~240 Hz
   tick.set_missed_tick_behavior(MissedTickBehavior::Skip);
 
   loop {
@@ -109,9 +109,6 @@ async fn main() {
       vis_tracked = packet;
     }
     if let Some(packet) = ws {
-      // Avoid printing every packet: stdout can become a bottleneck and make the
-      // program *look* like it stops sending.
-      // eprintln!("Received Websocket packet: {:?}", packet);
       println!("{:?}", packet);
       for robot_command in packet.robot_commands {
         robots_ws_data.insert(robot_command.robot_id, robot_command.command);
@@ -181,6 +178,7 @@ async fn main() {
 
       // Commands
       // Check for the referee command and overwrite cp commands
+      //
       // HALT Command, all robots stop
       if referee.command == 0 && interface_command.gc_data {
         robot.cmd = match robots_ws_data.get(&robot.robot_id) {
