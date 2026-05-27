@@ -14,3 +14,8 @@ toml = "1.1.2+spec-1.1.0"
 futures-util = "0.3.32"
 
 [build-dependencies]
+
+[workspace]
+members = [
+    "crates/*"
+]
