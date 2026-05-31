@@ -30,13 +30,12 @@ inline constexpr Robot_CP::Impl_::Impl_(
     [[maybe_unused]] ::google::protobuf::internal::InternalVisibility visibility,
     ::_pbi::ConstantInitialized) noexcept
       : _cached_size_{0},
-        error_msg_(
-            &::google::protobuf::internal::fixed_address_empty_string,
-            ::_pbi::ConstantInitialized()),
         robot_id_{0u},
-        battery_voltage_{0},
+        battery_voltage_{0u},
+        battery_current_{0u},
         kicker_ready_{false},
         has_ball_{false},
+        has_error_{false},
         acting_{false},
         last_rec_packet_{0u} {}
 
@@ -68,21 +67,23 @@ const ::uint32_t
         protodesc_cold) = {
         0x081, // bitmap
         PROTOBUF_FIELD_OFFSET(::Robot_CP, _impl_._has_bits_),
-        10, // hasbit index offset
+        11, // hasbit index offset
         PROTOBUF_FIELD_OFFSET(::Robot_CP, _impl_.robot_id_),
         PROTOBUF_FIELD_OFFSET(::Robot_CP, _impl_.battery_voltage_),
+        PROTOBUF_FIELD_OFFSET(::Robot_CP, _impl_.battery_current_),
         PROTOBUF_FIELD_OFFSET(::Robot_CP, _impl_.kicker_ready_),
         PROTOBUF_FIELD_OFFSET(::Robot_CP, _impl_.has_ball_),
-        PROTOBUF_FIELD_OFFSET(::Robot_CP, _impl_.error_msg_),
+        PROTOBUF_FIELD_OFFSET(::Robot_CP, _impl_.has_error_),
         PROTOBUF_FIELD_OFFSET(::Robot_CP, _impl_.acting_),
         PROTOBUF_FIELD_OFFSET(::Robot_CP, _impl_.last_rec_packet_),
+        0,
         1,
         2,
         3,
         4,
-        0,
         5,
         6,
+        7,
 };
 
 static const ::_pbi::MigrationSchema
@@ -95,19 +96,20 @@ static const ::_pb::Message* PROTOBUF_NONNULL const file_default_instances[] = {
 const char descriptor_table_protodef_crashpilot_2frobot_5fcp_2fcp_5frobot_5fcp_2eproto[] ABSL_ATTRIBUTE_SECTION_VARIABLE(
     protodesc_cold) = {
     "\n%crashpilot/robot_cp/cp_robot_cp.proto\""
-    "\351\001\n\010Robot_CP\022\031\n\010robot_id\030\001 \002(\rR\007robotId\022"
-    "\'\n\017battery_voltage\030\002 \001(\002R\016batteryVoltage"
-    "\022!\n\014kicker_ready\030\003 \002(\010R\013kickerReady\022\031\n\010h"
-    "as_ball\030\004 \002(\010R\007hasBall\022\033\n\terror_msg\030\005 \001("
-    "\tR\010errorMsg\022\026\n\006acting\030\006 \001(\010R\006acting\022&\n\017l"
-    "ast_rec_packet\030\007 \001(\rR\rlastRecPacketB\022B\016C"
-    "pRobotCpProtoP\001"
+    "\222\002\n\010Robot_CP\022\031\n\010robot_id\030\001 \002(\rR\007robotId\022"
+    "\'\n\017battery_voltage\030\002 \001(\rR\016batteryVoltage"
+    "\022\'\n\017battery_current\030\003 \001(\rR\016batteryCurren"
+    "t\022!\n\014kicker_ready\030\004 \002(\010R\013kickerReady\022\031\n\010"
+    "has_ball\030\005 \002(\010R\007hasBall\022\033\n\thas_error\030\006 \001"
+    "(\010R\010hasError\022\026\n\006acting\030\007 \001(\010R\006acting\022&\n\017"
+    "last_rec_packet\030\010 \001(\rR\rlastRecPacketB\022B\016"
+    "CpRobotCpProtoP\001"
 };
 static ::absl::once_flag descriptor_table_crashpilot_2frobot_5fcp_2fcp_5frobot_5fcp_2eproto_once;
 PROTOBUF_CONSTINIT const ::_pbi::DescriptorTable descriptor_table_crashpilot_2frobot_5fcp_2fcp_5frobot_5fcp_2eproto = {
     false,
     false,
-    295,
+    336,
     descriptor_table_protodef_crashpilot_2frobot_5fcp_2fcp_5frobot_5fcp_2eproto,
     "crashpilot/robot_cp/cp_robot_cp.proto",
     &descriptor_table_crashpilot_2frobot_5fcp_2fcp_5frobot_5fcp_2eproto_once,
@@ -129,7 +131,7 @@ class Robot_CP::_Internal {
   static constexpr ::int32_t kHasBitsOffset =
       8 * PROTOBUF_FIELD_OFFSET(Robot_CP, _impl_._has_bits_);
   static bool MissingRequiredFields(const HasBits& has_bits) {
-    return ((has_bits[0] & 0x0000001a) ^ 0x0000001a) != 0;
+    return ((has_bits[0] & 0x00000019) ^ 0x00000019) != 0;
   }
 };
 
@@ -142,42 +144,21 @@ Robot_CP::Robot_CP(::google::protobuf::Arena* PROTOBUF_NULLABLE arena)
   SharedCtor(arena);
   // @@protoc_insertion_point(arena_constructor:Robot_CP)
 }
-PROTOBUF_NDEBUG_INLINE Robot_CP::Impl_::Impl_(
-    [[maybe_unused]] ::google::protobuf::internal::InternalVisibility visibility,
-    [[maybe_unused]] ::google::protobuf::Arena* PROTOBUF_NULLABLE arena, const Impl_& from,
-    [[maybe_unused]] const ::Robot_CP& from_msg)
-      : _has_bits_{from._has_bits_},
-        _cached_size_{0},
-        error_msg_(arena, from.error_msg_) {}
-
 Robot_CP::Robot_CP(
-    ::google::protobuf::Arena* PROTOBUF_NULLABLE arena,
-    const Robot_CP& from)
+    ::google::protobuf::Arena* PROTOBUF_NULLABLE arena, const Robot_CP& from)
 #if defined(PROTOBUF_CUSTOM_VTABLE)
-    : ::google::protobuf::Message(arena, Robot_CP_class_data_.base()) {
+    : ::google::protobuf::Message(arena, Robot_CP_class_data_.base()),
 #else   // PROTOBUF_CUSTOM_VTABLE
-    : ::google::protobuf::Message(arena) {
+    : ::google::protobuf::Message(arena),
 #endif  // PROTOBUF_CUSTOM_VTABLE
-  Robot_CP* const _this = this;
-  (void)_this;
+      _impl_(from._impl_) {
   _internal_metadata_.MergeFrom<::google::protobuf::UnknownFieldSet>(
       from._internal_metadata_);
-  new (&_impl_) Impl_(internal_visibility(), arena, from._impl_, from);
-  ::memcpy(reinterpret_cast<char*>(&_impl_) +
-               offsetof(Impl_, robot_id_),
-           reinterpret_cast<const char*>(&from._impl_) +
-               offsetof(Impl_, robot_id_),
-           offsetof(Impl_, last_rec_packet_) -
-               offsetof(Impl_, robot_id_) +
-               sizeof(Impl_::last_rec_packet_));
-
-  // @@protoc_insertion_point(copy_constructor:Robot_CP)
 }
 PROTOBUF_NDEBUG_INLINE Robot_CP::Impl_::Impl_(
     [[maybe_unused]] ::google::protobuf::internal::InternalVisibility visibility,
     [[maybe_unused]] ::google::protobuf::Arena* PROTOBUF_NULLABLE arena)
-      : _cached_size_{0},
-        error_msg_(arena) {}
+      : _cached_size_{0} {}
 
 inline void Robot_CP::SharedCtor(::_pb::Arena* PROTOBUF_NULLABLE arena) {
   new (&_impl_) Impl_(internal_visibility(), arena);
@@ -199,7 +180,6 @@ inline void Robot_CP::SharedDtor(MessageLite& self) {
   }
   this_._internal_metadata_.Delete<::google::protobuf::UnknownFieldSet>();
   ABSL_DCHECK(this_.GetArena() == nullptr);
-  this_._impl_.error_msg_.Destroy();
   this_._impl_.~Impl_();
 }
 
@@ -209,7 +189,7 @@ inline void* PROTOBUF_NONNULL Robot_CP::PlacementNew_(
   return ::new (mem) Robot_CP(arena);
 }
 constexpr auto Robot_CP::InternalNewImpl_() {
-  return ::google::protobuf::internal::MessageCreator::CopyInit(sizeof(Robot_CP),
+  return ::google::protobuf::internal::MessageCreator::ZeroInit(sizeof(Robot_CP),
                                             alignof(Robot_CP));
 }
 constexpr auto Robot_CP::InternalGenerateClassData_() {
@@ -245,16 +225,16 @@ Robot_CP::GetClassData() const {
   return Robot_CP_class_data_.base();
 }
 PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1
-const ::_pbi::TcParseTable<3, 7, 0, 0, 2>
+const ::_pbi::TcParseTable<3, 8, 0, 0, 2>
 Robot_CP::_table_ = {
   {
     PROTOBUF_FIELD_OFFSET(Robot_CP, _impl_._has_bits_),
     0, // no _extensions_
-    7, 56,  // max_field_number, fast_idx_mask
+    8, 56,  // max_field_number, fast_idx_mask
     offsetof(decltype(_table_), field_lookup_table),
-    4294967168,  // skipmap
+    4294967040,  // skipmap
     offsetof(decltype(_table_), field_entries),
-    7,  // num_field_entries
+    8,  // num_field_entries
     0,  // num_aux_entries
     offsetof(decltype(_table_), field_names),  // no aux_entries
     Robot_CP_class_data_.base(),
@@ -264,52 +244,57 @@ Robot_CP::_table_ = {
     ::_pbi::TcParser::GetTable<::Robot_CP>(),  // to_prefetch
     #endif  // PROTOBUF_PREFETCH_PARSE_TABLE
   }, {{
-    {::_pbi::TcParser::MiniParse, {}},
-    // required uint32 robot_id = 1 [json_name = "robotId"];
-    {::_pbi::TcParser::SingularVarintNoZag1<::uint32_t, offsetof(Robot_CP, _impl_.robot_id_), 1>(),
-     {8, 1, 0,
-      PROTOBUF_FIELD_OFFSET(Robot_CP, _impl_.robot_id_)}},
-    // optional float battery_voltage = 2 [json_name = "batteryVoltage"];
-    {::_pbi::TcParser::FastF32S1,
-     {21, 2, 0,
-      PROTOBUF_FIELD_OFFSET(Robot_CP, _impl_.battery_voltage_)}},
-    // required bool kicker_ready = 3 [json_name = "kickerReady"];
-    {::_pbi::TcParser::SingularVarintNoZag1<bool, offsetof(Robot_CP, _impl_.kicker_ready_), 3>(),
-     {24, 3, 0,
-      PROTOBUF_FIELD_OFFSET(Robot_CP, _impl_.kicker_ready_)}},
-    // required bool has_ball = 4 [json_name = "hasBall"];
-    {::_pbi::TcParser::SingularVarintNoZag1<bool, offsetof(Robot_CP, _impl_.has_ball_), 4>(),
-     {32, 4, 0,
-      PROTOBUF_FIELD_OFFSET(Robot_CP, _impl_.has_ball_)}},
-    // optional string error_msg = 5 [json_name = "errorMsg"];
-    {::_pbi::TcParser::FastBS1,
-     {42, 0, 0,
-      PROTOBUF_FIELD_OFFSET(Robot_CP, _impl_.error_msg_)}},
-    // optional bool acting = 6 [json_name = "acting"];
-    {::_pbi::TcParser::SingularVarintNoZag1<bool, offsetof(Robot_CP, _impl_.acting_), 5>(),
-     {48, 5, 0,
-      PROTOBUF_FIELD_OFFSET(Robot_CP, _impl_.acting_)}},
-    // optional uint32 last_rec_packet = 7 [json_name = "lastRecPacket"];
-    {::_pbi::TcParser::SingularVarintNoZag1<::uint32_t, offsetof(Robot_CP, _impl_.last_rec_packet_), 6>(),
-     {56, 6, 0,
+    // optional uint32 last_rec_packet = 8 [json_name = "lastRecPacket"];
+    {::_pbi::TcParser::SingularVarintNoZag1<::uint32_t, offsetof(Robot_CP, _impl_.last_rec_packet_), 7>(),
+     {64, 7, 0,
       PROTOBUF_FIELD_OFFSET(Robot_CP, _impl_.last_rec_packet_)}},
+    // required uint32 robot_id = 1 [json_name = "robotId"];
+    {::_pbi::TcParser::SingularVarintNoZag1<::uint32_t, offsetof(Robot_CP, _impl_.robot_id_), 0>(),
+     {8, 0, 0,
+      PROTOBUF_FIELD_OFFSET(Robot_CP, _impl_.robot_id_)}},
+    // optional uint32 battery_voltage = 2 [json_name = "batteryVoltage"];
+    {::_pbi::TcParser::SingularVarintNoZag1<::uint32_t, offsetof(Robot_CP, _impl_.battery_voltage_), 1>(),
+     {16, 1, 0,
+      PROTOBUF_FIELD_OFFSET(Robot_CP, _impl_.battery_voltage_)}},
+    // optional uint32 battery_current = 3 [json_name = "batteryCurrent"];
+    {::_pbi::TcParser::SingularVarintNoZag1<::uint32_t, offsetof(Robot_CP, _impl_.battery_current_), 2>(),
+     {24, 2, 0,
+      PROTOBUF_FIELD_OFFSET(Robot_CP, _impl_.battery_current_)}},
+    // required bool kicker_ready = 4 [json_name = "kickerReady"];
+    {::_pbi::TcParser::SingularVarintNoZag1<bool, offsetof(Robot_CP, _impl_.kicker_ready_), 3>(),
+     {32, 3, 0,
+      PROTOBUF_FIELD_OFFSET(Robot_CP, _impl_.kicker_ready_)}},
+    // required bool has_ball = 5 [json_name = "hasBall"];
+    {::_pbi::TcParser::SingularVarintNoZag1<bool, offsetof(Robot_CP, _impl_.has_ball_), 4>(),
+     {40, 4, 0,
+      PROTOBUF_FIELD_OFFSET(Robot_CP, _impl_.has_ball_)}},
+    // optional bool has_error = 6 [json_name = "hasError"];
+    {::_pbi::TcParser::SingularVarintNoZag1<bool, offsetof(Robot_CP, _impl_.has_error_), 5>(),
+     {48, 5, 0,
+      PROTOBUF_FIELD_OFFSET(Robot_CP, _impl_.has_error_)}},
+    // optional bool acting = 7 [json_name = "acting"];
+    {::_pbi::TcParser::SingularVarintNoZag1<bool, offsetof(Robot_CP, _impl_.acting_), 6>(),
+     {56, 6, 0,
+      PROTOBUF_FIELD_OFFSET(Robot_CP, _impl_.acting_)}},
   }}, {{
     65535, 65535
   }}, {{
     // required uint32 robot_id = 1 [json_name = "robotId"];
-    {PROTOBUF_FIELD_OFFSET(Robot_CP, _impl_.robot_id_), _Internal::kHasBitsOffset + 1, 0, (0 | ::_fl::kFcOptional | ::_fl::kUInt32)},
-    // optional float battery_voltage = 2 [json_name = "batteryVoltage"];
-    {PROTOBUF_FIELD_OFFSET(Robot_CP, _impl_.battery_voltage_), _Internal::kHasBitsOffset + 2, 0, (0 | ::_fl::kFcOptional | ::_fl::kFloat)},
-    // required bool kicker_ready = 3 [json_name = "kickerReady"];
+    {PROTOBUF_FIELD_OFFSET(Robot_CP, _impl_.robot_id_), _Internal::kHasBitsOffset + 0, 0, (0 | ::_fl::kFcOptional | ::_fl::kUInt32)},
+    // optional uint32 battery_voltage = 2 [json_name = "batteryVoltage"];
+    {PROTOBUF_FIELD_OFFSET(Robot_CP, _impl_.battery_voltage_), _Internal::kHasBitsOffset + 1, 0, (0 | ::_fl::kFcOptional | ::_fl::kUInt32)},
+    // optional uint32 battery_current = 3 [json_name = "batteryCurrent"];
+    {PROTOBUF_FIELD_OFFSET(Robot_CP, _impl_.battery_current_), _Internal::kHasBitsOffset + 2, 0, (0 | ::_fl::kFcOptional | ::_fl::kUInt32)},
+    // required bool kicker_ready = 4 [json_name = "kickerReady"];
     {PROTOBUF_FIELD_OFFSET(Robot_CP, _impl_.kicker_ready_), _Internal::kHasBitsOffset + 3, 0, (0 | ::_fl::kFcOptional | ::_fl::kBool)},
-    // required bool has_ball = 4 [json_name = "hasBall"];
+    // required bool has_ball = 5 [json_name = "hasBall"];
     {PROTOBUF_FIELD_OFFSET(Robot_CP, _impl_.has_ball_), _Internal::kHasBitsOffset + 4, 0, (0 | ::_fl::kFcOptional | ::_fl::kBool)},
-    // optional string error_msg = 5 [json_name = "errorMsg"];
-    {PROTOBUF_FIELD_OFFSET(Robot_CP, _impl_.error_msg_), _Internal::kHasBitsOffset + 0, 0, (0 | ::_fl::kFcOptional | ::_fl::kBytes | ::_fl::kRepAString)},
-    // optional bool acting = 6 [json_name = "acting"];
-    {PROTOBUF_FIELD_OFFSET(Robot_CP, _impl_.acting_), _Internal::kHasBitsOffset + 5, 0, (0 | ::_fl::kFcOptional | ::_fl::kBool)},
-    // optional uint32 last_rec_packet = 7 [json_name = "lastRecPacket"];
-    {PROTOBUF_FIELD_OFFSET(Robot_CP, _impl_.last_rec_packet_), _Internal::kHasBitsOffset + 6, 0, (0 | ::_fl::kFcOptional | ::_fl::kUInt32)},
+    // optional bool has_error = 6 [json_name = "hasError"];
+    {PROTOBUF_FIELD_OFFSET(Robot_CP, _impl_.has_error_), _Internal::kHasBitsOffset + 5, 0, (0 | ::_fl::kFcOptional | ::_fl::kBool)},
+    // optional bool acting = 7 [json_name = "acting"];
+    {PROTOBUF_FIELD_OFFSET(Robot_CP, _impl_.acting_), _Internal::kHasBitsOffset + 6, 0, (0 | ::_fl::kFcOptional | ::_fl::kBool)},
+    // optional uint32 last_rec_packet = 8 [json_name = "lastRecPacket"];
+    {PROTOBUF_FIELD_OFFSET(Robot_CP, _impl_.last_rec_packet_), _Internal::kHasBitsOffset + 7, 0, (0 | ::_fl::kFcOptional | ::_fl::kUInt32)},
   }},
   // no aux_entries
   {{
@@ -323,10 +308,7 @@ PROTOBUF_NOINLINE void Robot_CP::Clear() {
   (void) cached_has_bits;
 
   cached_has_bits = _impl_._has_bits_[0];
-  if (CheckHasBit(cached_has_bits, 0x00000001U)) {
-    _impl_.error_msg_.ClearNonDefaultToEmpty();
-  }
-  if (BatchCheckHasBit(cached_has_bits, 0x0000007eU)) {
+  if (BatchCheckHasBit(cached_has_bits, 0x000000ffU)) {
     ::memset(&_impl_.robot_id_, 0, static_cast<::size_t>(
         reinterpret_cast<char*>(&_impl_.last_rec_packet_) -
         reinterpret_cast<char*>(&_impl_.robot_id_)) + sizeof(_impl_.last_rec_packet_));
@@ -355,51 +337,59 @@ PROTOBUF_NOINLINE void Robot_CP::Clear() {
 
   cached_has_bits = this_._impl_._has_bits_[0];
   // required uint32 robot_id = 1 [json_name = "robotId"];
-  if (CheckHasBit(cached_has_bits, 0x00000002U)) {
+  if (CheckHasBit(cached_has_bits, 0x00000001U)) {
     target = stream->EnsureSpace(target);
     target = ::_pbi::WireFormatLite::WriteUInt32ToArray(
         1, this_._internal_robot_id(), target);
   }
 
-  // optional float battery_voltage = 2 [json_name = "batteryVoltage"];
-  if (CheckHasBit(cached_has_bits, 0x00000004U)) {
+  // optional uint32 battery_voltage = 2 [json_name = "batteryVoltage"];
+  if (CheckHasBit(cached_has_bits, 0x00000002U)) {
     target = stream->EnsureSpace(target);
-    target = ::_pbi::WireFormatLite::WriteFloatToArray(
+    target = ::_pbi::WireFormatLite::WriteUInt32ToArray(
         2, this_._internal_battery_voltage(), target);
   }
 
-  // required bool kicker_ready = 3 [json_name = "kickerReady"];
+  // optional uint32 battery_current = 3 [json_name = "batteryCurrent"];
+  if (CheckHasBit(cached_has_bits, 0x00000004U)) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteUInt32ToArray(
+        3, this_._internal_battery_current(), target);
+  }
+
+  // required bool kicker_ready = 4 [json_name = "kickerReady"];
   if (CheckHasBit(cached_has_bits, 0x00000008U)) {
     target = stream->EnsureSpace(target);
     target = ::_pbi::WireFormatLite::WriteBoolToArray(
-        3, this_._internal_kicker_ready(), target);
+        4, this_._internal_kicker_ready(), target);
   }
 
-  // required bool has_ball = 4 [json_name = "hasBall"];
+  // required bool has_ball = 5 [json_name = "hasBall"];
   if (CheckHasBit(cached_has_bits, 0x00000010U)) {
     target = stream->EnsureSpace(target);
     target = ::_pbi::WireFormatLite::WriteBoolToArray(
-        4, this_._internal_has_ball(), target);
+        5, this_._internal_has_ball(), target);
   }
 
-  // optional string error_msg = 5 [json_name = "errorMsg"];
-  if (CheckHasBit(cached_has_bits, 0x00000001U)) {
-    const ::std::string& _s = this_._internal_error_msg();
-    target = stream->WriteStringMaybeAliased(5, _s, target);
-  }
-
-  // optional bool acting = 6 [json_name = "acting"];
+  // optional bool has_error = 6 [json_name = "hasError"];
   if (CheckHasBit(cached_has_bits, 0x00000020U)) {
     target = stream->EnsureSpace(target);
     target = ::_pbi::WireFormatLite::WriteBoolToArray(
-        6, this_._internal_acting(), target);
+        6, this_._internal_has_error(), target);
   }
 
-  // optional uint32 last_rec_packet = 7 [json_name = "lastRecPacket"];
+  // optional bool acting = 7 [json_name = "acting"];
   if (CheckHasBit(cached_has_bits, 0x00000040U)) {
     target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteBoolToArray(
+        7, this_._internal_acting(), target);
+  }
+
+  // optional uint32 last_rec_packet = 8 [json_name = "lastRecPacket"];
+  if (CheckHasBit(cached_has_bits, 0x00000080U)) {
+    target = stream->EnsureSpace(target);
     target = ::_pbi::WireFormatLite::WriteUInt32ToArray(
-        7, this_._internal_last_rec_packet(), target);
+        8, this_._internal_last_rec_packet(), target);
   }
 
   if (ABSL_PREDICT_FALSE(this_._internal_metadata_.have_unknown_fields())) {
@@ -427,25 +417,27 @@ PROTOBUF_NOINLINE void Robot_CP::Clear() {
 
   ::_pbi::Prefetch5LinesFrom7Lines(&this_);
   cached_has_bits = this_._impl_._has_bits_[0];
-  total_size += static_cast<bool>(0x00000004U & cached_has_bits) * 5;
-  total_size += ::absl::popcount(0x00000038U & cached_has_bits) * 2;
-   {
-    // optional string error_msg = 5 [json_name = "errorMsg"];
-    if (CheckHasBit(cached_has_bits, 0x00000001U)) {
-      total_size += 1 + ::google::protobuf::internal::WireFormatLite::StringSize(
-                                      this_._internal_error_msg());
-    }
-  }
+  total_size += ::absl::popcount(0x00000078U & cached_has_bits) * 2;
    {
     // required uint32 robot_id = 1 [json_name = "robotId"];
-    if (CheckHasBit(cached_has_bits, 0x00000002U)) {
+    if (CheckHasBit(cached_has_bits, 0x00000001U)) {
       total_size += ::_pbi::WireFormatLite::UInt32SizePlusOne(
           this_._internal_robot_id());
     }
   }
-   {
-    // optional uint32 last_rec_packet = 7 [json_name = "lastRecPacket"];
-    if (CheckHasBit(cached_has_bits, 0x00000040U)) {
+  if (BatchCheckHasBit(cached_has_bits, 0x00000086U)) {
+    // optional uint32 battery_voltage = 2 [json_name = "batteryVoltage"];
+    if (CheckHasBit(cached_has_bits, 0x00000002U)) {
+      total_size += ::_pbi::WireFormatLite::UInt32SizePlusOne(
+          this_._internal_battery_voltage());
+    }
+    // optional uint32 battery_current = 3 [json_name = "batteryCurrent"];
+    if (CheckHasBit(cached_has_bits, 0x00000004U)) {
+      total_size += ::_pbi::WireFormatLite::UInt32SizePlusOne(
+          this_._internal_battery_current());
+    }
+    // optional uint32 last_rec_packet = 8 [json_name = "lastRecPacket"];
+    if (CheckHasBit(cached_has_bits, 0x00000080U)) {
       total_size += ::_pbi::WireFormatLite::UInt32SizePlusOne(
           this_._internal_last_rec_packet());
     }
@@ -468,15 +460,15 @@ void Robot_CP::MergeImpl(::google::protobuf::MessageLite& to_msg,
   (void)cached_has_bits;
 
   cached_has_bits = from._impl_._has_bits_[0];
-  if (BatchCheckHasBit(cached_has_bits, 0x0000007fU)) {
+  if (BatchCheckHasBit(cached_has_bits, 0x000000ffU)) {
     if (CheckHasBit(cached_has_bits, 0x00000001U)) {
-      _this->_internal_set_error_msg(from._internal_error_msg());
-    }
-    if (CheckHasBit(cached_has_bits, 0x00000002U)) {
       _this->_impl_.robot_id_ = from._impl_.robot_id_;
     }
-    if (CheckHasBit(cached_has_bits, 0x00000004U)) {
+    if (CheckHasBit(cached_has_bits, 0x00000002U)) {
       _this->_impl_.battery_voltage_ = from._impl_.battery_voltage_;
+    }
+    if (CheckHasBit(cached_has_bits, 0x00000004U)) {
+      _this->_impl_.battery_current_ = from._impl_.battery_current_;
     }
     if (CheckHasBit(cached_has_bits, 0x00000008U)) {
       _this->_impl_.kicker_ready_ = from._impl_.kicker_ready_;
@@ -485,9 +477,12 @@ void Robot_CP::MergeImpl(::google::protobuf::MessageLite& to_msg,
       _this->_impl_.has_ball_ = from._impl_.has_ball_;
     }
     if (CheckHasBit(cached_has_bits, 0x00000020U)) {
-      _this->_impl_.acting_ = from._impl_.acting_;
+      _this->_impl_.has_error_ = from._impl_.has_error_;
     }
     if (CheckHasBit(cached_has_bits, 0x00000040U)) {
+      _this->_impl_.acting_ = from._impl_.acting_;
+    }
+    if (CheckHasBit(cached_has_bits, 0x00000080U)) {
       _this->_impl_.last_rec_packet_ = from._impl_.last_rec_packet_;
     }
   }
@@ -514,11 +509,8 @@ PROTOBUF_NOINLINE bool Robot_CP::IsInitializedImpl(
 
 void Robot_CP::InternalSwap(Robot_CP* PROTOBUF_RESTRICT PROTOBUF_NONNULL other) {
   using ::std::swap;
-  auto* arena = GetArena();
-  ABSL_DCHECK_EQ(arena, other->GetArena());
   _internal_metadata_.InternalSwap(&other->_internal_metadata_);
   swap(_impl_._has_bits_[0], other->_impl_._has_bits_[0]);
-  ::_pbi::ArenaStringPtr::InternalSwap(&_impl_.error_msg_, &other->_impl_.error_msg_, arena);
   ::google::protobuf::internal::memswap<
       PROTOBUF_FIELD_OFFSET(Robot_CP, _impl_.last_rec_packet_)
       + sizeof(Robot_CP::_impl_.last_rec_packet_)

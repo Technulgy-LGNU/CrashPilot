@@ -219,31 +219,15 @@ class  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED Robot_CP final : public ::google::p
 
   // accessors -------------------------------------------------------
   enum : int {
-    kErrorMsgFieldNumber = 5,
     kRobotIdFieldNumber = 1,
     kBatteryVoltageFieldNumber = 2,
-    kKickerReadyFieldNumber = 3,
-    kHasBallFieldNumber = 4,
-    kActingFieldNumber = 6,
-    kLastRecPacketFieldNumber = 7,
+    kBatteryCurrentFieldNumber = 3,
+    kKickerReadyFieldNumber = 4,
+    kHasBallFieldNumber = 5,
+    kHasErrorFieldNumber = 6,
+    kActingFieldNumber = 7,
+    kLastRecPacketFieldNumber = 8,
   };
-  // optional string error_msg = 5 [json_name = "errorMsg"];
-  [[nodiscard]] bool has_error_msg()
-      const;
-  void clear_error_msg() ;
-  [[nodiscard]] const ::std::string& error_msg() const;
-  template <typename Arg_ = const ::std::string&, typename... Args_>
-  void set_error_msg(Arg_&& arg, Args_... args);
-  ::std::string* PROTOBUF_NONNULL mutable_error_msg();
-  [[nodiscard]] ::std::string* PROTOBUF_NULLABLE release_error_msg();
-  void set_allocated_error_msg(::std::string* PROTOBUF_NULLABLE value);
-
-  private:
-  const ::std::string& _internal_error_msg() const;
-  PROTOBUF_ALWAYS_INLINE void _internal_set_error_msg(const ::std::string& value);
-  ::std::string* PROTOBUF_NONNULL _internal_mutable_error_msg();
-
-  public:
   // required uint32 robot_id = 1 [json_name = "robotId"];
   [[nodiscard]] bool has_robot_id()
       const;
@@ -256,19 +240,31 @@ class  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED Robot_CP final : public ::google::p
   void _internal_set_robot_id(::uint32_t value);
 
   public:
-  // optional float battery_voltage = 2 [json_name = "batteryVoltage"];
+  // optional uint32 battery_voltage = 2 [json_name = "batteryVoltage"];
   [[nodiscard]] bool has_battery_voltage()
       const;
   void clear_battery_voltage() ;
-  [[nodiscard]] float battery_voltage() const;
-  void set_battery_voltage(float value);
+  [[nodiscard]] ::uint32_t battery_voltage() const;
+  void set_battery_voltage(::uint32_t value);
 
   private:
-  float _internal_battery_voltage() const;
-  void _internal_set_battery_voltage(float value);
+  ::uint32_t _internal_battery_voltage() const;
+  void _internal_set_battery_voltage(::uint32_t value);
 
   public:
-  // required bool kicker_ready = 3 [json_name = "kickerReady"];
+  // optional uint32 battery_current = 3 [json_name = "batteryCurrent"];
+  [[nodiscard]] bool has_battery_current()
+      const;
+  void clear_battery_current() ;
+  [[nodiscard]] ::uint32_t battery_current() const;
+  void set_battery_current(::uint32_t value);
+
+  private:
+  ::uint32_t _internal_battery_current() const;
+  void _internal_set_battery_current(::uint32_t value);
+
+  public:
+  // required bool kicker_ready = 4 [json_name = "kickerReady"];
   [[nodiscard]] bool has_kicker_ready()
       const;
   void clear_kicker_ready() ;
@@ -280,7 +276,7 @@ class  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED Robot_CP final : public ::google::p
   void _internal_set_kicker_ready(bool value);
 
   public:
-  // required bool has_ball = 4 [json_name = "hasBall"];
+  // required bool has_ball = 5 [json_name = "hasBall"];
   [[nodiscard]] bool has_has_ball()
       const;
   void clear_has_ball() ;
@@ -292,7 +288,19 @@ class  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED Robot_CP final : public ::google::p
   void _internal_set_has_ball(bool value);
 
   public:
-  // optional bool acting = 6 [json_name = "acting"];
+  // optional bool has_error = 6 [json_name = "hasError"];
+  [[nodiscard]] bool has_has_error()
+      const;
+  void clear_has_error() ;
+  [[nodiscard]] bool has_error() const;
+  void set_has_error(bool value);
+
+  private:
+  bool _internal_has_error() const;
+  void _internal_set_has_error(bool value);
+
+  public:
+  // optional bool acting = 7 [json_name = "acting"];
   [[nodiscard]] bool has_acting()
       const;
   void clear_acting() ;
@@ -304,7 +312,7 @@ class  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED Robot_CP final : public ::google::p
   void _internal_set_acting(bool value);
 
   public:
-  // optional uint32 last_rec_packet = 7 [json_name = "lastRecPacket"];
+  // optional uint32 last_rec_packet = 8 [json_name = "lastRecPacket"];
   [[nodiscard]] bool has_last_rec_packet()
       const;
   void clear_last_rec_packet() ;
@@ -320,7 +328,7 @@ class  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED Robot_CP final : public ::google::p
  private:
   class _Internal;
   friend class ::google::protobuf::internal::TcParser;
-  static const ::google::protobuf::internal::TcParseTable<3, 7,
+  static const ::google::protobuf::internal::TcParseTable<3, 8,
                                    0, 0,
                                    2>
       _table_;
@@ -344,11 +352,12 @@ class  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED Robot_CP final : public ::google::p
         const Robot_CP& from_msg);
     ::google::protobuf::internal::HasBits<1> _has_bits_;
     ::google::protobuf::internal::CachedSize _cached_size_;
-    ::google::protobuf::internal::ArenaStringPtr error_msg_;
     ::uint32_t robot_id_;
-    float battery_voltage_;
+    ::uint32_t battery_voltage_;
+    ::uint32_t battery_current_;
     bool kicker_ready_;
     bool has_ball_;
+    bool has_error_;
     bool acting_;
     ::uint32_t last_rec_packet_;
     PROTOBUF_TSAN_DECLARE_MEMBER
@@ -377,14 +386,14 @@ extern const ::google::protobuf::internal::ClassDataFull Robot_CP_class_data_;
 
 // required uint32 robot_id = 1 [json_name = "robotId"];
 inline bool Robot_CP::has_robot_id() const {
-  bool value = CheckHasBit(_impl_._has_bits_[0], 0x00000002U);
+  bool value = CheckHasBit(_impl_._has_bits_[0], 0x00000001U);
   return value;
 }
 inline void Robot_CP::clear_robot_id() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   _impl_.robot_id_ = 0u;
   ClearHasBit(_impl_._has_bits_[0],
-                  0x00000002U);
+                  0x00000001U);
 }
 inline ::uint32_t Robot_CP::robot_id() const {
   // @@protoc_insertion_point(field_get:Robot_CP.robot_id)
@@ -392,7 +401,7 @@ inline ::uint32_t Robot_CP::robot_id() const {
 }
 inline void Robot_CP::set_robot_id(::uint32_t value) {
   _internal_set_robot_id(value);
-  SetHasBit(_impl_._has_bits_[0], 0x00000002U);
+  SetHasBit(_impl_._has_bits_[0], 0x00000001U);
   // @@protoc_insertion_point(field_set:Robot_CP.robot_id)
 }
 inline ::uint32_t Robot_CP::_internal_robot_id() const {
@@ -404,36 +413,65 @@ inline void Robot_CP::_internal_set_robot_id(::uint32_t value) {
   _impl_.robot_id_ = value;
 }
 
-// optional float battery_voltage = 2 [json_name = "batteryVoltage"];
+// optional uint32 battery_voltage = 2 [json_name = "batteryVoltage"];
 inline bool Robot_CP::has_battery_voltage() const {
-  bool value = CheckHasBit(_impl_._has_bits_[0], 0x00000004U);
+  bool value = CheckHasBit(_impl_._has_bits_[0], 0x00000002U);
   return value;
 }
 inline void Robot_CP::clear_battery_voltage() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
-  _impl_.battery_voltage_ = 0;
+  _impl_.battery_voltage_ = 0u;
   ClearHasBit(_impl_._has_bits_[0],
-                  0x00000004U);
+                  0x00000002U);
 }
-inline float Robot_CP::battery_voltage() const {
+inline ::uint32_t Robot_CP::battery_voltage() const {
   // @@protoc_insertion_point(field_get:Robot_CP.battery_voltage)
   return _internal_battery_voltage();
 }
-inline void Robot_CP::set_battery_voltage(float value) {
+inline void Robot_CP::set_battery_voltage(::uint32_t value) {
   _internal_set_battery_voltage(value);
-  SetHasBit(_impl_._has_bits_[0], 0x00000004U);
+  SetHasBit(_impl_._has_bits_[0], 0x00000002U);
   // @@protoc_insertion_point(field_set:Robot_CP.battery_voltage)
 }
-inline float Robot_CP::_internal_battery_voltage() const {
+inline ::uint32_t Robot_CP::_internal_battery_voltage() const {
   ::google::protobuf::internal::TSanRead(&_impl_);
   return _impl_.battery_voltage_;
 }
-inline void Robot_CP::_internal_set_battery_voltage(float value) {
+inline void Robot_CP::_internal_set_battery_voltage(::uint32_t value) {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   _impl_.battery_voltage_ = value;
 }
 
-// required bool kicker_ready = 3 [json_name = "kickerReady"];
+// optional uint32 battery_current = 3 [json_name = "batteryCurrent"];
+inline bool Robot_CP::has_battery_current() const {
+  bool value = CheckHasBit(_impl_._has_bits_[0], 0x00000004U);
+  return value;
+}
+inline void Robot_CP::clear_battery_current() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  _impl_.battery_current_ = 0u;
+  ClearHasBit(_impl_._has_bits_[0],
+                  0x00000004U);
+}
+inline ::uint32_t Robot_CP::battery_current() const {
+  // @@protoc_insertion_point(field_get:Robot_CP.battery_current)
+  return _internal_battery_current();
+}
+inline void Robot_CP::set_battery_current(::uint32_t value) {
+  _internal_set_battery_current(value);
+  SetHasBit(_impl_._has_bits_[0], 0x00000004U);
+  // @@protoc_insertion_point(field_set:Robot_CP.battery_current)
+}
+inline ::uint32_t Robot_CP::_internal_battery_current() const {
+  ::google::protobuf::internal::TSanRead(&_impl_);
+  return _impl_.battery_current_;
+}
+inline void Robot_CP::_internal_set_battery_current(::uint32_t value) {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  _impl_.battery_current_ = value;
+}
+
+// required bool kicker_ready = 4 [json_name = "kickerReady"];
 inline bool Robot_CP::has_kicker_ready() const {
   bool value = CheckHasBit(_impl_._has_bits_[0], 0x00000008U);
   return value;
@@ -462,7 +500,7 @@ inline void Robot_CP::_internal_set_kicker_ready(bool value) {
   _impl_.kicker_ready_ = value;
 }
 
-// required bool has_ball = 4 [json_name = "hasBall"];
+// required bool has_ball = 5 [json_name = "hasBall"];
 inline bool Robot_CP::has_has_ball() const {
   bool value = CheckHasBit(_impl_._has_bits_[0], 0x00000010U);
   return value;
@@ -491,85 +529,45 @@ inline void Robot_CP::_internal_set_has_ball(bool value) {
   _impl_.has_ball_ = value;
 }
 
-// optional string error_msg = 5 [json_name = "errorMsg"];
-inline bool Robot_CP::has_error_msg() const {
-  bool value = CheckHasBit(_impl_._has_bits_[0], 0x00000001U);
+// optional bool has_error = 6 [json_name = "hasError"];
+inline bool Robot_CP::has_has_error() const {
+  bool value = CheckHasBit(_impl_._has_bits_[0], 0x00000020U);
   return value;
 }
-inline void Robot_CP::clear_error_msg() {
+inline void Robot_CP::clear_has_error() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
-  _impl_.error_msg_.ClearToEmpty();
+  _impl_.has_error_ = false;
   ClearHasBit(_impl_._has_bits_[0],
-                  0x00000001U);
+                  0x00000020U);
 }
-inline const ::std::string& Robot_CP::error_msg() const
-    ABSL_ATTRIBUTE_LIFETIME_BOUND {
-  // @@protoc_insertion_point(field_get:Robot_CP.error_msg)
-  return _internal_error_msg();
+inline bool Robot_CP::has_error() const {
+  // @@protoc_insertion_point(field_get:Robot_CP.has_error)
+  return _internal_has_error();
 }
-template <typename Arg_, typename... Args_>
-PROTOBUF_ALWAYS_INLINE void Robot_CP::set_error_msg(Arg_&& arg, Args_... args) {
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-  SetHasBit(_impl_._has_bits_[0], 0x00000001U);
-  _impl_.error_msg_.Set(static_cast<Arg_&&>(arg), args..., GetArena());
-  // @@protoc_insertion_point(field_set:Robot_CP.error_msg)
+inline void Robot_CP::set_has_error(bool value) {
+  _internal_set_has_error(value);
+  SetHasBit(_impl_._has_bits_[0], 0x00000020U);
+  // @@protoc_insertion_point(field_set:Robot_CP.has_error)
 }
-inline ::std::string* PROTOBUF_NONNULL Robot_CP::mutable_error_msg()
-    ABSL_ATTRIBUTE_LIFETIME_BOUND {
-  SetHasBit(_impl_._has_bits_[0], 0x00000001U);
-  ::std::string* _s = _internal_mutable_error_msg();
-  // @@protoc_insertion_point(field_mutable:Robot_CP.error_msg)
-  return _s;
-}
-inline const ::std::string& Robot_CP::_internal_error_msg() const {
+inline bool Robot_CP::_internal_has_error() const {
   ::google::protobuf::internal::TSanRead(&_impl_);
-  return _impl_.error_msg_.Get();
+  return _impl_.has_error_;
 }
-inline void Robot_CP::_internal_set_error_msg(const ::std::string& value) {
+inline void Robot_CP::_internal_set_has_error(bool value) {
   ::google::protobuf::internal::TSanWrite(&_impl_);
-  _impl_.error_msg_.Set(value, GetArena());
-}
-inline ::std::string* PROTOBUF_NONNULL Robot_CP::_internal_mutable_error_msg() {
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-  return _impl_.error_msg_.Mutable( GetArena());
-}
-inline ::std::string* PROTOBUF_NULLABLE Robot_CP::release_error_msg() {
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-  // @@protoc_insertion_point(field_release:Robot_CP.error_msg)
-  if (!CheckHasBit(_impl_._has_bits_[0], 0x00000001U)) {
-    return nullptr;
-  }
-  ClearHasBit(_impl_._has_bits_[0], 0x00000001U);
-  auto* released = _impl_.error_msg_.Release();
-  if (::google::protobuf::internal::DebugHardenForceCopyDefaultString()) {
-    _impl_.error_msg_.Set("", GetArena());
-  }
-  return released;
-}
-inline void Robot_CP::set_allocated_error_msg(::std::string* PROTOBUF_NULLABLE value) {
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-  if (value != nullptr) {
-    SetHasBit(_impl_._has_bits_[0], 0x00000001U);
-  } else {
-    ClearHasBit(_impl_._has_bits_[0], 0x00000001U);
-  }
-  _impl_.error_msg_.SetAllocated(value, GetArena());
-  if (::google::protobuf::internal::DebugHardenForceCopyDefaultString() && _impl_.error_msg_.IsDefault()) {
-    _impl_.error_msg_.Set("", GetArena());
-  }
-  // @@protoc_insertion_point(field_set_allocated:Robot_CP.error_msg)
+  _impl_.has_error_ = value;
 }
 
-// optional bool acting = 6 [json_name = "acting"];
+// optional bool acting = 7 [json_name = "acting"];
 inline bool Robot_CP::has_acting() const {
-  bool value = CheckHasBit(_impl_._has_bits_[0], 0x00000020U);
+  bool value = CheckHasBit(_impl_._has_bits_[0], 0x00000040U);
   return value;
 }
 inline void Robot_CP::clear_acting() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   _impl_.acting_ = false;
   ClearHasBit(_impl_._has_bits_[0],
-                  0x00000020U);
+                  0x00000040U);
 }
 inline bool Robot_CP::acting() const {
   // @@protoc_insertion_point(field_get:Robot_CP.acting)
@@ -577,7 +575,7 @@ inline bool Robot_CP::acting() const {
 }
 inline void Robot_CP::set_acting(bool value) {
   _internal_set_acting(value);
-  SetHasBit(_impl_._has_bits_[0], 0x00000020U);
+  SetHasBit(_impl_._has_bits_[0], 0x00000040U);
   // @@protoc_insertion_point(field_set:Robot_CP.acting)
 }
 inline bool Robot_CP::_internal_acting() const {
@@ -589,16 +587,16 @@ inline void Robot_CP::_internal_set_acting(bool value) {
   _impl_.acting_ = value;
 }
 
-// optional uint32 last_rec_packet = 7 [json_name = "lastRecPacket"];
+// optional uint32 last_rec_packet = 8 [json_name = "lastRecPacket"];
 inline bool Robot_CP::has_last_rec_packet() const {
-  bool value = CheckHasBit(_impl_._has_bits_[0], 0x00000040U);
+  bool value = CheckHasBit(_impl_._has_bits_[0], 0x00000080U);
   return value;
 }
 inline void Robot_CP::clear_last_rec_packet() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   _impl_.last_rec_packet_ = 0u;
   ClearHasBit(_impl_._has_bits_[0],
-                  0x00000040U);
+                  0x00000080U);
 }
 inline ::uint32_t Robot_CP::last_rec_packet() const {
   // @@protoc_insertion_point(field_get:Robot_CP.last_rec_packet)
@@ -606,7 +604,7 @@ inline ::uint32_t Robot_CP::last_rec_packet() const {
 }
 inline void Robot_CP::set_last_rec_packet(::uint32_t value) {
   _internal_set_last_rec_packet(value);
-  SetHasBit(_impl_._has_bits_[0], 0x00000040U);
+  SetHasBit(_impl_._has_bits_[0], 0x00000080U);
   // @@protoc_insertion_point(field_set:Robot_CP.last_rec_packet)
 }
 inline ::uint32_t Robot_CP::_internal_last_rec_packet() const {

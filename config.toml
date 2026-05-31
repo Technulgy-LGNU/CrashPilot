@@ -11,6 +11,7 @@ ssl_gc_port = 10003
 robot_socket_host = "0.0.0.0"
 robot_socket_port = 8192    
 robots_port = 1024
+robot_receive_port = 2048
 websocket_host = "0.0.0.0"
 websocket_port = 4096
 

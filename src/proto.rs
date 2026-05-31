@@ -3249,21 +3249,23 @@ pub struct InterfaceCommandCp {
     pub gc_data: bool,
 }
 /// The packet the robot should send back
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct RobotCp {
     #[prost(uint32, required, tag="1")]
     pub robot_id: u32,
-    #[prost(float, optional, tag="2")]
-    pub battery_voltage: ::core::option::Option<f32>,
-    #[prost(bool, required, tag="3")]
-    pub kicker_ready: bool,
+    #[prost(uint32, optional, tag="2")]
+    pub battery_voltage: ::core::option::Option<u32>,
+    #[prost(uint32, optional, tag="3")]
+    pub current: ::core::option::Option<u32>,
     #[prost(bool, required, tag="4")]
+    pub kicker_ready: bool,
+    #[prost(bool, required, tag="5")]
     pub has_ball: bool,
-    #[prost(string, optional, tag="5")]
-    pub error_msg: ::core::option::Option<::prost::alloc::string::String>,
     #[prost(bool, optional, tag="6")]
+    pub has_error: ::core::option::Option<bool>,
+    #[prost(bool, optional, tag="7")]
     pub acting: ::core::option::Option<bool>,
-    #[prost(uint32, optional, tag="7")]
+    #[prost(uint32, optional, tag="8")]
     pub last_rec_packet: ::core::option::Option<u32>,
 }
 /// a reply that is sent by the controller for each request from teams or autoRefs

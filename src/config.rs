@@ -55,6 +55,7 @@ pub struct ServerConfig {
   pub robot_socket_host: Ipv4Addr,
   pub robot_socket_port: u16,
   pub robots_port: u16,
+  pub robot_receive_port: u16,
   pub websocket_host: Ipv4Addr,
   pub websocket_port: u16,
 }
@@ -64,13 +65,14 @@ impl Default for ServerConfig {
       robot_socket_host: Ipv4Addr::new(0, 0, 0, 0),
       robot_socket_port: 8192,
       robots_port: 1024,
+      robot_receive_port: 2048,
       websocket_host: Ipv4Addr::new(0, 0, 0, 0),
       websocket_port: 4096,
     }
   }
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct RobotConfig {
   pub ip: Ipv4Addr,
   pub substitution_pos: Vector2,
@@ -84,7 +86,7 @@ impl Default for RobotConfig {
   }
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct Vector2 {
   pub x: i32,
   pub y: i32,

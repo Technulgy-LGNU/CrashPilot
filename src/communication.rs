@@ -7,6 +7,7 @@ use tokio::sync::Notify;
 use crate::config;
 use crate::interface::spawn_websocket;
 use crate::proto::{InterfaceWrapperCp, Referee, SslWrapperPacket, TrackerWrapperPacket};
+use crate::robot_communication::robot_receiver::robot_receiver;
 use crate::ssl_communication::get_ssl_data;
 
 pub type EventShare = Arc<Mutex<(Option<SslWrapperPacket>, Option<TrackerWrapperPacket>, Option<InterfaceWrapperCp>, Option<Referee>)>>;
@@ -84,6 +85,8 @@ pub async fn communication_receiver(cfg: &config::Config) -> anyhow::Result<Comm
   get_ssl_data(cfg, events.clone()).await;
 
   spawn_websocket(cfg, events.clone(), ws_out.clone()).await;
+  
+  robot_receiver(cfg).await;
 
   Ok(CommunicationHandles {
     events,

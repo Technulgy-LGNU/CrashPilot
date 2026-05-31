@@ -1,6 +1,40 @@
-use crate::communication::EventShare;
 use crate::config;
+use crate::proto::RobotCp;
+use prost::Message;
 
-pub async fn get_robot_data(cfg: config::Config, tx: EventShare) {
+pub async fn robot_receiver(cfg: &config::Config) {
+  let addr = format!("{}:{}", cfg.server.robot_socket_host, cfg.server.robot_receive_port);
+  let robots = cfg.robots.clone();
 
+  tokio::spawn(async move {
+    let socket = match tokio::net::UdpSocket::bind(addr.clone()).await {
+      Ok(s) => s,
+      Err(e) => {
+        panic!("Couldn't bind socket: {}", e);
+      }
+    };
+
+    println!("Robot receiver listening on {}", addr);
+
+    let mut buf = [0u8; 65535];
+    loop {
+      match socket.recv_from(&mut buf).await {
+        Ok((size, addr)) => {
+          if robots.iter().find(|x| { addr.ip() == x.1.ip}).is_some() {
+            if let Ok(msg) = RobotCp::decode(&buf[..size]) {
+              println!("Received message from robot: {:?}", msg);
+            } else {
+              eprintln!("Failed to decode message from robot: {:?}", addr);
+            }
+          } else {
+            eprintln!("IP not found for robot: {:?}", addr);
+            continue;
+          }
+        }
+        Err(e) => {
+          eprintln!("Error receiving robot message{:?}", e);
+        }
+      }
+    }
+  });
 }

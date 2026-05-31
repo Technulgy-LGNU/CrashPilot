@@ -71,13 +71,13 @@ impl RobotSender for NetworkSender<'_> {
       }
 
       // Print data, for current testing
-      if robot_id == 4 {
-        println!("====================");
-        println!("Robot ID: {}", robot_id);
-        println!("Raw CpRobot data: {:?}", robot_data.cmd);
-        // println!("Encoded CpRobot ({} bytes): {:02X?}", buf.len(), buf);
-        println!("====================");
-      }
+      // if robot_id == 4 {
+      //   println!("====================");
+      //   println!("Robot ID: {}", robot_id);
+      //   println!("Raw CpRobot data: {:?}", robot_data.cmd);
+      //   // println!("Encoded CpRobot ({} bytes): {:02X?}", buf.len(), buf);
+      //   println!("====================");
+      // }
 
       let robot_cfg = match cfg.robots.get(&robot_id) {
         Some(c) => c,
