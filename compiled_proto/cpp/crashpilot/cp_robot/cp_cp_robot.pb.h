@@ -33,7 +33,6 @@
 #include "google/protobuf/unknown_field_set.h"
 #include "crashpilot/common.pb.h"
 #include "google/protobuf/timestamp.pb.h"
-#include "geom/ssl_gc_geometry.pb.h"
 // @@protoc_insertion_point(includes)
 
 // Must be included last.
@@ -129,6 +128,7 @@ enum CP_Task : int {
   TASK_STEAL = 5,
   TASK_DRIBBLE = 6,
   TASK_PosBall = 7,
+  TASK_BLOCK = 8,
   STATE_KICKOFF = 9,
   STATE_FREEKICK = 11,
 };
@@ -139,7 +139,7 @@ inline constexpr CP_Task CP_Task_MIN =
 inline constexpr CP_Task CP_Task_MAX =
     static_cast<CP_Task>(11);
 [[nodiscard]] inline bool CP_Task_IsValid(int value) {
-  return 0 <= value && value <= 11 && ((2815u >> value) & 1) != 0;
+  return 0 <= value && value <= 11 && ((3071u >> value) & 1) != 0;
 }
 inline constexpr int CP_Task_ARRAYSIZE = 11 + 1;
 [[nodiscard]] const ::google::protobuf::EnumDescriptor* PROTOBUF_NONNULL
@@ -328,6 +328,7 @@ class  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED CP_Command final : public ::google:
     kOrientationFieldNumber = 5,
     kKickOrientFieldNumber = 6,
     kKickSpeedFieldNumber = 7,
+    kEnemyIdFieldNumber = 8,
   };
   // optional .CP_Vector2 pos = 3 [json_name = "pos"];
   [[nodiscard]] bool has_pos()
@@ -417,11 +418,23 @@ class  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED CP_Command final : public ::google:
   void _internal_set_kick_speed(::uint32_t value);
 
   public:
+  // optional uint32 enemy_id = 8 [json_name = "enemyId"];
+  [[nodiscard]] bool has_enemy_id()
+      const;
+  void clear_enemy_id() ;
+  [[nodiscard]] ::uint32_t enemy_id() const;
+  void set_enemy_id(::uint32_t value);
+
+  private:
+  ::uint32_t _internal_enemy_id() const;
+  void _internal_set_enemy_id(::uint32_t value);
+
+  public:
   // @@protoc_insertion_point(class_scope:CP_Command)
  private:
   class _Internal;
   friend class ::google::protobuf::internal::TcParser;
-  static const ::google::protobuf::internal::TcParseTable<3, 7,
+  static const ::google::protobuf::internal::TcParseTable<3, 8,
                                    3, 0,
                                    2>
       _table_;
@@ -452,6 +465,7 @@ class  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED CP_Command final : public ::google:
     ::uint32_t orientation_;
     ::uint32_t kick_orient_;
     ::uint32_t kick_speed_;
+    ::uint32_t enemy_id_;
     PROTOBUF_TSAN_DECLARE_MEMBER
   };
   union { Impl_ _impl_; };
@@ -1509,6 +1523,35 @@ inline ::uint32_t CP_Command::_internal_kick_speed() const {
 inline void CP_Command::_internal_set_kick_speed(::uint32_t value) {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   _impl_.kick_speed_ = value;
+}
+
+// optional uint32 enemy_id = 8 [json_name = "enemyId"];
+inline bool CP_Command::has_enemy_id() const {
+  bool value = CheckHasBit(_impl_._has_bits_[0], 0x00000080U);
+  return value;
+}
+inline void CP_Command::clear_enemy_id() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  _impl_.enemy_id_ = 0u;
+  ClearHasBit(_impl_._has_bits_[0],
+                  0x00000080U);
+}
+inline ::uint32_t CP_Command::enemy_id() const {
+  // @@protoc_insertion_point(field_get:CP_Command.enemy_id)
+  return _internal_enemy_id();
+}
+inline void CP_Command::set_enemy_id(::uint32_t value) {
+  _internal_set_enemy_id(value);
+  SetHasBit(_impl_._has_bits_[0], 0x00000080U);
+  // @@protoc_insertion_point(field_set:CP_Command.enemy_id)
+}
+inline ::uint32_t CP_Command::_internal_enemy_id() const {
+  ::google::protobuf::internal::TSanRead(&_impl_);
+  return _impl_.enemy_id_;
+}
+inline void CP_Command::_internal_set_enemy_id(::uint32_t value) {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  _impl_.enemy_id_ = value;
 }
 
 #ifdef __GNUC__

@@ -2984,15 +2984,18 @@ pub struct CpBall {
 pub struct CpTrackedRobot {
     #[prost(uint32, required, tag="1")]
     pub robot_id: u32,
-    /// The position \[m,\] in the ssl-vision coordinate system
+    /// The position \[mm\] in the ssl-vision coordinate system
     #[prost(message, required, tag="2")]
     pub pos: CpVector2,
-    /// The orientation \[rad\] in the ssl-vision coordinate system
+    /// The orientation \[degree\] in the ssl-vision coordinate system
     #[prost(int32, required, tag="3")]
     pub orientation: i32,
     /// The velocity \[m/s\] in the ssl-vision coordinate system
     #[prost(message, optional, tag="4")]
     pub vel: ::core::option::Option<CpVector2>,
+    /// The visibility, 0 means not visible, 255 means fully visible, the rest is in between
+    #[prost(uint32, required, tag="5")]
+    pub visibility: u32,
 }
 #[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct CpVector2 {
@@ -3040,6 +3043,8 @@ pub struct CpCommand {
     pub kick_orient: ::core::option::Option<u32>,
     #[prost(uint32, optional, tag="7")]
     pub kick_speed: ::core::option::Option<u32>,
+    #[prost(uint32, optional, tag="8")]
+    pub enemy_id: ::core::option::Option<u32>,
 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
 #[repr(i32)]
@@ -3106,6 +3111,8 @@ pub enum CpTask {
     TaskDribble = 6,
     /// Get the ball and move it to the CP_Command::pos position
     TaskPosBall = 7,
+    /// Moves the robot between the ball and an enemy, defined with the CP_Command::enemy_id value
+    TaskBlock = 8,
     /// This robot should do a kickoff, basically kick the ball in the CP_Command::kick_orient direction, but adhere to the kickoff rules
     StateKickoff = 9,
     /// Free Kick, use the CP_Command::kick_orientation direction
@@ -3126,6 +3133,7 @@ impl CpTask {
             Self::TaskSteal => "TASK_STEAL",
             Self::TaskDribble => "TASK_DRIBBLE",
             Self::TaskPosBall => "TASK_PosBall",
+            Self::TaskBlock => "TASK_BLOCK",
             Self::StateKickoff => "STATE_KICKOFF",
             Self::StateFreekick => "STATE_FREEKICK",
         }
@@ -3141,6 +3149,7 @@ impl CpTask {
             "TASK_STEAL" => Some(Self::TaskSteal),
             "TASK_DRIBBLE" => Some(Self::TaskDribble),
             "TASK_PosBall" => Some(Self::TaskPosBall),
+            "TASK_BLOCK" => Some(Self::TaskBlock),
             "STATE_KICKOFF" => Some(Self::StateKickoff),
             "STATE_FREEKICK" => Some(Self::StateFreekick),
             _ => None,

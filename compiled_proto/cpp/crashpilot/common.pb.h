@@ -448,6 +448,7 @@ class  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED CP_TrackedRobot final : public ::go
     kVelFieldNumber = 4,
     kRobotIdFieldNumber = 1,
     kOrientationFieldNumber = 3,
+    kVisibilityFieldNumber = 5,
   };
   // required .CP_Vector2 pos = 2 [json_name = "pos"];
   [[nodiscard]] bool has_pos()
@@ -505,11 +506,23 @@ class  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED CP_TrackedRobot final : public ::go
   void _internal_set_orientation(::int32_t value);
 
   public:
+  // required uint32 visibility = 5 [json_name = "visibility"];
+  [[nodiscard]] bool has_visibility()
+      const;
+  void clear_visibility() ;
+  [[nodiscard]] ::uint32_t visibility() const;
+  void set_visibility(::uint32_t value);
+
+  private:
+  ::uint32_t _internal_visibility() const;
+  void _internal_set_visibility(::uint32_t value);
+
+  public:
   // @@protoc_insertion_point(class_scope:CP_TrackedRobot)
  private:
   class _Internal;
   friend class ::google::protobuf::internal::TcParser;
-  static const ::google::protobuf::internal::TcParseTable<2, 4,
+  static const ::google::protobuf::internal::TcParseTable<3, 5,
                                    2, 0,
                                    2>
       _table_;
@@ -537,6 +550,7 @@ class  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED CP_TrackedRobot final : public ::go
     ::CP_Vector2* PROTOBUF_NULLABLE vel_;
     ::uint32_t robot_id_;
     ::int32_t orientation_;
+    ::uint32_t visibility_;
     PROTOBUF_TSAN_DECLARE_MEMBER
   };
   union { Impl_ _impl_; };
@@ -1242,6 +1256,35 @@ inline void CP_TrackedRobot::set_allocated_vel(::CP_Vector2* PROTOBUF_NULLABLE v
 
   _impl_.vel_ = reinterpret_cast<::CP_Vector2*>(value);
   // @@protoc_insertion_point(field_set_allocated:CP_TrackedRobot.vel)
+}
+
+// required uint32 visibility = 5 [json_name = "visibility"];
+inline bool CP_TrackedRobot::has_visibility() const {
+  bool value = CheckHasBit(_impl_._has_bits_[0], 0x00000010U);
+  return value;
+}
+inline void CP_TrackedRobot::clear_visibility() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  _impl_.visibility_ = 0u;
+  ClearHasBit(_impl_._has_bits_[0],
+                  0x00000010U);
+}
+inline ::uint32_t CP_TrackedRobot::visibility() const {
+  // @@protoc_insertion_point(field_get:CP_TrackedRobot.visibility)
+  return _internal_visibility();
+}
+inline void CP_TrackedRobot::set_visibility(::uint32_t value) {
+  _internal_set_visibility(value);
+  SetHasBit(_impl_._has_bits_[0], 0x00000010U);
+  // @@protoc_insertion_point(field_set:CP_TrackedRobot.visibility)
+}
+inline ::uint32_t CP_TrackedRobot::_internal_visibility() const {
+  ::google::protobuf::internal::TSanRead(&_impl_);
+  return _impl_.visibility_;
+}
+inline void CP_TrackedRobot::_internal_set_visibility(::uint32_t value) {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  _impl_.visibility_ = value;
 }
 
 // -------------------------------------------------------------------

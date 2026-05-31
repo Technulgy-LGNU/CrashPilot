@@ -60,7 +60,8 @@ inline constexpr CP_TrackedRobot::Impl_::Impl_(
         pos_{nullptr},
         vel_{nullptr},
         robot_id_{0u},
-        orientation_{0} {}
+        orientation_{0},
+        visibility_{0u} {}
 
 template <typename>
 constexpr CP_TrackedRobot::CP_TrackedRobot(::_pbi::ConstantInitialized)
@@ -124,15 +125,17 @@ const ::uint32_t
         1,
         0x081, // bitmap
         PROTOBUF_FIELD_OFFSET(::CP_TrackedRobot, _impl_._has_bits_),
-        7, // hasbit index offset
+        8, // hasbit index offset
         PROTOBUF_FIELD_OFFSET(::CP_TrackedRobot, _impl_.robot_id_),
         PROTOBUF_FIELD_OFFSET(::CP_TrackedRobot, _impl_.pos_),
         PROTOBUF_FIELD_OFFSET(::CP_TrackedRobot, _impl_.orientation_),
         PROTOBUF_FIELD_OFFSET(::CP_TrackedRobot, _impl_.vel_),
+        PROTOBUF_FIELD_OFFSET(::CP_TrackedRobot, _impl_.visibility_),
         2,
         0,
         3,
         1,
+        4,
         0x081, // bitmap
         PROTOBUF_FIELD_OFFSET(::CP_Vector2, _impl_._has_bits_),
         5, // hasbit index offset
@@ -146,7 +149,7 @@ static const ::_pbi::MigrationSchema
     schemas[] ABSL_ATTRIBUTE_SECTION_VARIABLE(protodesc_cold) = {
         {0, sizeof(::CP_Ball)},
         {7, sizeof(::CP_TrackedRobot)},
-        {18, sizeof(::CP_Vector2)},
+        {20, sizeof(::CP_Vector2)},
 };
 static const ::_pb::Message* PROTOBUF_NONNULL const file_default_instances[] = {
     &::_CP_Ball_default_instance_._instance,
@@ -157,18 +160,19 @@ const char descriptor_table_protodef_crashpilot_2fcommon_2eproto[] ABSL_ATTRIBUT
     protodesc_cold) = {
     "\n\027crashpilot/common.proto\"G\n\007CP_Ball\022\035\n\003"
     "pos\030\001 \002(\0132\013.CP_Vector2R\003pos\022\035\n\003vel\030\002 \001(\013"
-    "2\013.CP_Vector2R\003vel\"\214\001\n\017CP_TrackedRobot\022\031"
+    "2\013.CP_Vector2R\003vel\"\254\001\n\017CP_TrackedRobot\022\031"
     "\n\010robot_id\030\001 \002(\rR\007robotId\022\035\n\003pos\030\002 \002(\0132\013"
     ".CP_Vector2R\003pos\022 \n\013orientation\030\003 \002(\005R\013o"
     "rientation\022\035\n\003vel\030\004 \001(\0132\013.CP_Vector2R\003ve"
-    "l\"(\n\nCP_Vector2\022\014\n\001x\030\001 \002(\005R\001x\022\014\n\001y\030\002 \002(\005"
-    "R\001yB\017B\013CommonProtoP\001"
+    "l\022\036\n\nvisibility\030\005 \002(\rR\nvisibility\"(\n\nCP_"
+    "Vector2\022\014\n\001x\030\001 \002(\005R\001x\022\014\n\001y\030\002 \002(\005R\001yB\017B\013C"
+    "ommonProtoP\001"
 };
 static ::absl::once_flag descriptor_table_crashpilot_2fcommon_2eproto_once;
 PROTOBUF_CONSTINIT const ::_pbi::DescriptorTable descriptor_table_crashpilot_2fcommon_2eproto = {
     false,
     false,
-    300,
+    332,
     descriptor_table_protodef_crashpilot_2fcommon_2eproto,
     "crashpilot/common.proto",
     &descriptor_table_crashpilot_2fcommon_2eproto_once,
@@ -529,7 +533,7 @@ class CP_TrackedRobot::_Internal {
   static constexpr ::int32_t kHasBitsOffset =
       8 * PROTOBUF_FIELD_OFFSET(CP_TrackedRobot, _impl_._has_bits_);
   static bool MissingRequiredFields(const HasBits& has_bits) {
-    return ((has_bits[0] & 0x0000000d) ^ 0x0000000d) != 0;
+    return ((has_bits[0] & 0x0000001d) ^ 0x0000001d) != 0;
   }
 };
 
@@ -573,9 +577,9 @@ CP_TrackedRobot::CP_TrackedRobot(
                offsetof(Impl_, robot_id_),
            reinterpret_cast<const char*>(&from._impl_) +
                offsetof(Impl_, robot_id_),
-           offsetof(Impl_, orientation_) -
+           offsetof(Impl_, visibility_) -
                offsetof(Impl_, robot_id_) +
-               sizeof(Impl_::orientation_));
+               sizeof(Impl_::visibility_));
 
   // @@protoc_insertion_point(copy_constructor:CP_TrackedRobot)
 }
@@ -589,9 +593,9 @@ inline void CP_TrackedRobot::SharedCtor(::_pb::Arena* PROTOBUF_NULLABLE arena) {
   ::memset(reinterpret_cast<char*>(&_impl_) +
                offsetof(Impl_, pos_),
            0,
-           offsetof(Impl_, orientation_) -
+           offsetof(Impl_, visibility_) -
                offsetof(Impl_, pos_) +
-               sizeof(Impl_::orientation_));
+               sizeof(Impl_::visibility_));
 }
 CP_TrackedRobot::~CP_TrackedRobot() {
   // @@protoc_insertion_point(destructor:CP_TrackedRobot)
@@ -651,16 +655,16 @@ CP_TrackedRobot::GetClassData() const {
   return CP_TrackedRobot_class_data_.base();
 }
 PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1
-const ::_pbi::TcParseTable<2, 4, 2, 0, 2>
+const ::_pbi::TcParseTable<3, 5, 2, 0, 2>
 CP_TrackedRobot::_table_ = {
   {
     PROTOBUF_FIELD_OFFSET(CP_TrackedRobot, _impl_._has_bits_),
     0, // no _extensions_
-    4, 24,  // max_field_number, fast_idx_mask
+    5, 56,  // max_field_number, fast_idx_mask
     offsetof(decltype(_table_), field_lookup_table),
-    4294967280,  // skipmap
+    4294967264,  // skipmap
     offsetof(decltype(_table_), field_entries),
-    4,  // num_field_entries
+    5,  // num_field_entries
     2,  // num_aux_entries
     offsetof(decltype(_table_), aux_entries),
     CP_TrackedRobot_class_data_.base(),
@@ -670,10 +674,7 @@ CP_TrackedRobot::_table_ = {
     ::_pbi::TcParser::GetTable<::CP_TrackedRobot>(),  // to_prefetch
     #endif  // PROTOBUF_PREFETCH_PARSE_TABLE
   }, {{
-    // optional .CP_Vector2 vel = 4 [json_name = "vel"];
-    {::_pbi::TcParser::FastMtS1,
-     {34, 1, 1,
-      PROTOBUF_FIELD_OFFSET(CP_TrackedRobot, _impl_.vel_)}},
+    {::_pbi::TcParser::MiniParse, {}},
     // required uint32 robot_id = 1 [json_name = "robotId"];
     {::_pbi::TcParser::SingularVarintNoZag1<::uint32_t, offsetof(CP_TrackedRobot, _impl_.robot_id_), 2>(),
      {8, 2, 0,
@@ -686,6 +687,16 @@ CP_TrackedRobot::_table_ = {
     {::_pbi::TcParser::SingularVarintNoZag1<::uint32_t, offsetof(CP_TrackedRobot, _impl_.orientation_), 3>(),
      {24, 3, 0,
       PROTOBUF_FIELD_OFFSET(CP_TrackedRobot, _impl_.orientation_)}},
+    // optional .CP_Vector2 vel = 4 [json_name = "vel"];
+    {::_pbi::TcParser::FastMtS1,
+     {34, 1, 1,
+      PROTOBUF_FIELD_OFFSET(CP_TrackedRobot, _impl_.vel_)}},
+    // required uint32 visibility = 5 [json_name = "visibility"];
+    {::_pbi::TcParser::SingularVarintNoZag1<::uint32_t, offsetof(CP_TrackedRobot, _impl_.visibility_), 4>(),
+     {40, 4, 0,
+      PROTOBUF_FIELD_OFFSET(CP_TrackedRobot, _impl_.visibility_)}},
+    {::_pbi::TcParser::MiniParse, {}},
+    {::_pbi::TcParser::MiniParse, {}},
   }}, {{
     65535, 65535
   }}, {{
@@ -697,6 +708,8 @@ CP_TrackedRobot::_table_ = {
     {PROTOBUF_FIELD_OFFSET(CP_TrackedRobot, _impl_.orientation_), _Internal::kHasBitsOffset + 3, 0, (0 | ::_fl::kFcOptional | ::_fl::kInt32)},
     // optional .CP_Vector2 vel = 4 [json_name = "vel"];
     {PROTOBUF_FIELD_OFFSET(CP_TrackedRobot, _impl_.vel_), _Internal::kHasBitsOffset + 1, 1, (0 | ::_fl::kFcOptional | ::_fl::kMessage | ::_fl::kTvTable)},
+    // required uint32 visibility = 5 [json_name = "visibility"];
+    {PROTOBUF_FIELD_OFFSET(CP_TrackedRobot, _impl_.visibility_), _Internal::kHasBitsOffset + 4, 0, (0 | ::_fl::kFcOptional | ::_fl::kUInt32)},
   }},
   {{
       {::_pbi::TcParser::GetTable<::CP_Vector2>()},
@@ -723,10 +736,10 @@ PROTOBUF_NOINLINE void CP_TrackedRobot::Clear() {
       _impl_.vel_->Clear();
     }
   }
-  if (BatchCheckHasBit(cached_has_bits, 0x0000000cU)) {
+  if (BatchCheckHasBit(cached_has_bits, 0x0000001cU)) {
     ::memset(&_impl_.robot_id_, 0, static_cast<::size_t>(
-        reinterpret_cast<char*>(&_impl_.orientation_) -
-        reinterpret_cast<char*>(&_impl_.robot_id_)) + sizeof(_impl_.orientation_));
+        reinterpret_cast<char*>(&_impl_.visibility_) -
+        reinterpret_cast<char*>(&_impl_.robot_id_)) + sizeof(_impl_.visibility_));
   }
   _impl_._has_bits_.Clear();
   _internal_metadata_.Clear<::google::protobuf::UnknownFieldSet>();
@@ -779,6 +792,13 @@ PROTOBUF_NOINLINE void CP_TrackedRobot::Clear() {
         stream);
   }
 
+  // required uint32 visibility = 5 [json_name = "visibility"];
+  if (CheckHasBit(cached_has_bits, 0x00000010U)) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteUInt32ToArray(
+        5, this_._internal_visibility(), target);
+  }
+
   if (ABSL_PREDICT_FALSE(this_._internal_metadata_.have_unknown_fields())) {
     target =
         ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
@@ -818,7 +838,7 @@ PROTOBUF_NOINLINE void CP_TrackedRobot::Clear() {
                     ::google::protobuf::internal::WireFormatLite::MessageSize(*this_._impl_.vel_);
     }
   }
-  if (BatchCheckHasBit(cached_has_bits, 0x0000000cU)) {
+  if (BatchCheckHasBit(cached_has_bits, 0x0000001cU)) {
     // required uint32 robot_id = 1 [json_name = "robotId"];
     if (CheckHasBit(cached_has_bits, 0x00000004U)) {
       total_size += ::_pbi::WireFormatLite::UInt32SizePlusOne(
@@ -828,6 +848,11 @@ PROTOBUF_NOINLINE void CP_TrackedRobot::Clear() {
     if (CheckHasBit(cached_has_bits, 0x00000008U)) {
       total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(
           this_._internal_orientation());
+    }
+    // required uint32 visibility = 5 [json_name = "visibility"];
+    if (CheckHasBit(cached_has_bits, 0x00000010U)) {
+      total_size += ::_pbi::WireFormatLite::UInt32SizePlusOne(
+          this_._internal_visibility());
     }
   }
   return this_.MaybeComputeUnknownFieldsSize(total_size,
@@ -849,7 +874,7 @@ void CP_TrackedRobot::MergeImpl(::google::protobuf::MessageLite& to_msg,
   (void)cached_has_bits;
 
   cached_has_bits = from._impl_._has_bits_[0];
-  if (BatchCheckHasBit(cached_has_bits, 0x0000000fU)) {
+  if (BatchCheckHasBit(cached_has_bits, 0x0000001fU)) {
     if (CheckHasBit(cached_has_bits, 0x00000001U)) {
       ABSL_DCHECK(from._impl_.pos_ != nullptr);
       if (_this->_impl_.pos_ == nullptr) {
@@ -871,6 +896,9 @@ void CP_TrackedRobot::MergeImpl(::google::protobuf::MessageLite& to_msg,
     }
     if (CheckHasBit(cached_has_bits, 0x00000008U)) {
       _this->_impl_.orientation_ = from._impl_.orientation_;
+    }
+    if (CheckHasBit(cached_has_bits, 0x00000010U)) {
+      _this->_impl_.visibility_ = from._impl_.visibility_;
     }
   }
   _this->_impl_._has_bits_[0] |= cached_has_bits;
@@ -905,8 +933,8 @@ void CP_TrackedRobot::InternalSwap(CP_TrackedRobot* PROTOBUF_RESTRICT PROTOBUF_N
   _internal_metadata_.InternalSwap(&other->_internal_metadata_);
   swap(_impl_._has_bits_[0], other->_impl_._has_bits_[0]);
   ::google::protobuf::internal::memswap<
-      PROTOBUF_FIELD_OFFSET(CP_TrackedRobot, _impl_.orientation_)
-      + sizeof(CP_TrackedRobot::_impl_.orientation_)
+      PROTOBUF_FIELD_OFFSET(CP_TrackedRobot, _impl_.visibility_)
+      + sizeof(CP_TrackedRobot::_impl_.visibility_)
       - PROTOBUF_FIELD_OFFSET(CP_TrackedRobot, _impl_.pos_)>(
           reinterpret_cast<char*>(&_impl_.pos_),
           reinterpret_cast<char*>(&other->_impl_.pos_));

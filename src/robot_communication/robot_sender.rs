@@ -143,6 +143,7 @@ mod tests {
         orientation: None,
         kick_orient: None,
         kick_speed: None,
+        enemy_id: None,
       },
     }
   }

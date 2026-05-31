@@ -36,7 +36,8 @@ inline constexpr CP_Command::Impl_::Impl_(
         speed_{0u},
         orientation_{0u},
         kick_orient_{0u},
-        kick_speed_{0u} {}
+        kick_speed_{0u},
+        enemy_id_{0u} {}
 
 template <typename>
 constexpr CP_Command::CP_Command(::_pbi::ConstantInitialized)
@@ -131,7 +132,7 @@ const ::uint32_t
         4,
         0x081, // bitmap
         PROTOBUF_FIELD_OFFSET(::CP_Command, _impl_._has_bits_),
-        10, // hasbit index offset
+        11, // hasbit index offset
         PROTOBUF_FIELD_OFFSET(::CP_Command, _impl_.state_),
         PROTOBUF_FIELD_OFFSET(::CP_Command, _impl_.task_),
         PROTOBUF_FIELD_OFFSET(::CP_Command, _impl_.pos_),
@@ -139,6 +140,7 @@ const ::uint32_t
         PROTOBUF_FIELD_OFFSET(::CP_Command, _impl_.orientation_),
         PROTOBUF_FIELD_OFFSET(::CP_Command, _impl_.kick_orient_),
         PROTOBUF_FIELD_OFFSET(::CP_Command, _impl_.kick_speed_),
+        PROTOBUF_FIELD_OFFSET(::CP_Command, _impl_.enemy_id_),
         1,
         2,
         0,
@@ -146,6 +148,7 @@ const ::uint32_t
         4,
         5,
         6,
+        7,
 };
 
 static const ::_pbi::MigrationSchema
@@ -161,46 +164,45 @@ const char descriptor_table_protodef_crashpilot_2fcp_5frobot_2fcp_5fcp_5frobot_2
     protodesc_cold) = {
     "\n%crashpilot/cp_robot/cp_cp_robot.proto\032"
     "\027crashpilot/common.proto\032\037google/protobu"
-    "f/timestamp.proto\032\032geom/ssl_gc_geometry."
-    "proto\"\243\002\n\010CP_Robot\022\031\n\010robot_id\030\001 \002(\rR\007ro"
-    "botId\0228\n\ttimestamp\030\002 \002(\0132\032.google.protob"
-    "uf.TimestampR\ttimestamp\022\033\n\tpacket_id\030\003 \002"
-    "(\rR\010packetId\022\034\n\004ball\030\004 \002(\0132\010.CP_BallR\004ba"
-    "ll\0225\n\rrobots_yellow\030\005 \003(\0132\020.CP_TrackedRo"
-    "botR\014robotsYellow\0221\n\013robots_blue\030\006 \003(\0132\020"
-    ".CP_TrackedRobotR\nrobotsBlue\022\035\n\003cmd\030\007 \002("
-    "\0132\013.CP_CommandR\003cmd\"\342\001\n\nCP_Command\022\037\n\005st"
-    "ate\030\001 \002(\0162\t.CP_StateR\005state\022\034\n\004task\030\002 \002("
-    "\0162\010.CP_TaskR\004task\022\035\n\003pos\030\003 \001(\0132\013.CP_Vect"
-    "or2R\003pos\022\024\n\005speed\030\004 \001(\rR\005speed\022 \n\013orient"
-    "ation\030\005 \001(\rR\013orientation\022\037\n\013kick_orient\030"
-    "\006 \001(\rR\nkickOrient\022\035\n\nkick_speed\030\007 \001(\rR\tk"
-    "ickSpeed*y\n\010CP_State\022\025\n\021STATE_UNSPECIFIE"
-    "D\020\000\022\016\n\nSTATE_HALT\020\001\022\016\n\nSTATE_STOP\020\002\022\016\n\nS"
-    "TATE_FREE\020\003\022\020\n\014STATE_GOALIE\020\004\022\024\n\020STATE_S"
-    "UBSTITUTE\020\005*\271\001\n\007CP_Task\022\024\n\020TASK_UNSPECIF"
-    "IED\020\000\022\014\n\010TASK_POS\020\001\022\r\n\tTASK_KICK\020\002\022\r\n\tTA"
-    "SK_CHIP\020\003\022\021\n\rTASK_REC_KICK\020\004\022\016\n\nTASK_STE"
-    "AL\020\005\022\020\n\014TASK_DRIBBLE\020\006\022\020\n\014TASK_PosBall\020\007"
-    "\022\021\n\rSTATE_KICKOFF\020\t\022\022\n\016STATE_FREEKICK\020\013B"
-    "\022B\016CpCpRobotProtoP\001"
+    "f/timestamp.proto\"\243\002\n\010CP_Robot\022\031\n\010robot_"
+    "id\030\001 \002(\rR\007robotId\0228\n\ttimestamp\030\002 \002(\0132\032.g"
+    "oogle.protobuf.TimestampR\ttimestamp\022\033\n\tp"
+    "acket_id\030\003 \002(\rR\010packetId\022\034\n\004ball\030\004 \002(\0132\010"
+    ".CP_BallR\004ball\0225\n\rrobots_yellow\030\005 \003(\0132\020."
+    "CP_TrackedRobotR\014robotsYellow\0221\n\013robots_"
+    "blue\030\006 \003(\0132\020.CP_TrackedRobotR\nrobotsBlue"
+    "\022\035\n\003cmd\030\007 \002(\0132\013.CP_CommandR\003cmd\"\375\001\n\nCP_C"
+    "ommand\022\037\n\005state\030\001 \002(\0162\t.CP_StateR\005state\022"
+    "\034\n\004task\030\002 \002(\0162\010.CP_TaskR\004task\022\035\n\003pos\030\003 \001"
+    "(\0132\013.CP_Vector2R\003pos\022\024\n\005speed\030\004 \001(\rR\005spe"
+    "ed\022 \n\013orientation\030\005 \001(\rR\013orientation\022\037\n\013"
+    "kick_orient\030\006 \001(\rR\nkickOrient\022\035\n\nkick_sp"
+    "eed\030\007 \001(\rR\tkickSpeed\022\031\n\010enemy_id\030\010 \001(\rR\007"
+    "enemyId*y\n\010CP_State\022\025\n\021STATE_UNSPECIFIED"
+    "\020\000\022\016\n\nSTATE_HALT\020\001\022\016\n\nSTATE_STOP\020\002\022\016\n\nST"
+    "ATE_FREE\020\003\022\020\n\014STATE_GOALIE\020\004\022\024\n\020STATE_SU"
+    "BSTITUTE\020\005*\311\001\n\007CP_Task\022\024\n\020TASK_UNSPECIFI"
+    "ED\020\000\022\014\n\010TASK_POS\020\001\022\r\n\tTASK_KICK\020\002\022\r\n\tTAS"
+    "K_CHIP\020\003\022\021\n\rTASK_REC_KICK\020\004\022\016\n\nTASK_STEA"
+    "L\020\005\022\020\n\014TASK_DRIBBLE\020\006\022\020\n\014TASK_PosBall\020\007\022"
+    "\016\n\nTASK_BLOCK\020\010\022\021\n\rSTATE_KICKOFF\020\t\022\022\n\016ST"
+    "ATE_FREEKICK\020\013B\022B\016CpCpRobotProtoP\001"
 };
 static const ::_pbi::DescriptorTable* PROTOBUF_NONNULL const
-    descriptor_table_crashpilot_2fcp_5frobot_2fcp_5fcp_5frobot_2eproto_deps[3] = {
+    descriptor_table_crashpilot_2fcp_5frobot_2fcp_5fcp_5frobot_2eproto_deps[2] = {
         &::descriptor_table_crashpilot_2fcommon_2eproto,
-        &::descriptor_table_geom_2fssl_5fgc_5fgeometry_2eproto,
         &::descriptor_table_google_2fprotobuf_2ftimestamp_2eproto,
 };
 static ::absl::once_flag descriptor_table_crashpilot_2fcp_5frobot_2fcp_5fcp_5frobot_2eproto_once;
 PROTOBUF_CONSTINIT const ::_pbi::DescriptorTable descriptor_table_crashpilot_2fcp_5frobot_2fcp_5fcp_5frobot_2eproto = {
     false,
     false,
-    979,
+    994,
     descriptor_table_protodef_crashpilot_2fcp_5frobot_2fcp_5fcp_5frobot_2eproto,
     "crashpilot/cp_robot/cp_cp_robot.proto",
     &descriptor_table_crashpilot_2fcp_5frobot_2fcp_5fcp_5frobot_2eproto_once,
     descriptor_table_crashpilot_2fcp_5frobot_2fcp_5fcp_5frobot_2eproto_deps,
-    3,
+    2,
     2,
     schemas,
     file_default_instances,
@@ -221,7 +223,7 @@ CP_Task_descriptor() {
   return file_level_enum_descriptors_crashpilot_2fcp_5frobot_2fcp_5fcp_5frobot_2eproto[1];
 }
 PROTOBUF_CONSTINIT const uint32_t CP_Task_internal_data_[] = {
-    524288u, 32u, 10u, };
+    655360u, 32u, 2u, };
 // ===================================================================
 
 class CP_Robot::_Internal {
@@ -866,9 +868,9 @@ CP_Command::CP_Command(
                offsetof(Impl_, state_),
            reinterpret_cast<const char*>(&from._impl_) +
                offsetof(Impl_, state_),
-           offsetof(Impl_, kick_speed_) -
+           offsetof(Impl_, enemy_id_) -
                offsetof(Impl_, state_) +
-               sizeof(Impl_::kick_speed_));
+               sizeof(Impl_::enemy_id_));
 
   // @@protoc_insertion_point(copy_constructor:CP_Command)
 }
@@ -882,9 +884,9 @@ inline void CP_Command::SharedCtor(::_pb::Arena* PROTOBUF_NULLABLE arena) {
   ::memset(reinterpret_cast<char*>(&_impl_) +
                offsetof(Impl_, pos_),
            0,
-           offsetof(Impl_, kick_speed_) -
+           offsetof(Impl_, enemy_id_) -
                offsetof(Impl_, pos_) +
-               sizeof(Impl_::kick_speed_));
+               sizeof(Impl_::enemy_id_));
 }
 CP_Command::~CP_Command() {
   // @@protoc_insertion_point(destructor:CP_Command)
@@ -943,16 +945,16 @@ CP_Command::GetClassData() const {
   return CP_Command_class_data_.base();
 }
 PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1
-const ::_pbi::TcParseTable<3, 7, 3, 0, 2>
+const ::_pbi::TcParseTable<3, 8, 3, 0, 2>
 CP_Command::_table_ = {
   {
     PROTOBUF_FIELD_OFFSET(CP_Command, _impl_._has_bits_),
     0, // no _extensions_
-    7, 56,  // max_field_number, fast_idx_mask
+    8, 56,  // max_field_number, fast_idx_mask
     offsetof(decltype(_table_), field_lookup_table),
-    4294967168,  // skipmap
+    4294967040,  // skipmap
     offsetof(decltype(_table_), field_entries),
-    7,  // num_field_entries
+    8,  // num_field_entries
     3,  // num_aux_entries
     offsetof(decltype(_table_), aux_entries),
     CP_Command_class_data_.base(),
@@ -962,7 +964,10 @@ CP_Command::_table_ = {
     ::_pbi::TcParser::GetTable<::CP_Command>(),  // to_prefetch
     #endif  // PROTOBUF_PREFETCH_PARSE_TABLE
   }, {{
-    {::_pbi::TcParser::MiniParse, {}},
+    // optional uint32 enemy_id = 8 [json_name = "enemyId"];
+    {::_pbi::TcParser::SingularVarintNoZag1<::uint32_t, offsetof(CP_Command, _impl_.enemy_id_), 7>(),
+     {64, 7, 0,
+      PROTOBUF_FIELD_OFFSET(CP_Command, _impl_.enemy_id_)}},
     // required .CP_State state = 1 [json_name = "state"];
     {::_pbi::TcParser::FastEr0S1,
      {8, 1, 5,
@@ -1008,6 +1013,8 @@ CP_Command::_table_ = {
     {PROTOBUF_FIELD_OFFSET(CP_Command, _impl_.kick_orient_), _Internal::kHasBitsOffset + 5, 0, (0 | ::_fl::kFcOptional | ::_fl::kUInt32)},
     // optional uint32 kick_speed = 7 [json_name = "kickSpeed"];
     {PROTOBUF_FIELD_OFFSET(CP_Command, _impl_.kick_speed_), _Internal::kHasBitsOffset + 6, 0, (0 | ::_fl::kFcOptional | ::_fl::kUInt32)},
+    // optional uint32 enemy_id = 8 [json_name = "enemyId"];
+    {PROTOBUF_FIELD_OFFSET(CP_Command, _impl_.enemy_id_), _Internal::kHasBitsOffset + 7, 0, (0 | ::_fl::kFcOptional | ::_fl::kUInt32)},
   }},
   {{
       {::_pbi::TcParser::GetTable<::CP_Vector2>()},
@@ -1029,10 +1036,10 @@ PROTOBUF_NOINLINE void CP_Command::Clear() {
     ABSL_DCHECK(_impl_.pos_ != nullptr);
     _impl_.pos_->Clear();
   }
-  if (BatchCheckHasBit(cached_has_bits, 0x0000007eU)) {
+  if (BatchCheckHasBit(cached_has_bits, 0x000000feU)) {
     ::memset(&_impl_.state_, 0, static_cast<::size_t>(
-        reinterpret_cast<char*>(&_impl_.kick_speed_) -
-        reinterpret_cast<char*>(&_impl_.state_)) + sizeof(_impl_.kick_speed_));
+        reinterpret_cast<char*>(&_impl_.enemy_id_) -
+        reinterpret_cast<char*>(&_impl_.state_)) + sizeof(_impl_.enemy_id_));
   }
   _impl_._has_bits_.Clear();
   _internal_metadata_.Clear<::google::protobuf::UnknownFieldSet>();
@@ -1106,6 +1113,13 @@ PROTOBUF_NOINLINE void CP_Command::Clear() {
         7, this_._internal_kick_speed(), target);
   }
 
+  // optional uint32 enemy_id = 8 [json_name = "enemyId"];
+  if (CheckHasBit(cached_has_bits, 0x00000080U)) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteUInt32ToArray(
+        8, this_._internal_enemy_id(), target);
+  }
+
   if (ABSL_PREDICT_FALSE(this_._internal_metadata_.have_unknown_fields())) {
     target =
         ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
@@ -1150,7 +1164,7 @@ PROTOBUF_NOINLINE void CP_Command::Clear() {
                     ::_pbi::WireFormatLite::EnumSize(this_._internal_task());
     }
   }
-  if (BatchCheckHasBit(cached_has_bits, 0x00000078U)) {
+  if (BatchCheckHasBit(cached_has_bits, 0x000000f8U)) {
     // optional uint32 speed = 4 [json_name = "speed"];
     if (CheckHasBit(cached_has_bits, 0x00000008U)) {
       total_size += ::_pbi::WireFormatLite::UInt32SizePlusOne(
@@ -1170,6 +1184,11 @@ PROTOBUF_NOINLINE void CP_Command::Clear() {
     if (CheckHasBit(cached_has_bits, 0x00000040U)) {
       total_size += ::_pbi::WireFormatLite::UInt32SizePlusOne(
           this_._internal_kick_speed());
+    }
+    // optional uint32 enemy_id = 8 [json_name = "enemyId"];
+    if (CheckHasBit(cached_has_bits, 0x00000080U)) {
+      total_size += ::_pbi::WireFormatLite::UInt32SizePlusOne(
+          this_._internal_enemy_id());
     }
   }
   return this_.MaybeComputeUnknownFieldsSize(total_size,
@@ -1191,7 +1210,7 @@ void CP_Command::MergeImpl(::google::protobuf::MessageLite& to_msg,
   (void)cached_has_bits;
 
   cached_has_bits = from._impl_._has_bits_[0];
-  if (BatchCheckHasBit(cached_has_bits, 0x0000007fU)) {
+  if (BatchCheckHasBit(cached_has_bits, 0x000000ffU)) {
     if (CheckHasBit(cached_has_bits, 0x00000001U)) {
       ABSL_DCHECK(from._impl_.pos_ != nullptr);
       if (_this->_impl_.pos_ == nullptr) {
@@ -1217,6 +1236,9 @@ void CP_Command::MergeImpl(::google::protobuf::MessageLite& to_msg,
     }
     if (CheckHasBit(cached_has_bits, 0x00000040U)) {
       _this->_impl_.kick_speed_ = from._impl_.kick_speed_;
+    }
+    if (CheckHasBit(cached_has_bits, 0x00000080U)) {
+      _this->_impl_.enemy_id_ = from._impl_.enemy_id_;
     }
   }
   _this->_impl_._has_bits_[0] |= cached_has_bits;
@@ -1248,8 +1270,8 @@ void CP_Command::InternalSwap(CP_Command* PROTOBUF_RESTRICT PROTOBUF_NONNULL oth
   _internal_metadata_.InternalSwap(&other->_internal_metadata_);
   swap(_impl_._has_bits_[0], other->_impl_._has_bits_[0]);
   ::google::protobuf::internal::memswap<
-      PROTOBUF_FIELD_OFFSET(CP_Command, _impl_.kick_speed_)
-      + sizeof(CP_Command::_impl_.kick_speed_)
+      PROTOBUF_FIELD_OFFSET(CP_Command, _impl_.enemy_id_)
+      + sizeof(CP_Command::_impl_.enemy_id_)
       - PROTOBUF_FIELD_OFFSET(CP_Command, _impl_.pos_)>(
           reinterpret_cast<char*>(&_impl_.pos_),
           reinterpret_cast<char*>(&other->_impl_.pos_));

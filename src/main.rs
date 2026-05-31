@@ -165,6 +165,7 @@ async fn main() {
               pos: as_cp_vec2(robot_tracked.pos),
               orientation: robot_tracked.orientation.to_degrees() as i32,
               vel: Option::from(as_cp_vec2(robot_tracked.vel.unwrap_or_default())),
+              visibility: (robot_tracked.visibility.unwrap_or_default() * 100f32) as u32,
             };
 
             match robot_tracked.robot_id.team {
