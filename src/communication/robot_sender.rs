@@ -1,11 +1,10 @@
+use crate::RobotData;
 use crate::config::Config;
-use crate::proto::CpRobot;
-use anyhow::{anyhow, Error};
+use anyhow::{Error, anyhow};
 use prost::Message;
 use std::collections::HashMap;
 use std::net::{SocketAddr, SocketAddrV4};
 use tokio::net::UdpSocket;
-use crate::RobotData;
 
 pub struct NetworkSender<'a> {
   pub(crate) socket: &'a UdpSocket,
@@ -62,7 +61,10 @@ impl RobotSender for NetworkSender<'_> {
       }
 
       if let Err(e) = robot_data.msg.encode(&mut buf) {
-        report.push_failure(robot_id, Error::new(e).context("failed to encode CpRobot protobuf"));
+        report.push_failure(
+          robot_id,
+          Error::new(e).context("failed to encode CpRobot protobuf"),
+        );
         continue;
       }
 
@@ -83,7 +85,10 @@ impl RobotSender for NetworkSender<'_> {
       let robot_cfg = match cfg.robots.get(&robot_id) {
         Some(c) => c,
         None => {
-          report.push_failure(robot_id, anyhow!("no robot configuration found for id {robot_id}"));
+          report.push_failure(
+            robot_id,
+            anyhow!("no robot configuration found for id {robot_id}"),
+          );
           continue;
         }
       };
@@ -96,10 +101,7 @@ impl RobotSender for NetworkSender<'_> {
         Ok(bytes_sent) => {
           report.push_failure(
             robot_id,
-            anyhow!(
-              "partial UDP send: sent {bytes_sent} of {} bytes",
-              buf.len()
-            ),
+            anyhow!("partial UDP send: sent {bytes_sent} of {} bytes", buf.len()),
           );
         }
         Err(e) => {
@@ -119,7 +121,7 @@ impl RobotSender for NetworkSender<'_> {
 mod tests {
   use super::*;
   use crate::config::{Config, RobotConfig};
-  use crate::proto::{CpBall, CpCommand, CpVector2};
+  use crate::proto::{CpBall, CpCommand, CpRobot, CpVector2};
   use prost_types::Timestamp;
   use std::net::Ipv4Addr;
   use std::time::Duration;
@@ -129,7 +131,10 @@ mod tests {
     RobotData {
       msg: CpRobot {
         robot_id,
-        timestamp: Timestamp { seconds: 0, nanos: 0 },
+        timestamp: Timestamp {
+          seconds: 0,
+          nanos: 0,
+        },
         packet_id: 1,
         ball: CpBall {
           pos: CpVector2 { x: 0, y: 0 },
@@ -176,7 +181,11 @@ mod tests {
 
     let report = sender.send_to_all_robots(&cfg).await;
     assert_eq!(report.sent, 1);
-    assert!(report.failed.is_empty(), "unexpected failures: {:#?}", report.failed);
+    assert!(
+      report.failed.is_empty(),
+      "unexpected failures: {:#?}",
+      report.failed
+    );
 
     let mut buf = [0u8; 2048];
     let (n, _from) = timeout(Duration::from_millis(200), receiver.recv_from(&mut buf))
@@ -207,4 +216,3 @@ mod tests {
     assert_eq!(report.failed[0].robot_id, 123);
   }
 }
-

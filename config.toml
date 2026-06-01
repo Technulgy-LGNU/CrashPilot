@@ -6,6 +6,11 @@ ssl_vision_tracked_port = 10010
 ssl_gc_ip = "224.5.23.1"
 ssl_gc_port = 10003
 
+[logging]
+prometheus_host = "10.0.64.2"
+prometheus_port = 9090
+loki_host = "10.0.64.2"
+loki_port = 3100
 
 [server]
 robot_socket_host = "0.0.0.0"
