@@ -198,12 +198,18 @@ pub async fn spawn_prometheus_server(cfg: &Config) -> anyhow::Result<PrometheusM
   Ok(metrics)
 }
 
-async fn handle_request(req: Request<Incoming>, metrics: PrometheusMetrics) -> Response<Full<Bytes>> {
+async fn handle_request(
+  req: Request<Incoming>,
+  metrics: PrometheusMetrics,
+) -> Response<Full<Bytes>> {
   match (req.method(), req.uri().path()) {
     (&Method::GET, "/metrics") => plain_response(StatusCode::OK, metrics.render().await),
     (&Method::GET, "/health") => plain_response(StatusCode::OK, "ok\n".to_owned()),
     (&Method::GET, _) => plain_response(StatusCode::NOT_FOUND, "not found\n".to_owned()),
-    _ => plain_response(StatusCode::METHOD_NOT_ALLOWED, "method not allowed\n".to_owned()),
+    _ => plain_response(
+      StatusCode::METHOD_NOT_ALLOWED,
+      "method not allowed\n".to_owned(),
+    ),
   }
 }
 
@@ -216,7 +222,10 @@ fn plain_response(status: StatusCode, body: String) -> Response<Full<Bytes>> {
 }
 
 fn render_snapshot(
-  snapshot: &(HashMap<u32, RobotMetrics>, HashMap<TrackedRobotKey, TrackedRobotVelocity>),
+  snapshot: &(
+    HashMap<u32, RobotMetrics>,
+    HashMap<TrackedRobotKey, TrackedRobotVelocity>,
+  ),
 ) -> String {
   let (robot_snapshot, velocity_snapshot) = snapshot;
   let mut out = String::with_capacity((robot_snapshot.len() + velocity_snapshot.len()) * 1024);
@@ -321,7 +330,11 @@ fn render_snapshot(
     let robot = &robot_snapshot[&robot_id];
     let feedback_present = robot.last_feedback_unix_seconds.is_some();
 
-    let _ = writeln!(out, "crashpilot_robot_registered{{robot_id=\"{}\"}} 1", robot_id);
+    let _ = writeln!(
+      out,
+      "crashpilot_robot_registered{{robot_id=\"{}\"}} 1",
+      robot_id
+    );
     let _ = writeln!(
       out,
       "crashpilot_robot_feedback_present{{robot_id=\"{}\"}} {}",
@@ -373,20 +386,17 @@ fn render_snapshot(
     let _ = writeln!(
       out,
       "crashpilot_robot_feedback_seen_total{{robot_id=\"{}\"}} {}",
-      robot_id,
-      robot.feedback_seen_total
+      robot_id, robot.feedback_seen_total
     );
     let _ = writeln!(
       out,
       "crashpilot_robot_send_success_total{{robot_id=\"{}\"}} {}",
-      robot_id,
-      robot.send_success_total
+      robot_id, robot.send_success_total
     );
     let _ = writeln!(
       out,
       "crashpilot_robot_send_failure_total{{robot_id=\"{}\"}} {}",
-      robot_id,
-      robot.send_failure_total
+      robot_id, robot.send_failure_total
     );
     let _ = writeln!(
       out,
@@ -409,7 +419,11 @@ fn render_snapshot(
   }
 
   let mut velocity_keys: Vec<&TrackedRobotKey> = velocity_snapshot.keys().collect();
-  velocity_keys.sort_unstable_by(|a, b| a.robot_id.cmp(&b.robot_id).then(a.team.as_str().cmp(b.team.as_str())));
+  velocity_keys.sort_unstable_by(|a, b| {
+    a.robot_id
+      .cmp(&b.robot_id)
+      .then(a.team.as_str().cmp(b.team.as_str()))
+  });
 
   for key in velocity_keys {
     let robot = &velocity_snapshot[key];
@@ -532,4 +546,3 @@ mod tests {
     assert!(text.contains("crashpilot_robot_feedback_present{robot_id=\"42\"} 1"));
   }
 }
-

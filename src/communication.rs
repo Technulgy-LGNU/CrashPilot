@@ -9,6 +9,7 @@ pub mod robot_sender;
 mod ssl_communication;
 mod udp_listener;
 
+use crate::communication::interface::spawn_websocket;
 use crate::communication::robot_receiver::robot_receiver;
 use crate::communication::ssl_communication::get_ssl_data;
 use crate::config;
@@ -17,7 +18,6 @@ use prost::bytes::Bytes;
 use std::sync::Arc;
 use tokio::sync::Mutex;
 use tokio::sync::Notify;
-use crate::communication::interface::spawn_websocket;
 
 pub type EventShare = Arc<
   Mutex<(
@@ -73,10 +73,10 @@ impl WebsocketOut {
 
       {
         let lock = self.state.lock().await;
-        if lock.seq != last_seq {
-          if let Some(payload) = lock.payload.clone() {
-            return (lock.seq, payload);
-          }
+        if lock.seq != last_seq
+          && let Some(payload) = lock.payload.clone()
+        {
+          return (lock.seq, payload);
         }
       }
 

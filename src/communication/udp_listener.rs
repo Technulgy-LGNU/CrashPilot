@@ -7,16 +7,13 @@ use tokio::sync::MutexGuard;
 pub(crate) fn spawn_udp_listener<T>(
   socket: UdpSocket,
   tx: EventShare,
-  wrap: fn(
-    T,
-    MutexGuard<(
+  wrap: fn(T, MutexGuard<(
       Option<SslWrapperPacket>,
       Option<TrackerWrapperPacket>,
       Option<InterfaceWrapperCp>,
       Option<Referee>,
       Option<RobotCp>,
-    )>,
-  ),
+    )>,),
 ) where
   T: Message + Default + Send + 'static,
 {

@@ -7,13 +7,13 @@ use hyper::header::CONTENT_TYPE;
 use hyper_util::client::legacy::Client;
 use hyper_util::client::legacy::connect::HttpConnector;
 use hyper_util::rt::TokioExecutor;
+use prost_types::Timestamp;
 use serde::Serialize;
 use serde_json::json;
 use std::collections::BTreeMap;
 use std::net::SocketAddrV4;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use tokio::sync::mpsc;
-use prost_types::Timestamp;
 
 const MAX_BATCH_SIZE: usize = 128;
 const FLUSH_INTERVAL: Duration = Duration::from_millis(200);
@@ -55,7 +55,8 @@ pub fn spawn_loki_publisher(cfg: &Config) -> LokiPublisher {
   let endpoint = loki_endpoint(cfg);
 
   tokio::spawn(async move {
-    let client: Client<HttpConnector, Full<Bytes>> = Client::builder(TokioExecutor::new()).build(HttpConnector::new());
+    let client: Client<HttpConnector, Full<Bytes>> =
+      Client::builder(TokioExecutor::new()).build(HttpConnector::new());
     run_loki_publisher(client, endpoint, rx).await;
   });
 
@@ -239,7 +240,10 @@ mod tests {
   fn builds_loki_payload_grouped_by_robot() {
     let robot = CpRobot {
       robot_id: 1,
-      timestamp: Timestamp { seconds: 12, nanos: 34 },
+      timestamp: Timestamp {
+        seconds: 12,
+        nanos: 34,
+      },
       packet_id: 10,
       ball: CpBall {
         pos: CpVector2 { x: 1, y: 2 },
@@ -266,9 +270,26 @@ mod tests {
     };
 
     let payload = build_push_body(&[
-      OutgoingRobotLog { robot: robot.clone(), ts_ns: 111 },
-      OutgoingRobotLog { robot: CpRobot { robot_id: 1, packet_id: 11, ..robot.clone() }, ts_ns: 112 },
-      OutgoingRobotLog { robot: CpRobot { robot_id: 2, packet_id: 12, ..robot }, ts_ns: 113 },
+      OutgoingRobotLog {
+        robot: robot.clone(),
+        ts_ns: 111,
+      },
+      OutgoingRobotLog {
+        robot: CpRobot {
+          robot_id: 1,
+          packet_id: 11,
+          ..robot.clone()
+        },
+        ts_ns: 112,
+      },
+      OutgoingRobotLog {
+        robot: CpRobot {
+          robot_id: 2,
+          packet_id: 12,
+          ..robot
+        },
+        ts_ns: 113,
+      },
     ]);
 
     let parsed: Value = serde_json::from_str(&payload).expect("valid loki json");
@@ -282,18 +303,21 @@ mod tests {
 
     let values_1 = streams[0]["values"].as_array().expect("values array");
     assert_eq!(values_1.len(), 2);
-    let first_inner: Value = serde_json::from_str(values_1[0][1].as_str().unwrap()).expect("inner json");
+    let first_inner: Value =
+      serde_json::from_str(values_1[0][1].as_str().unwrap()).expect("inner json");
     assert_eq!(first_inner["packet_id"], 10);
     assert_eq!(first_inner["ball"]["pos"]["x"], 1);
     assert_eq!(first_inner["cmd"]["kick_speed"], 14);
     assert_eq!(first_inner["robots_yellow"][0]["robot_id"], 7);
 
-    let second_inner: Value = serde_json::from_str(values_1[1][1].as_str().unwrap()).expect("inner json");
+    let second_inner: Value =
+      serde_json::from_str(values_1[1][1].as_str().unwrap()).expect("inner json");
     assert_eq!(second_inner["packet_id"], 11);
 
     let values_2 = streams[1]["values"].as_array().expect("values array");
     assert_eq!(values_2.len(), 1);
-    let third_inner: Value = serde_json::from_str(values_2[0][1].as_str().unwrap()).expect("inner json");
+    let third_inner: Value =
+      serde_json::from_str(values_2[0][1].as_str().unwrap()).expect("inner json");
     assert_eq!(third_inner["packet_id"], 12);
   }
 
@@ -305,7 +329,3 @@ mod tests {
     assert!(endpoint.ends_with("/loki/api/v1/push"));
   }
 }
-
-
-
-

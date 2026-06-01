@@ -64,7 +64,7 @@ async fn main() {
   }
 
   // Receiver for the communication
-  let (rx, ws_out)= match communication_receiver(&config).await {
+  let (rx, ws_out) = match communication_receiver(&config).await {
     Ok(comm) => (comm.events, comm.ws_out),
     Err(e) => panic!("{}", e),
   };
@@ -201,7 +201,11 @@ async fn main() {
       }
     }
 
-    let failed_robot_ids: HashSet<u32> = send_report.failed.iter().map(|failure| failure.robot_id).collect();
+    let failed_robot_ids: HashSet<u32> = send_report
+      .failed
+      .iter()
+      .map(|failure| failure.robot_id)
+      .collect();
     for robot_id in robots.keys().copied() {
       metrics
         .record_send_result(robot_id, !failed_robot_ids.contains(&robot_id))

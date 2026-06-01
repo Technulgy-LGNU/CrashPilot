@@ -1,6 +1,6 @@
 use crate::RobotData;
-use crate::config::Config;
 use crate::communication::loki::LokiPublisher;
+use crate::config::Config;
 use anyhow::{Error, anyhow};
 use prost::Message;
 use std::collections::HashMap;

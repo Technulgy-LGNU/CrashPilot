@@ -1,13 +1,16 @@
-use futures_util::{SinkExt, StreamExt};
-use prost::Message;
-use tokio::net::TcpListener;
 use crate::communication::EventShare;
 use crate::communication::WebsocketOut;
 use crate::config;
-use crate::proto::{InterfaceWrapperCp};
+use crate::proto::InterfaceWrapperCp;
+use futures_util::{SinkExt, StreamExt};
+use prost::Message;
+use tokio::net::TcpListener;
 
 pub async fn spawn_websocket(cfg: &config::Config, tx: EventShare, ws_out: WebsocketOut) {
-  let addr = format!("{}:{}", cfg.server.websocket_host, cfg.server.websocket_port);
+  let addr = format!(
+    "{}:{}",
+    cfg.server.websocket_host, cfg.server.websocket_port
+  );
 
   // Create raw TCP Stream
   let tcp_socket = match TcpListener::bind(&addr).await {
@@ -31,8 +34,7 @@ pub async fn spawn_websocket(cfg: &config::Config, tx: EventShare, ws_out: Webso
         Err(e) => {
           eprintln!(
             "WebSocket handshake failed from {}: {:?}. Ensure the client connects with ws:// and sends a valid HTTP Upgrade request.",
-            peer_addr,
-            e
+            peer_addr, e
           );
           continue;
         }
@@ -70,7 +72,6 @@ pub async fn spawn_websocket(cfg: &config::Config, tx: EventShare, ws_out: Webso
 
               match InterfaceWrapperCp::decode(&*data) {
                 Ok(decoded) => {
-
                   let mut lock = tx.lock().await;
 
                   lock.2 = Some(decoded);
