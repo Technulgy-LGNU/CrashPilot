@@ -40,8 +40,6 @@ pub async fn robot_receiver(
         Ok((size, addr)) => {
           if robots.iter().find(|x| addr.ip() == x.1.ip).is_some() {
             if let Ok(msg) = RobotCp::decode(&buf[..size]) {
-              println!("Received message from robot: {:?}", msg);
-
               let lock = tx.lock().await;
               wrap(msg, lock);
             } else {

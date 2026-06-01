@@ -143,6 +143,7 @@ async fn main() {
       vis_raw = packet;
     }
     if let Some(packet) = tracked {
+      metrics.record_tracked_frame(&packet).await;
       vis_tracked = packet;
     }
     if let Some(packet) = ws {

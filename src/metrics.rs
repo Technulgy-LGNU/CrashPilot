@@ -1,5 +1,5 @@
 use crate::config::Config;
-use crate::proto::RobotCp;
+use crate::proto::{RobotCp, TrackerWrapperPacket};
 use anyhow::Context;
 use http_body_util::Full;
 use hyper::body::Incoming;
@@ -24,6 +24,7 @@ pub struct PrometheusMetrics {
 #[derive(Default, Clone)]
 struct MetricsState {
   robots: HashMap<u32, RobotMetrics>,
+  tracked_robot_velocities: HashMap<TrackedRobotKey, TrackedRobotVelocity>,
 }
 
 #[derive(Debug, Clone, Default)]
@@ -41,6 +42,35 @@ struct RobotMetrics {
   last_feedback_unix_seconds: Option<f64>,
   last_send_unix_seconds: Option<f64>,
   last_send_success: Option<bool>,
+}
+
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
+struct TrackedRobotKey {
+  robot_id: u32,
+  team: RobotTeam,
+}
+
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
+enum RobotTeam {
+  Yellow,
+  Blue,
+  Unknown,
+}
+
+impl RobotTeam {
+  fn as_str(self) -> &'static str {
+    match self {
+      Self::Yellow => "yellow",
+      Self::Blue => "blue",
+      Self::Unknown => "unknown",
+    }
+  }
+}
+
+#[derive(Debug, Clone, Default)]
+struct TrackedRobotVelocity {
+  velocity_mps: f64,
+  last_seen_unix_seconds: f64,
 }
 
 impl PrometheusMetrics {
@@ -81,10 +111,46 @@ impl PrometheusMetrics {
     }
   }
 
+  pub async fn record_tracked_frame(&self, packet: &TrackerWrapperPacket) {
+    let Some(frame) = packet.tracked_frame.as_ref() else {
+      return;
+    };
+
+    let mut lock = self.inner.write().await;
+
+    for robot in &frame.robots {
+      let Some(robot_id) = robot.robot_id.id else {
+        continue;
+      };
+
+      let key = TrackedRobotKey {
+        robot_id,
+        team: match robot.robot_id.team {
+          Some(1) => RobotTeam::Yellow,
+          Some(2) => RobotTeam::Blue,
+          _ => RobotTeam::Unknown,
+        },
+      };
+
+      let velocity_mps = robot
+        .vel
+        .map(|vel| f64::from((vel.x * vel.x + vel.y * vel.y).sqrt()))
+        .unwrap_or(0.0);
+
+      lock.tracked_robot_velocities.insert(
+        key,
+        TrackedRobotVelocity {
+          velocity_mps,
+          last_seen_unix_seconds: now_seconds(),
+        },
+      );
+    }
+  }
+
   pub async fn render(&self) -> String {
     let snapshot = {
       let lock = self.inner.read().await;
-      lock.robots.clone()
+      (lock.robots.clone(), lock.tracked_robot_velocities.clone())
     };
 
     render_snapshot(&snapshot)
@@ -149,8 +215,11 @@ fn plain_response(status: StatusCode, body: String) -> Response<Full<Bytes>> {
     .expect("failed to build HTTP response")
 }
 
-fn render_snapshot(snapshot: &HashMap<u32, RobotMetrics>) -> String {
-  let mut out = String::with_capacity(snapshot.len() * 1024);
+fn render_snapshot(
+  snapshot: &(HashMap<u32, RobotMetrics>, HashMap<TrackedRobotKey, TrackedRobotVelocity>),
+) -> String {
+  let (robot_snapshot, velocity_snapshot) = snapshot;
+  let mut out = String::with_capacity((robot_snapshot.len() + velocity_snapshot.len()) * 1024);
 
   macro_rules! metric {
     ($name:literal, $help:literal, $type:literal) => {{
@@ -234,12 +303,22 @@ fn render_snapshot(snapshot: &HashMap<u32, RobotMetrics>) -> String {
     "Whether the latest UDP send attempt for this robot succeeded.",
     "gauge"
   );
+  metric!(
+    "crashpilot_robot_velocity_mps",
+    "Magnitude of the tracked robot velocity in meters per second.",
+    "gauge"
+  );
+  metric!(
+    "crashpilot_robot_velocity_last_seen_unix_seconds",
+    "Unix timestamp of the latest tracked velocity sample for this robot.",
+    "gauge"
+  );
 
-  let mut robot_ids: Vec<u32> = snapshot.keys().copied().collect();
+  let mut robot_ids: Vec<u32> = robot_snapshot.keys().copied().collect();
   robot_ids.sort_unstable();
 
   for robot_id in robot_ids {
-    let robot = &snapshot[&robot_id];
+    let robot = &robot_snapshot[&robot_id];
     let feedback_present = robot.last_feedback_unix_seconds.is_some();
 
     let _ = writeln!(out, "crashpilot_robot_registered{{robot_id=\"{}\"}} 1", robot_id);
@@ -329,6 +408,27 @@ fn render_snapshot(snapshot: &HashMap<u32, RobotMetrics>) -> String {
     );
   }
 
+  let mut velocity_keys: Vec<&TrackedRobotKey> = velocity_snapshot.keys().collect();
+  velocity_keys.sort_unstable_by(|a, b| a.robot_id.cmp(&b.robot_id).then(a.team.as_str().cmp(b.team.as_str())));
+
+  for key in velocity_keys {
+    let robot = &velocity_snapshot[key];
+    let _ = writeln!(
+      out,
+      "crashpilot_robot_velocity_mps{{robot_id=\"{}\",team=\"{}\"}} {}",
+      key.robot_id,
+      key.team.as_str(),
+      robot.velocity_mps
+    );
+    let _ = writeln!(
+      out,
+      "crashpilot_robot_velocity_last_seen_unix_seconds{{robot_id=\"{}\",team=\"{}\"}} {}",
+      key.robot_id,
+      key.team.as_str(),
+      robot.last_seen_unix_seconds
+    );
+  }
+
   out
 }
 
@@ -346,6 +446,7 @@ fn now_seconds() -> f64 {
 #[cfg(test)]
 mod tests {
   use super::*;
+  use crate::proto::{RobotId, Team, TrackedFrame, TrackedRobot, Vector2};
 
   #[tokio::test]
   async fn renders_robot_metrics_with_robot_id_label() {
@@ -376,6 +477,38 @@ mod tests {
     assert!(text.contains("crashpilot_robot_last_rec_packet{robot_id=\"7\"} 99"));
     assert!(text.contains("crashpilot_robot_send_success_total{robot_id=\"7\"} 1"));
     assert!(text.contains("crashpilot_robot_send_failure_total{robot_id=\"7\"} 0"));
+  }
+
+  #[tokio::test]
+  async fn renders_tracked_velocity_with_robot_id_and_team_label() {
+    let metrics = PrometheusMetrics::new();
+    metrics
+      .record_tracked_frame(&TrackerWrapperPacket {
+        uuid: "demo".to_owned(),
+        source_name: None,
+        tracked_frame: Some(TrackedFrame {
+          frame_number: 1,
+          timestamp: 1.0,
+          balls: vec![],
+          robots: vec![TrackedRobot {
+            robot_id: RobotId {
+              id: Some(7),
+              team: Some(Team::Yellow as i32),
+            },
+            pos: Vector2 { x: 0.0, y: 0.0 },
+            orientation: 0.0,
+            vel: Some(Vector2 { x: 3.0, y: 4.0 }),
+            vel_angular: None,
+            visibility: Some(1.0),
+          }],
+          kicked_ball: None,
+          capabilities: vec![],
+        }),
+      })
+      .await;
+
+    let text = metrics.render().await;
+    assert!(text.contains("crashpilot_robot_velocity_mps{robot_id=\"7\",team=\"yellow\"} 5"));
   }
 
   #[tokio::test]
