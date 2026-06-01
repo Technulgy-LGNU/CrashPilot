@@ -60,7 +60,3 @@ pub async fn robot_receiver(
   });
 }
 
-/*
-I want to publish the robot stats to Prometheus, can you implement me a clean solution, which does not block any of my other code and associates the data in Prometheus with the robot_id?
-Use something like hyper1 as a http server, because its minimal and has basically zero overhead
- */

@@ -1,9 +1,10 @@
 use crate::communication::communication_receiver;
 use crate::communication::robot_sender::{NetworkSender, RobotSender};
 use crate::helpers::robot_data::create_robot_data;
+use crate::metrics::PrometheusMetrics;
 use crate::proto::{CpInterfaceWrapper, CpRobot, InterfaceCommandCp, RobotCp};
 use prost::Message;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::fs;
 use std::io::ErrorKind;
 use std::os::unix::fs::PermissionsExt;
@@ -14,6 +15,7 @@ mod communication;
 mod config;
 mod game_logic;
 mod helpers;
+mod metrics;
 mod proto;
 
 // Embed frontend (crashpilot-interface) binary
@@ -47,6 +49,16 @@ async fn main() {
     Ok(config) => config,
     Err(e) => panic!("{}", e),
   };
+
+  // Prometheus metrics endpoint and shared per-robot registry.
+  let metrics: PrometheusMetrics = match metrics::spawn_prometheus_server(&config).await {
+    Ok(metrics) => metrics,
+    Err(e) => panic!("{}", e),
+  };
+
+  for robot_id in config.robots.keys().copied() {
+    metrics.register_robot(robot_id).await;
+  }
 
   // Receiver for the communication
   let (rx, ws_out)= match communication_receiver(&config).await {
@@ -148,6 +160,7 @@ async fn main() {
         .iter_mut()
         .find(|(_, data)| data.msg.robot_id == packet.robot_id)
         .map(|(_, data)| data.feedback = packet);
+      metrics.record_robot_feedback(packet).await;
     }
 
     robots = create_robot_data(
@@ -178,9 +191,16 @@ async fn main() {
         send_report.sent,
         send_report.failed.len()
       );
-      for failure in send_report.failed {
+      for failure in &send_report.failed {
         eprintln!("  robot {}: {:#}", failure.robot_id, failure.error);
       }
+    }
+
+    let failed_robot_ids: HashSet<u32> = send_report.failed.iter().map(|failure| failure.robot_id).collect();
+    for robot_id in robots.keys().copied() {
+      metrics
+        .record_send_result(robot_id, !failed_robot_ids.contains(&robot_id))
+        .await;
     }
 
     // Broadcast the latest state to all websocket clients (CP -> interface)
