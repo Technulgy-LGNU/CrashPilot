@@ -1,5 +1,6 @@
 use crate::RobotData;
 use crate::config::Config;
+use crate::communication::loki::LokiPublisher;
 use anyhow::{Error, anyhow};
 use prost::Message;
 use std::collections::HashMap;
@@ -9,6 +10,7 @@ use tokio::net::UdpSocket;
 pub struct NetworkSender<'a> {
   pub(crate) socket: &'a UdpSocket,
   pub(crate) data: &'a HashMap<u32, RobotData>,
+  pub(crate) loki: Option<LokiPublisher>,
 }
 
 #[derive(Debug, Default)]
@@ -97,6 +99,9 @@ impl RobotSender for NetworkSender<'_> {
       match self.socket.send_to(&buf, addr).await {
         Ok(bytes_sent) if bytes_sent == buf.len() => {
           report.sent += 1;
+          if let Some(loki) = &self.loki {
+            loki.publish_robot_message(robot_data.msg.clone());
+          }
         }
         Ok(bytes_sent) => {
           report.push_failure(
@@ -167,6 +172,7 @@ mod tests {
     let sender: NetworkSender = NetworkSender {
       socket: &sender_socket,
       data: &data,
+      loki: None,
     };
 
     let mut cfg = Config::default();
@@ -205,6 +211,7 @@ mod tests {
     let sender: NetworkSender = NetworkSender {
       socket: &sender_socket,
       data: &data,
+      loki: None,
     };
 
     let mut cfg = Config::default();

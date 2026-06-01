@@ -3,6 +3,7 @@
 mod create_multicast_socket;
 mod gc_sender;
 pub mod interface;
+pub mod loki;
 mod robot_receiver;
 pub mod robot_sender;
 mod ssl_communication;

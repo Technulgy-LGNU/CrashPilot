@@ -1,4 +1,5 @@
 use crate::communication::communication_receiver;
+use crate::communication::loki::spawn_loki_publisher;
 use crate::communication::robot_sender::{NetworkSender, RobotSender};
 use crate::helpers::robot_data::create_robot_data;
 use crate::metrics::PrometheusMetrics;
@@ -55,6 +56,8 @@ async fn main() {
     Ok(metrics) => metrics,
     Err(e) => panic!("{}", e),
   };
+
+  let loki = spawn_loki_publisher(&config);
 
   for robot_id in config.robots.keys().copied() {
     metrics.register_robot(robot_id).await;
@@ -184,6 +187,7 @@ async fn main() {
     let network_sender: NetworkSender = NetworkSender {
       socket: &robot_socket,
       data: &robots,
+      loki: Some(loki.clone()),
     };
     let send_report = network_sender.send_to_all_robots(&config).await;
     if !send_report.failed.is_empty() {
