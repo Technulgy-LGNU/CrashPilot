@@ -1,4 +1,3 @@
-
 pub enum GCTask {
   Substitution,
   Goalie,

@@ -1,16 +1,32 @@
 // Combines the SSL, Robot and Websocket communication into one stream
 
-use std::sync::Arc;
+mod create_multicast_socket;
+mod gc_sender;
+pub mod interface;
+mod robot_receiver;
+pub mod robot_sender;
+mod ssl_communication;
+mod udp_listener;
+
+use crate::communication::robot_receiver::robot_receiver;
+use crate::communication::ssl_communication::get_ssl_data;
+use crate::config;
+use crate::proto::{InterfaceWrapperCp, Referee, RobotCp, SslWrapperPacket, TrackerWrapperPacket};
 use prost::bytes::Bytes;
+use std::sync::Arc;
 use tokio::sync::Mutex;
 use tokio::sync::Notify;
-use crate::config;
-use crate::interface::spawn_websocket;
-use crate::proto::{InterfaceWrapperCp, Referee, SslWrapperPacket, TrackerWrapperPacket};
-use crate::robot_communication::robot_receiver::robot_receiver;
-use crate::ssl_communication::get_ssl_data;
+use crate::communication::interface::spawn_websocket;
 
-pub type EventShare = Arc<Mutex<(Option<SslWrapperPacket>, Option<TrackerWrapperPacket>, Option<InterfaceWrapperCp>, Option<Referee>)>>;
+pub type EventShare = Arc<
+  Mutex<(
+    Option<SslWrapperPacket>,
+    Option<TrackerWrapperPacket>,
+    Option<InterfaceWrapperCp>,
+    Option<Referee>,
+    Option<RobotCp>,
+  )>,
+>;
 
 #[derive(Default)]
 struct WsLatestState {
@@ -79,18 +95,17 @@ pub struct CommunicationHandles {
 }
 
 pub async fn communication_receiver(cfg: &config::Config) -> anyhow::Result<CommunicationHandles> {
-  let events = Arc::new(Mutex::new((None, None, None, None)));
+  let events = Arc::new(Mutex::new((None, None, None, None, None)));
   let ws_out = WebsocketOut::new();
 
   get_ssl_data(cfg, events.clone()).await;
 
   spawn_websocket(cfg, events.clone(), ws_out.clone()).await;
-  
-  robot_receiver(cfg).await;
 
-  Ok(CommunicationHandles {
-    events,
-    ws_out,
+  robot_receiver(cfg, events.clone(), |event, mut lock| {
+    lock.4 = Some(event);
   })
-}
+  .await;
 
+  Ok(CommunicationHandles { events, ws_out })
+}

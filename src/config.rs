@@ -1,28 +1,54 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::error::Error;
-use std::net::Ipv4Addr;
 use std::fs;
+use std::net::Ipv4Addr;
 use std::path::Path;
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Config {
   pub ssl: SslConfig,
   pub server: ServerConfig,
+  pub logging: LoggingConfig,
   pub robots: HashMap<u32, RobotConfig>,
 }
 impl Default for Config {
   fn default() -> Self {
     let mut robots = HashMap::new();
 
-    robots.insert(1, RobotConfig { ip: Ipv4Addr::new(10, 0, 64, 101), substitution_pos: Default::default() });
-    robots.insert(2, RobotConfig { ip: Ipv4Addr::new(10, 0, 64, 102), substitution_pos: Default::default() });
-    robots.insert(3, RobotConfig { ip: Ipv4Addr::new(10, 0, 64, 103), substitution_pos: Default::default() });
-    robots.insert(4, RobotConfig { ip: Ipv4Addr::new(10, 0, 64, 104), substitution_pos: Default::default() });
+    robots.insert(
+      1,
+      RobotConfig {
+        ip: Ipv4Addr::new(10, 0, 64, 101),
+        substitution_pos: Default::default(),
+      },
+    );
+    robots.insert(
+      2,
+      RobotConfig {
+        ip: Ipv4Addr::new(10, 0, 64, 102),
+        substitution_pos: Default::default(),
+      },
+    );
+    robots.insert(
+      3,
+      RobotConfig {
+        ip: Ipv4Addr::new(10, 0, 64, 103),
+        substitution_pos: Default::default(),
+      },
+    );
+    robots.insert(
+      4,
+      RobotConfig {
+        ip: Ipv4Addr::new(10, 0, 64, 104),
+        substitution_pos: Default::default(),
+      },
+    );
 
     Self {
       ssl: SslConfig::default(),
       server: ServerConfig::default(),
+      logging: LoggingConfig::default(),
       robots,
     }
   }
@@ -72,6 +98,24 @@ impl Default for ServerConfig {
   }
 }
 
+#[derive(Debug, Deserialize, Serialize)]
+pub struct LoggingConfig {
+  pub prometheus_host: Ipv4Addr,
+  pub prometheus_port: u16,
+  pub loki_host: Ipv4Addr,
+  pub loki_port: u16,
+}
+impl Default for LoggingConfig {
+  fn default() -> Self {
+    Self {
+      prometheus_host: Ipv4Addr::new(10, 0, 64, 2),
+      prometheus_port: 9000,
+      loki_host: Ipv4Addr::new(10, 0, 64, 2),
+      loki_port: 3100,
+    }
+  }
+}
+
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct RobotConfig {
   pub ip: Ipv4Addr,
@@ -97,8 +141,7 @@ impl Default for Vector2 {
   }
 }
 
-
-pub fn load_or_create_config(path: &str, ) -> Result<Config, Box<dyn Error>> {
+pub fn load_or_create_config(path: &str) -> Result<Config, Box<dyn Error>> {
   if !Path::new(path).exists() {
     let default_config = Config::default();
 

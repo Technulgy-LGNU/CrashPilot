@@ -1,28 +1,31 @@
 use crate::communication::EventShare;
+use crate::communication::create_multicast_socket::create_multicast_socket;
+use crate::communication::udp_listener::spawn_udp_listener;
 use crate::config::Config;
 use crate::proto::{Referee, SslWrapperPacket, TrackerWrapperPacket};
-use crate::ssl_communication::create_multicast_socket::create_multicast_socket;
-use crate::ssl_communication::udp_listener::spawn_udp_listener;
-
-pub mod udp_listener;
-pub mod create_multicast_socket;
-pub mod gc_sender;
 
 pub async fn get_ssl_data(cfg: &Config, tx: EventShare) {
   // Vision raw
-  let vis_raw_socket = match create_multicast_socket(cfg.ssl.ssl_vision_raw_ip, cfg.ssl.ssl_vision_raw_port) {
-    Ok(s) => s,
-    Err(err) => panic!("Failed to create multicast socket for raw-vision: {}", err),
-  };
+  let vis_raw_socket =
+    match create_multicast_socket(cfg.ssl.ssl_vision_raw_ip, cfg.ssl.ssl_vision_raw_port) {
+      Ok(s) => s,
+      Err(err) => panic!("Failed to create multicast socket for raw-vision: {}", err),
+    };
 
   spawn_udp_listener::<SslWrapperPacket>(vis_raw_socket, tx.clone(), |event, mut lock| {
     lock.0 = Some(event)
   });
 
   // Vision Tracked
-  let vis_tracked_socket = match create_multicast_socket(cfg.ssl.ssl_vision_tracked_ip, cfg.ssl.ssl_vision_tracked_port) {
+  let vis_tracked_socket = match create_multicast_socket(
+    cfg.ssl.ssl_vision_tracked_ip,
+    cfg.ssl.ssl_vision_tracked_port,
+  ) {
     Ok(s) => s,
-    Err(e) => panic!("Failed to create multicast socket for tracked-vision: {}", e),
+    Err(e) => panic!(
+      "Failed to create multicast socket for tracked-vision: {}",
+      e
+    ),
   };
 
   spawn_udp_listener::<TrackerWrapperPacket>(vis_tracked_socket, tx.clone(), |event, mut lock| {

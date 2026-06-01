@@ -2,10 +2,11 @@ use crate::proto::{CpBall, CpVector2, InterfaceCommandCp, SslDetectionBall, Trac
 
 pub enum VisionBalls {
   Raw(Vec<SslDetectionBall>),
-  Tracked(Vec<TrackedBall>)
+  Tracked(Vec<TrackedBall>),
 }
 /// Convert a tracked ball into a CpBall
 /// Also does only select the ball who is in the designated test area, if test mode is enabled
+#[inline]
 pub fn convert_ball(balls: VisionBalls, interface_command: InterfaceCommandCp) -> CpBall {
   // The correct ball, that gets passed on
   let mut correct_ball: TrackedBall = Default::default();
@@ -26,7 +27,7 @@ pub fn convert_ball(balls: VisionBalls, interface_command: InterfaceCommandCp) -
           visibility: None,
         });
       }
-    },
+    }
     VisionBalls::Tracked(balls) => {
       balls_generic = balls;
     }
@@ -42,28 +43,32 @@ pub fn convert_ball(balls: VisionBalls, interface_command: InterfaceCommandCp) -
     match interface_command.testfield {
       // -x || +y
       0 => {
-        correct_balls = balls_generic.iter()
+        correct_balls = balls_generic
+          .iter()
           .filter(|ball| ball.pos.x < 0.0 && ball.pos.y > 0.0)
           .collect::<Vec<&TrackedBall>>();
-      },
+      }
       // +x || +y
       1 => {
-        correct_balls = balls_generic.iter()
+        correct_balls = balls_generic
+          .iter()
           .filter(|ball| ball.pos.x > 0.0 && ball.pos.y > 0.0)
           .collect::<Vec<&TrackedBall>>();
-      },
+      }
       // +x || -y
       2 => {
-        correct_balls = balls_generic.iter()
+        correct_balls = balls_generic
+          .iter()
           .filter(|ball| ball.pos.x > 0.0 && ball.pos.y < 0.0)
           .collect::<Vec<&TrackedBall>>();
-      },
+      }
       // -x || -y
       3 => {
-        correct_balls = balls_generic.iter()
+        correct_balls = balls_generic
+          .iter()
           .filter(|ball| ball.pos.x < 0.0 && ball.pos.y < 0.0)
           .collect::<Vec<&TrackedBall>>();
-      },
+      }
       _ => (),
     }
     if !correct_balls.is_empty() {

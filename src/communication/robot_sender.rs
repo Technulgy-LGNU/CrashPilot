@@ -5,10 +5,11 @@ use prost::Message;
 use std::collections::HashMap;
 use std::net::{SocketAddr, SocketAddrV4};
 use tokio::net::UdpSocket;
+use crate::RobotData;
 
 pub struct NetworkSender<'a> {
   pub(crate) socket: &'a UdpSocket,
-  pub(crate) data: &'a HashMap<u32, CpRobot>,
+  pub(crate) data: &'a HashMap<u32, RobotData>,
 }
 
 #[derive(Debug, Default)]
@@ -47,20 +48,20 @@ impl RobotSender for NetworkSender<'_> {
     for (&robot_id, robot_data) in self.data.iter() {
       // Keep the buffer re-used but always reset before encoding.
       buf.clear();
-      buf.reserve(robot_data.encoded_len());
+      buf.reserve(robot_data.msg.encoded_len());
 
-      if robot_data.robot_id != robot_id {
+      if robot_data.msg.robot_id != robot_id {
         report.push_failure(
           robot_id,
           anyhow!(
             "robot_id mismatch: map key is {robot_id} but message.robot_id is {}",
-            robot_data.robot_id
+            robot_data.msg.robot_id
           ),
         );
         // Still attempt to send using the map key, since that's what we have configured.
       }
 
-      if let Err(e) = robot_data.encode(&mut buf) {
+      if let Err(e) = robot_data.msg.encode(&mut buf) {
         report.push_failure(robot_id, Error::new(e).context("failed to encode CpRobot protobuf"));
         continue;
       }
@@ -124,27 +125,30 @@ mod tests {
   use std::time::Duration;
   use tokio::time::timeout;
 
-  fn sample_robot(robot_id: u32) -> CpRobot {
-    CpRobot {
-      robot_id,
-      timestamp: Timestamp { seconds: 0, nanos: 0 },
-      packet_id: 1,
-      ball: CpBall {
-        pos: CpVector2 { x: 0, y: 0 },
-        vel: None,
+  fn sample_robot(robot_id: u32) -> RobotData {
+    RobotData {
+      msg: CpRobot {
+        robot_id,
+        timestamp: Timestamp { seconds: 0, nanos: 0 },
+        packet_id: 1,
+        ball: CpBall {
+          pos: CpVector2 { x: 0, y: 0 },
+          vel: None,
+        },
+        robots_yellow: vec![],
+        robots_blue: vec![],
+        cmd: CpCommand {
+          state: 0,
+          task: 0,
+          pos: None,
+          speed: None,
+          orientation: None,
+          kick_orient: None,
+          kick_speed: None,
+          enemy_id: None,
+        },
       },
-      robots_yellow: vec![],
-      robots_blue: vec![],
-      cmd: CpCommand {
-        state: 0,
-        task: 0,
-        pos: None,
-        speed: None,
-        orientation: None,
-        kick_orient: None,
-        kick_speed: None,
-        enemy_id: None,
-      },
+      feedback: Default::default(),
     }
   }
 

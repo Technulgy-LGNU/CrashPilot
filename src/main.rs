@@ -1,38 +1,35 @@
 use crate::communication::communication_receiver;
-use crate::proto::{CpInterfaceWrapper, CpTrackedRobot, InterfaceCommandCp, SslDetectionBall};
-use crate::robot_communication::robot_sender::{NetworkSender, RobotSender};
-use crate::utils::as_cp_vec2;
+use crate::communication::robot_sender::{NetworkSender, RobotSender};
+use crate::helpers::robot_data::create_robot_data;
+use crate::proto::{CpInterfaceWrapper, CpRobot, InterfaceCommandCp, RobotCp};
 use prost::Message;
-use prost_types::Timestamp;
 use std::collections::HashMap;
 use std::fs;
 use std::io::ErrorKind;
-use std::option::Option;
 use std::os::unix::fs::PermissionsExt;
 use std::process::Command;
-use std::time::SystemTime;
-use tokio::time::{interval, Duration, MissedTickBehavior};
-use crate::data_handler::ball_data::{convert_ball, VisionBalls};
+use tokio::time::{Duration, MissedTickBehavior, interval};
 
 mod communication;
 mod config;
-mod interface;
+mod game_logic;
+mod helpers;
 mod proto;
-mod robot_communication;
-mod ssl_communication;
-mod utils;
-mod data_handler;
 
 // Embed frontend (crashpilot-interface) binary
 static GO_BINARY: &[u8] = include_bytes!("../crashpilot-interface");
 
+struct RobotData {
+  pub msg: CpRobot,
+  pub feedback: RobotCp,
+}
+
 #[tokio::main]
 async fn main() {
   tokio::spawn(async move {
-    let path = "./cp_interface";
+    let path = "./crashpilot-interface";
 
-    fs::write(path, GO_BINARY)
-      .expect("Failed to write binary file");
+    fs::write(path, GO_BINARY).expect("Failed to write binary file");
 
     let mut perms = fs::metadata(path)
       .expect("Failed to read metadata")
@@ -40,12 +37,9 @@ async fn main() {
 
     perms.set_mode(0o755);
 
-    fs::set_permissions(path, perms)
-      .expect("Failed to set executable permissions");
+    fs::set_permissions(path, perms).expect("Failed to set executable permissions");
 
-    Command::new(path)
-      .spawn()
-      .expect("Failed to spawn binary");
+    Command::new(path).spawn().expect("Failed to spawn binary");
   });
 
   // Get config
@@ -55,20 +49,18 @@ async fn main() {
   };
 
   // Receiver for the communication
-  let comm = match communication_receiver(&config).await {
-    Ok(comm) => comm,
+  let (rx, ws_out)= match communication_receiver(&config).await {
+    Ok(comm) => (comm.events, comm.ws_out),
     Err(e) => panic!("{}", e),
   };
 
-  let rx = comm.events;
-  let ws_out = comm.ws_out;
-
   // UDPSocket for robot communication
-  let robot_socket = match tokio::net::UdpSocket::bind(
-    format!("{}:{}",
-            config.server.robot_socket_host,
-            config.server.robot_socket_port)
-  ).await {
+  let robot_socket = match tokio::net::UdpSocket::bind(format!(
+    "{}:{}",
+    config.server.robot_socket_host, config.server.robot_socket_port
+  ))
+  .await
+  {
     Ok(socket) => socket,
     Err(e) => match e.kind() {
       ErrorKind::AddrNotAvailable => {
@@ -80,21 +72,23 @@ async fn main() {
     },
   };
 
-
   // Robots Hashmap
   let mut packet_id = 0;
-  let mut robots: HashMap<u32, proto::CpRobot> = HashMap::new();
+  let mut robots: HashMap<u32, RobotData> = HashMap::new();
   for robot in config.robots.iter() {
     robots.insert(
       *robot.0,
-      proto::CpRobot {
-        robot_id: *robot.0,
-        timestamp: Default::default(),
-        packet_id,
-        ball: Default::default(),
-        robots_yellow: vec![],
-        robots_blue: vec![],
-        cmd: Default::default(),
+      RobotData {
+        msg: CpRobot {
+          robot_id: *robot.0,
+          timestamp: Default::default(),
+          packet_id,
+          ball: Default::default(),
+          robots_yellow: vec![],
+          robots_blue: vec![],
+          cmd: Default::default(),
+        },
+        feedback: Default::default(),
       },
     );
   }
@@ -103,7 +97,6 @@ async fn main() {
   for robot in config.robots.iter() {
     robots_ws_data.insert(*robot.0, Default::default());
   }
-
 
   println!("Starting robots...");
   // Data packets
@@ -115,7 +108,7 @@ async fn main() {
   // Sending should not depend on receiving new packets: when vision/GC packets pause,
   // we still want to keep sending the latest known command/state to the robots.
   // Also, waiting on an interval prevents busy-spinning on `rx.lock()`.
-  let mut tick = interval(Duration::from_millis(4)); // ~240 Hz
+  let mut tick = interval(Duration::from_millis(2)); // ~480 Hz
   tick.set_missed_tick_behavior(MissedTickBehavior::Skip);
 
   loop {
@@ -123,9 +116,15 @@ async fn main() {
 
     // Drain the *latest* events from the shared state. We handle all types each tick,
     // not just one, so state stays fresh.
-    let (raw, tracked, ws, gc) = {
+    let (raw, tracked, ws, gc, rf) = {
       let mut lock = rx.lock().await;
-      (lock.0.take(), lock.1.take(), lock.2.take(), lock.3.take())
+      (
+        lock.0.take(),
+        lock.1.take(),
+        lock.2.take(),
+        lock.3.take(),
+        lock.4.take(),
+      )
     };
 
     if let Some(packet) = raw {
@@ -144,92 +143,28 @@ async fn main() {
     if let Some(packet) = gc {
       referee = packet;
     }
-
-    // Create data for each robot
-    for robot in robots.values_mut() {
-      // Basic data
-      robot.packet_id = packet_id;
-      robot.timestamp = Timestamp::from(SystemTime::now());
-
-      // Tracked frame, if not empty
-      // Robot Position Data
-      match vis_tracked.tracked_frame.clone() {
-        Some(frame) => {
-          // Robot
-          // Clear robots already in array
-          robot.robots_yellow = vec![];
-          robot.robots_blue = vec![];
-          for robot_tracked in frame.robots {
-            let robot_vis: CpTrackedRobot = CpTrackedRobot {
-              robot_id: robot_tracked.robot_id.id.unwrap_or_default(),
-              pos: as_cp_vec2(robot_tracked.pos),
-              orientation: robot_tracked.orientation.to_degrees() as i32,
-              vel: Option::from(as_cp_vec2(robot_tracked.vel.unwrap_or_default())),
-              visibility: (robot_tracked.visibility.unwrap_or_default() * 100f32) as u32,
-            };
-
-            match robot_tracked.robot_id.team {
-              // Yellow robots
-              Some(1) => {
-                // Check if this yellow robot already exists
-                if !robot.robots_yellow.iter().any(|robot| robot.robot_id == robot_vis.robot_id) {
-                    robot.robots_yellow.push(robot_vis);
-                }
-              },
-              // Blue Robots
-              Some(2) => {
-                // Check if this blue robot already exists
-                if !robot.robots_blue.iter().any(|robot| robot.robot_id == robot_vis.robot_id) {
-                  robot.robots_yellow.push(robot_vis);
-                }
-              },
-              _ => (),
-            }
-          }
-
-          // Raw or Tracked vision can be used here
-          // Tracked vision is superior and will be used by default
-          // Ball
-          if !interface_command.ball_tracked {
-            let vis_raw_balls: Vec<SslDetectionBall> = match vis_raw.detection.clone() {
-              Some(frame) => frame.balls,
-              None => vec![],
-            };
-            robot.ball = convert_ball(VisionBalls::Raw(vis_raw_balls), interface_command);
-          } else {
-            robot.ball = convert_ball(VisionBalls::Tracked(frame.balls), interface_command);
-          }
-        }
-        None => (),
-      };
-
-      // Commands
-      // Check for the referee command and overwrite cp commands
-      //
-      // HALT Command, all robots stop
-      if referee.command == 0 && interface_command.gc_data {
-        robot.cmd = match robots_ws_data.get(&robot.robot_id) {
-          Some(cmd) => *cmd,
-          None => Default::default(),
-        };
-        robot.cmd.state = 0;
-
-      // STOP Command, all robots are only allowed to move with a max velocity of 1.5m/s and should avoid the ball with a clearance of 0.5m
-      } else if referee.command == 1 && interface_command.gc_data {
-        robot.cmd = match robots_ws_data.get(&robot.robot_id) {
-          Some(cmd) => *cmd,
-          None => Default::default(),
-        };
-        robot.cmd.state = 1;
-
-      // Send the last command received by the interface
-      } else {
-        robot.cmd = match robots_ws_data.get(&robot.robot_id) {
-          Some(cmd) => *cmd,
-          None => Default::default(),
-        };
-      }
+    if let Some(packet) = rf {
+      robots
+        .iter_mut()
+        .find(|(_, data)| data.msg.robot_id == packet.robot_id)
+        .map(|(_, data)| data.feedback = packet);
     }
+
+    robots = create_robot_data(
+      robots,
+      packet_id,
+      &vis_tracked,
+      &vis_raw,
+      &referee,
+      &interface_command,
+      &robots_ws_data,
+    );
+
+    // Actual game logic is going to happen here
+    // First checks, on game state, and coordinating robots for that
+    // Checks if one of multiple predetermine strategies apply
+    //  - Goalie has Ball -> Chips automatically to the furthest own robot -> This robot should get the receive command
+    // Still WIP, teamfaabs_ssl_robot_code is still in W.I.P., but nearing its completion
 
     // Send the data to the robots
     let network_sender: NetworkSender = NetworkSender {
@@ -253,8 +188,12 @@ async fn main() {
     let ws_packet = CpInterfaceWrapper {
       vision_raw: Some(vis_raw.clone()),
       vision_tracked: Some(vis_tracked.clone()),
-      gc_data: if referee.packet_timestamp != 0 { Some(referee.clone()) } else { None },
-      robot_commands: robots.values().cloned().collect(),
+      gc_data: if referee.packet_timestamp != 0 {
+        Some(referee.clone())
+      } else {
+        None
+      },
+      robot_commands: robots.values().map(|robot| robot.msg.clone()).collect(),
     };
     let mut buf = Vec::with_capacity(ws_packet.encoded_len());
     if let Err(e) = ws_packet.encode(&mut buf) {
