@@ -129,7 +129,7 @@ impl RobotSender for NetworkSender<'_> {
 mod tests {
   use super::*;
   use crate::config::{Config, RobotConfig};
-  use crate::proto::{CpBall, CpCommand, CpRobot, CpVector2};
+  use core_dump::proto::{CpBall, CpCommand, CpRobot, CpVector2};
   use prost_types::Timestamp;
   use std::net::Ipv4Addr;
   use std::time::Duration;

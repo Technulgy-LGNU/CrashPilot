@@ -1,8 +1,7 @@
 pub mod ball_helper;
 pub mod robot_data;
-pub mod vec;
 
-use crate::proto::{CpVector2, Vector2};
+use core_dump::proto::{CpVector2, Vector2};
 
 #[inline]
 pub fn as_cp_vec2(v2: Vector2) -> CpVector2 {

@@ -2653,8 +2653,8 @@ pub struct SslGeometryCameraCalibration {
 /// There are two phases with different accelerations during the ball kicks:
 /// 1. Sliding
 /// 2. Rolling
-/// The full model is described in the TDP of ER-Force from 2016, which can be found here:
-/// <https://ssl.robocup.org/wp-content/uploads/2019/01/2016_ETDP_ER-Force.pdf>
+///    The full model is described in the TDP of ER-Force from 2016, which can be found here:
+///    <https://ssl.robocup.org/wp-content/uploads/2019/01/2016_ETDP_ER-Force.pdf>
 #[derive(Clone, Copy, PartialEq, ::prost::Message)]
 pub struct SslBallModelStraightTwoPhase {
   /// Ball sliding acceleration \[m/s^2\] (should be negative)

@@ -16,6 +16,7 @@ hyper = { version = "1", features = ["server", "client", "http1"] }
 hyper-util = { version = "0.1", features = ["server", "client-legacy", "http1", "tokio"] }
 http-body-util = "0.1"
 serde_json = "1.0.145"
+core_dump = { path = "crates/core_dump" }
 
 [build-dependencies]
 

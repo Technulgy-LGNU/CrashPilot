@@ -1,6 +1,6 @@
 use crate::communication::EventShare;
 use crate::config;
-use crate::proto::{InterfaceWrapperCp, Referee, RobotCp, SslWrapperPacket, TrackerWrapperPacket};
+use core_dump::proto::{InterfaceWrapperCp, Referee, RobotCp, SslWrapperPacket, TrackerWrapperPacket};
 use prost::Message;
 use tokio::sync::MutexGuard;
 

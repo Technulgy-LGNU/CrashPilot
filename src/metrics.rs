@@ -1,5 +1,5 @@
 use crate::config::Config;
-use crate::proto::{RobotCp, TrackerWrapperPacket};
+use core_dump::proto::{RobotCp, TrackerWrapperPacket};
 use anyhow::Context;
 use http_body_util::Full;
 use hyper::body::Incoming;
@@ -460,7 +460,7 @@ fn now_seconds() -> f64 {
 #[cfg(test)]
 mod tests {
   use super::*;
-  use crate::proto::{RobotId, Team, TrackedFrame, TrackedRobot, Vector2};
+  use core_dump::proto::{RobotId, Team, TrackedFrame, TrackedRobot, Vector2};
 
   #[tokio::test]
   async fn renders_robot_metrics_with_robot_id_label() {

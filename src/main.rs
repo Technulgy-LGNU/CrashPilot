@@ -4,8 +4,8 @@ use crate::communication::loki::spawn_loki_publisher;
 use crate::communication::robot_sender::{NetworkSender, RobotSender};
 use crate::helpers::robot_data::create_robot_data;
 use crate::metrics::PrometheusMetrics;
-use crate::proto::{
-  CpInterfaceWrapper, CpRobot, InterfaceCommandCp, Referee, RobotCp, SslWrapperPacket,
+use core_dump::proto::{
+  CpCommand, CpInterfaceWrapper, CpRobot, InterfaceCommandCp, Referee, RobotCp, SslWrapperPacket,
   TrackerWrapperPacket,
 };
 use prost::Message;
@@ -21,7 +21,6 @@ mod config;
 mod game_logic;
 mod helpers;
 mod metrics;
-mod proto;
 
 // Embed frontend (crashpilot-interface) binary
 static GO_BINARY: &[u8] = include_bytes!("../crashpilot-interface");
@@ -82,7 +81,7 @@ async fn main() {
     );
   }
   // Initialize the hashmap for the websocket data, which will be used to store the last command received for each robot
-  let mut robots_ws_data: HashMap<u32, proto::CpCommand> = HashMap::new();
+  let mut robots_ws_data: HashMap<u32, CpCommand> = HashMap::new();
   for robot in config.robots.iter() {
     robots_ws_data.insert(*robot.0, Default::default());
   }
@@ -267,7 +266,7 @@ async fn robot_sender(
 async fn websocket_sender(
   vis_raw: &SslWrapperPacket,
   vis_tracked: &TrackerWrapperPacket,
-  referee: &proto::Referee,
+  referee: &Referee,
   robots: &HashMap<u32, RobotData>,
   ws_out: &communication::WebsocketOut,
 ) {

@@ -1,10 +1,10 @@
 use crate::communication::EventShare;
 use crate::communication::WebsocketOut;
 use crate::config;
-use crate::proto::InterfaceWrapperCp;
 use futures_util::{SinkExt, StreamExt};
 use prost::Message;
 use tokio::net::TcpListener;
+use core_dump::proto::InterfaceWrapperCp;
 
 pub async fn spawn_websocket(cfg: &config::Config, tx: EventShare, ws_out: WebsocketOut) {
   let addr = format!(

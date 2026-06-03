@@ -14,7 +14,7 @@ use crate::communication::interface::spawn_websocket;
 use crate::communication::robot_receiver::robot_receiver;
 use crate::communication::ssl_communication::get_ssl_data;
 use crate::config;
-use crate::proto::{InterfaceWrapperCp, Referee, RobotCp, SslWrapperPacket, TrackerWrapperPacket};
+use core_dump::proto::{InterfaceWrapperCp, Referee, RobotCp, SslWrapperPacket, TrackerWrapperPacket};
 use prost::bytes::Bytes;
 use std::sync::Arc;
 use tokio::sync::Mutex;

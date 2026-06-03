@@ -2,7 +2,7 @@ use crate::communication::EventShare;
 use crate::communication::create_multicast_socket::create_multicast_socket;
 use crate::communication::udp_listener::spawn_udp_listener;
 use crate::config::Config;
-use crate::proto::{Referee, SslWrapperPacket, TrackerWrapperPacket};
+use core_dump::proto::{Referee, SslWrapperPacket, TrackerWrapperPacket};
 
 pub async fn get_ssl_data(cfg: &Config, tx: EventShare) {
   // Vision raw
