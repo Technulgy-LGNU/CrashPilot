@@ -43,29 +43,27 @@ pub fn create_robot_data(
 
         match robot_tracked.robot_id.team {
           // Yellow robots
-          Some(1) => {
-            // Check if this yellow robot already exists
+          // Check if this yellow robot already exists
+          Some(1)
             if !robot
               .msg
               .robots_yellow
               .iter()
-              .any(|robot| robot.robot_id == robot_vis.robot_id)
-            {
-              robot.msg.robots_yellow.push(robot_vis);
-            }
+              .any(|robot| robot.robot_id == robot_vis.robot_id) =>
+          {
+            robot.msg.robots_yellow.push(robot_vis)
           }
           // Blue Robots
           // Check if this blue robot already exists
-          Some(2) => {
+          Some(2)
             if !robot
               .msg
               .robots_blue
               .iter()
-              .any(|robot| robot.robot_id == robot_vis.robot_id)
+              .any(|robot| robot.robot_id == robot_vis.robot_id) =>
             {
               robot.msg.robots_blue.push(robot_vis);
             }
-          }
           _ => (),
         }
       }

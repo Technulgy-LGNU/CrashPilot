@@ -1,4 +1,5 @@
 use crate::communication::communication_receiver;
+#[cfg(feature = "loki")]
 use crate::communication::loki::spawn_loki_publisher;
 use crate::communication::robot_sender::{NetworkSender, RobotSender};
 use crate::helpers::robot_data::create_robot_data;
@@ -42,7 +43,7 @@ async fn main() {
 
     fs::set_permissions(path, perms).expect("Failed to set executable permissions");
 
-    Command::new(path).spawn().expect("Failed to spawn binary");
+    Command::new(path).spawn().expect("Failed to spawn binary").wait().expect("Failed to wait on binary");
   });
 
   // Get config
@@ -57,6 +58,7 @@ async fn main() {
     Err(e) => panic!("{}", e),
   };
 
+  #[cfg(feature = "loki")]
   let loki = spawn_loki_publisher(&config);
 
   for robot_id in config.robots.keys().copied() {
@@ -160,10 +162,11 @@ async fn main() {
       referee = packet;
     }
     if let Some(packet) = rf {
-      robots
+      if let Some((_, data)) = robots
         .iter_mut()
-        .find(|(_, data)| data.msg.robot_id == packet.robot_id)
-        .map(|(_, data)| data.feedback = packet);
+        .find(|(_, data)| data.msg.robot_id == packet.robot_id) {
+        data.feedback = packet;
+      }
       metrics.record_robot_feedback(packet).await;
     }
 
@@ -187,6 +190,7 @@ async fn main() {
     let network_sender: NetworkSender = NetworkSender {
       socket: &robot_socket,
       data: &robots,
+      #[cfg(feature = "loki")]
       loki: Some(loki.clone()),
     };
     let send_report = network_sender.send_to_all_robots(&config).await;
