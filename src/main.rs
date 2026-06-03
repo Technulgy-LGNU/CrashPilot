@@ -4,7 +4,10 @@ use crate::communication::loki::spawn_loki_publisher;
 use crate::communication::robot_sender::{NetworkSender, RobotSender};
 use crate::helpers::robot_data::create_robot_data;
 use crate::metrics::PrometheusMetrics;
-use crate::proto::{CpInterfaceWrapper, CpRobot, InterfaceCommandCp, RobotCp};
+use crate::proto::{
+  CpInterfaceWrapper, CpRobot, InterfaceCommandCp, Referee, RobotCp, SslWrapperPacket,
+  TrackerWrapperPacket,
+};
 use prost::Message;
 use std::collections::{HashMap, HashSet};
 use std::fs;
@@ -30,22 +33,7 @@ struct RobotData {
 
 #[tokio::main]
 async fn main() {
-  tokio::spawn(async move {
-    let path = "./crashpilot-interface";
-
-    fs::write(path, GO_BINARY).expect("Failed to write binary file");
-
-    let mut perms = fs::metadata(path)
-      .expect("Failed to read metadata")
-      .permissions();
-
-    perms.set_mode(0o755);
-
-    fs::set_permissions(path, perms).expect("Failed to set executable permissions");
-
-    Command::new(path).spawn().expect("Failed to spawn binary").wait().expect("Failed to wait on binary");
-  });
-
+  spawn_interface();
   // Get config
   let config = match config::load_or_create_config("config.toml") {
     Ok(config) => config,
@@ -57,13 +45,12 @@ async fn main() {
     Ok(metrics) => metrics,
     Err(e) => panic!("{}", e),
   };
-
-  #[cfg(feature = "loki")]
-  let loki = spawn_loki_publisher(&config);
-
   for robot_id in config.robots.keys().copied() {
     metrics.register_robot(robot_id).await;
   }
+
+  #[cfg(feature = "loki")]
+  let loki = spawn_loki_publisher(&config);
 
   // Receiver for the communication
   let (rx, ws_out) = match communication_receiver(&config).await {
@@ -72,22 +59,7 @@ async fn main() {
   };
 
   // UDPSocket for robot communication
-  let robot_socket = match tokio::net::UdpSocket::bind(format!(
-    "{}:{}",
-    config.server.robot_socket_host, config.server.robot_socket_port
-  ))
-  .await
-  {
-    Ok(socket) => socket,
-    Err(e) => match e.kind() {
-      ErrorKind::AddrNotAvailable => {
-        panic!(
-          "Failed to bind UDP socket: Address not available. Please check if the IP address and port are correct and not in use."
-        );
-      }
-      _ => panic!("Failed to bind UDP socket: {}", e),
-    },
-  };
+  let robot_socket = spawn_robot_socket(&config).await;
 
   // Robots Hashmap
   let mut packet_id = 0;
@@ -117,15 +89,15 @@ async fn main() {
 
   println!("Starting robots...");
   // Data packets
-  let mut vis_raw: proto::SslWrapperPacket = Default::default();
-  let mut vis_tracked: proto::TrackerWrapperPacket = Default::default();
+  let mut vis_raw: SslWrapperPacket = Default::default();
+  let mut vis_tracked: TrackerWrapperPacket = Default::default();
   let mut interface_command: InterfaceCommandCp = Default::default();
-  let mut referee: proto::Referee = Default::default();
+  let mut referee: Referee = Default::default();
 
   // Sending should not depend on receiving new packets: when vision/GC packets pause,
   // we still want to keep sending the latest known command/state to the robots.
   // Also, waiting on an interval prevents busy-spinning on `rx.lock()`.
-  let mut tick = interval(Duration::from_millis(2)); // ~480 Hz
+  let mut tick = interval(Duration::from_millis(2)); // ~500 Hz
   tick.set_missed_tick_behavior(MissedTickBehavior::Skip);
 
   loop {
@@ -164,7 +136,8 @@ async fn main() {
     if let Some(packet) = rf {
       if let Some((_, data)) = robots
         .iter_mut()
-        .find(|(_, data)| data.msg.robot_id == packet.robot_id) {
+        .find(|(_, data)| data.msg.robot_id == packet.robot_id)
+      {
         data.feedback = packet;
       }
       metrics.record_robot_feedback(packet).await;
@@ -187,55 +160,131 @@ async fn main() {
     // Still WIP, teamfaabs_ssl_robot_code is still in W.I.P., but nearing its completion
 
     // Send the data to the robots
-    let network_sender: NetworkSender = NetworkSender {
-      socket: &robot_socket,
-      data: &robots,
+    robot_sender(
+      &config,
+      &robot_socket,
+      &robots,
+      &metrics,
       #[cfg(feature = "loki")]
-      loki: Some(loki.clone()),
-    };
-    let send_report = network_sender.send_to_all_robots(&config).await;
-    if !send_report.failed.is_empty() {
-      eprintln!(
-        "Robot send: {} ok, {} failed",
-        send_report.sent,
-        send_report.failed.len()
-      );
-      for failure in &send_report.failed {
-        eprintln!("  robot {}: {:#}", failure.robot_id, failure.error);
-      }
-    }
+      &loki,
+    )
+    .await;
 
-    let failed_robot_ids: HashSet<u32> = send_report
-      .failed
-      .iter()
-      .map(|failure| failure.robot_id)
-      .collect();
-    for robot_id in robots.keys().copied() {
-      metrics
-        .record_send_result(robot_id, !failed_robot_ids.contains(&robot_id))
-        .await;
-    }
-
-    // Broadcast the latest state to all websocket clients (CP -> interface)
-    // Note: if no clients are connected, send() returns an error; that's fine.
-    let ws_packet = CpInterfaceWrapper {
-      vision_raw: Some(vis_raw.clone()),
-      vision_tracked: Some(vis_tracked.clone()),
-      gc_data: if referee.packet_timestamp != 0 {
-        Some(referee.clone())
-      } else {
-        None
-      },
-      robot_commands: robots.values().map(|robot| robot.msg.clone()).collect(),
-    };
-    let mut buf = Vec::with_capacity(ws_packet.encoded_len());
-    if let Err(e) = ws_packet.encode(&mut buf) {
-      eprintln!("Failed to encode websocket packet: {}", e);
-    } else {
-      ws_out.publish(buf.into()).await;
-    }
+    // Websocket sender
+    websocket_sender(&vis_raw, &vis_tracked, &referee, &robots, &ws_out).await;
 
     // So the next packet has a higher id
     packet_id += 1;
+  }
+}
+
+/// Starts the Crashpilot interface, has to be in the repository as a compiled binary
+fn spawn_interface() {
+  tokio::spawn(async move {
+    let path = "./crashpilot-interface";
+
+    fs::write(path, GO_BINARY).expect("Failed to write binary file");
+
+    let mut perms = fs::metadata(path)
+      .expect("Failed to read metadata")
+      .permissions();
+
+    perms.set_mode(0o755);
+
+    fs::set_permissions(path, perms).expect("Failed to set executable permissions");
+
+    Command::new(path)
+      .spawn()
+      .expect("Failed to spawn binary")
+      .wait()
+      .expect("Failed to wait on binary");
+  });
+}
+
+/// Spawns the socket for the robot sender
+#[inline]
+async fn spawn_robot_socket(cfg: &config::Config) -> tokio::net::UdpSocket {
+  match tokio::net::UdpSocket::bind(format!(
+    "{}:{}",
+    cfg.server.robot_socket_host, cfg.server.robot_socket_port
+  ))
+  .await
+  {
+    Ok(socket) => socket,
+    Err(e) => match e.kind() {
+      ErrorKind::AddrNotAvailable => {
+        panic!(
+          "Failed to bind UDP socket: Address not available. Please check if the IP address and port are correct and not in use."
+        );
+      }
+      _ => panic!("Failed to bind UDP socket: {}", e),
+    },
+  }
+}
+
+/// Sends the latest data to all robots
+#[inline]
+async fn robot_sender(
+  cfg: &config::Config,
+  robot_socket: &tokio::net::UdpSocket,
+  robots: &HashMap<u32, RobotData>,
+  metrics: &PrometheusMetrics,
+  #[cfg(feature = "loki")] loki: &Option<communication::loki::LokiPublisher>,
+) {
+  let network_sender: NetworkSender = NetworkSender {
+    socket: robot_socket,
+    data: robots,
+    #[cfg(feature = "loki")]
+    loki: Some(loki.clone()),
+  };
+  let send_report = network_sender.send_to_all_robots(cfg).await;
+  if !send_report.failed.is_empty() {
+    eprintln!(
+      "Robot send: {} ok, {} failed",
+      send_report.sent,
+      send_report.failed.len()
+    );
+    for failure in &send_report.failed {
+      eprintln!("  robot {}: {:#}", failure.robot_id, failure.error);
+    }
+  }
+
+  let failed_robot_ids: HashSet<u32> = send_report
+    .failed
+    .iter()
+    .map(|failure| failure.robot_id)
+    .collect();
+  for robot_id in robots.keys().copied() {
+    metrics
+      .record_send_result(robot_id, !failed_robot_ids.contains(&robot_id))
+      .await;
+  }
+}
+
+/// Broadcast the latest state to all websocket clients (CP -> interface)
+/// Note: if no clients are connected, send() returns an error; that's fine.
+#[inline]
+async fn websocket_sender(
+  vis_raw: &SslWrapperPacket,
+  vis_tracked: &TrackerWrapperPacket,
+  referee: &proto::Referee,
+  robots: &HashMap<u32, RobotData>,
+  ws_out: &communication::WebsocketOut,
+) {
+  let ws_packet = CpInterfaceWrapper {
+    vision_raw: Some(vis_raw.clone()),
+    vision_tracked: Some(vis_tracked.clone()),
+    gc_data: if referee.packet_timestamp != 0 {
+      Some(referee.clone())
+    } else {
+      None
+    },
+    robot_commands: robots.values().map(|robot| robot.msg.clone()).collect(),
+  };
+  let mut buf = Vec::with_capacity(ws_packet.encoded_len());
+  if let Err(e) = ws_packet.encode(&mut buf) {
+    eprintln!("Failed to encode websocket packet: {}", e);
+  } else {
+    ws_out.publish(buf.into()).await;
   }
 }
