@@ -38,4 +38,12 @@ message InterfaceCommand_CP {
   required bool ball_tracked = 3;
   // Enable listening to the game controller data, for testing you can switch it off to test the behaviour without the game controller data
   required bool gc_data = 4;
+  // Enable game mode, disables the manual control unit
+  required bool game_mode = 5;
+  // Set the side. false for x+, true for x-
+  required bool side = 6;
+  // Set the team color. False for Yellow, true for Blue
+  required bool team_color = 7;
+  // Set the robot, that should be goalkeeper
+  required uint32 goalkeeper_id = 8;
 }

@@ -2,8 +2,7 @@ use crate::RobotData;
 use crate::helpers::as_cp_vec2;
 use crate::helpers::ball_helper::{VisionBalls, convert_ball};
 use core_dump::proto::{
-  CpCommand, CpTrackedRobot, InterfaceCommandCp, Referee, SslDetectionBall, SslWrapperPacket,
-  TrackerWrapperPacket,
+  CpTrackedRobot, InterfaceCommandCp, SslDetectionBall, SslWrapperPacket, TrackerWrapperPacket,
 };
 use prost_types::Timestamp;
 use std::collections::HashMap;
@@ -15,9 +14,7 @@ pub fn create_robot_data(
   packet_id: u32,
   vis_tracked: &TrackerWrapperPacket,
   vis_raw: &SslWrapperPacket,
-  referee: &Referee,
   interface_command: &InterfaceCommandCp,
-  robots_ws_data: &HashMap<u32, CpCommand>,
 ) -> HashMap<u32, RobotData> {
   // Create data for each robot
   for robot in robots.values_mut() {
@@ -61,9 +58,9 @@ pub fn create_robot_data(
               .robots_blue
               .iter()
               .any(|robot| robot.robot_id == robot_vis.robot_id) =>
-            {
-              robot.msg.robots_blue.push(robot_vis);
-            }
+          {
+            robot.msg.robots_blue.push(robot_vis);
+          }
           _ => (),
         }
       }
@@ -81,33 +78,6 @@ pub fn create_robot_data(
         robot.msg.ball = convert_ball(VisionBalls::Tracked(frame.balls), *interface_command);
       }
     };
-
-    // Commands
-    // Check for the referee command and overwrite cp commands
-    //
-    // HALT Command, all robots stop
-    if referee.command == 0 && interface_command.gc_data {
-      robot.msg.cmd = match robots_ws_data.get(&robot.msg.robot_id) {
-        Some(cmd) => *cmd,
-        None => Default::default(),
-      };
-      robot.msg.cmd.state = 0;
-
-    // STOP Command, all robots are only allowed to move with a max velocity of 1.5m/s and should avoid the ball with a clearance of 0.5m
-    } else if referee.command == 1 && interface_command.gc_data {
-      robot.msg.cmd = match robots_ws_data.get(&robot.msg.robot_id) {
-        Some(cmd) => *cmd,
-        None => Default::default(),
-      };
-      robot.msg.cmd.state = 1;
-
-    // Send the last command received by the interface
-    } else {
-      robot.msg.cmd = match robots_ws_data.get(&robot.msg.robot_id) {
-        Some(cmd) => *cmd,
-        None => Default::default(),
-      };
-    }
   }
 
   robots

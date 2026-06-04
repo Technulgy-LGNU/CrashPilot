@@ -150,9 +150,7 @@ async fn main() {
       packet_id,
       &vis_tracked,
       &vis_raw,
-      &referee,
       &interface_command,
-      &robots_ws_data,
     );
 
     // Actual game logic is going to happen here
@@ -168,6 +166,7 @@ async fn main() {
       BallData::new(),
       &referee,
       &interface_command,
+      &robots_ws_data
     )
     .await;
 
