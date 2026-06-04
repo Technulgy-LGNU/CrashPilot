@@ -11,9 +11,12 @@ use core_dump::proto::{
 };
 use prost::Message;
 use std::collections::{HashMap, HashSet};
+#[cfg(feature = "interface")]
 use std::fs;
 use std::io::ErrorKind;
+#[cfg(feature = "interface")]
 use std::os::unix::fs::PermissionsExt;
+#[cfg(feature = "interface")]
 use std::process::Command;
 use tokio::time::{Duration, MissedTickBehavior, interval};
 
@@ -24,6 +27,7 @@ mod helpers;
 mod metrics;
 
 // Embed frontend (crashpilot-interface) binary
+#[cfg(feature = "interface")]
 static GO_BINARY: &[u8] = include_bytes!("../crashpilot-interface");
 
 struct RobotData {
@@ -33,6 +37,7 @@ struct RobotData {
 
 #[tokio::main]
 async fn main() {
+  #[cfg(feature = "interface")]
   spawn_interface();
   // Get config
   let config = match config::load_or_create_config("config.toml") {
@@ -190,6 +195,7 @@ async fn main() {
 }
 
 /// Starts the Crashpilot interface, has to be in the repository as a compiled binary
+#[cfg(feature = "interface")]
 fn spawn_interface() {
   tokio::spawn(async move {
     let path = "./crashpilot-interface";

@@ -46,4 +46,6 @@ message InterfaceCommand_CP {
   required bool team_color = 7;
   // Set the robot, that should be goalkeeper
   required uint32 goalkeeper_id = 8;
+  // Set the max speed for the game in mm/s, 0 for unlimited
+  required uint32 max_speed = 9;
 }

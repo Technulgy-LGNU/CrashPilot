@@ -3260,6 +3260,9 @@ pub struct InterfaceCommandCp {
     /// Set the robot, that should be goalkeeper
     #[prost(uint32, required, tag="8")]
     pub goalkeeper_id: u32,
+    /// Set the max speed for the game in mm/s, 0 for unlimited
+    #[prost(uint32, required, tag="9")]
+    pub max_speed: u32,
 }
 /// The packet the robot should send back
 #[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
