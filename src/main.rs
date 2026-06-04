@@ -168,7 +168,7 @@ async fn main() {
       robots,
       &mut state,
       Robot::new_from_tracked(&vis_tracked),
-      BallData::new(),
+      BallData::new(&vis_tracked),
       &referee,
       &interface_command,
       &robots_ws_data

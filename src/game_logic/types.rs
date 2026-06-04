@@ -75,10 +75,27 @@ impl BallData {
   #[inline]
   /// Takes either the tracked or raw vision and converts it to our own ball type
   /// The Test Field switcher is not implemented for this function for now
-  pub fn new() -> Self {
+  pub fn new(vis_tracked: &TrackerWrapperPacket) -> Self {
+    let frame = vis_tracked.tracked_frame.clone().unwrap_or_default();
+
+    let mut ball = Ball::default();
+    if !frame.balls.is_empty() {
+      // Always uses the first Ball found in the TrackerFrame
+      ball = Ball {
+        pos: Vec2::new(frame.balls[0].pos.x, frame.balls[0].pos.y),
+        vel: frame.balls[0].vel.map(|vel| Vec2::new(vel.x, vel.y)).unwrap_or_default(),
+      };
+    }
+
+    let kicked_ball = KickedBall {
+      pos: Vec2::new_from_cp(frame.kicked_ball.unwrap_or_default().pos),
+      vel: Vec2::new(frame.kicked_ball.unwrap_or_default().vel.x, frame.kicked_ball.unwrap_or_default().vel.y),
+      end_point: frame.kicked_ball.unwrap_or_default().stop_pos.map(|ep| Vec2::new(ep.x, ep.y)),
+    };
+
     Self {
-      ball: Default::default(),
-      kicked_ball: Default::default(),
+      ball,
+      kicked_ball,
     }
   }
 }
