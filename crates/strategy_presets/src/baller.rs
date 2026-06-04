@@ -1,5 +1,5 @@
+use core_dump::vec::types::{Axis, Vec2};
 use crate::quadratic::QuadraticResult;
-use crate::vec2::{Axis, Vec2};
 
 struct PhysicsParams {
     ball_radius: f32,

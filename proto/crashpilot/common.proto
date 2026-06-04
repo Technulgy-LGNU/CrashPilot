@@ -19,6 +19,9 @@ message CP_TrackedRobot {
 
   // The velocity [m/s] in the ssl-vision coordinate system
   optional CP_Vector2 vel = 4;
+
+  // The visibility, 0 means not visible, 255 means fully visible, the rest is in between
+  required uint32 visibility = 5;
 }
 
 message CP_Vector2 {

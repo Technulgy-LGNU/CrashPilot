@@ -32,6 +32,8 @@ message CP_Command {
 
   optional uint32 kick_orient = 6;
   optional uint32 kick_speed = 7;
+
+  optional uint32 enemy_id = 8;
 }
 
 enum CP_State {
@@ -68,6 +70,9 @@ enum CP_Task {
   TASK_DRIBBLE = 6;
   // Get the ball and move it to the CP_Command::pos position
   TASK_PosBall = 7;
+  // Moves the robot between the ball and an enemy, defined with the CP_Command::enemy_id value
+  // If CP_Command::enemy_id is None, then it should block the goal
+  TASK_BLOCK = 8;
   // This robot should do a kickoff, basically kick the ball in the CP_Command::kick_orient direction, but adhere to the kickoff rules
   STATE_KICKOFF = 9;
   // Free Kick, use the CP_Command::kick_orientation direction

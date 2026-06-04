@@ -2,8 +2,8 @@ syntax = "proto2";
 
 import "crashpilot/cp_robot/cp_cp_robot.proto";
 import "state/ssl_gc_referee_message.proto";
-import "vision_tracked/messages_robocup_ssl_wrapper_tracked.proto";
 import "vision_tracked/messages_robocup_ssl_wrapper.proto";
+import "vision_tracked/messages_robocup_ssl_wrapper_tracked.proto";
 
 // buf:lint:ignore MESSAGE_PASCAL_CASE
 message CP_InterfaceWrapper {
@@ -29,6 +29,13 @@ message InterfaceRobotCommands_CP {
 
 // buf:lint:ignore MESSAGE_PASCAL_CASE
 message InterfaceCommand_CP {
+  required CpMode mode = 1;
+  required InterfaceManual_CP manual = 2;
+  required InterfaceGame_CP game = 3;
+  required InterfaceTest_CP test = 4;
+}
+
+message InterfaceManual_CP {
   // You can decide which quadrant the robot should use to test
   // 0: -x +y || 1: +x +y || 2: +x -y || 3: -x -y
   required bool enable_testfield = 1;
@@ -38,4 +45,35 @@ message InterfaceCommand_CP {
   required bool ball_tracked = 3;
   // Enable listening to the game controller data, for testing you can switch it off to test the behaviour without the game controller data
   required bool gc_data = 4;
+}
+
+message InterfaceGame_CP {
+  // Set the side. false for x+, true for x-
+  required bool side = 2;
+  // Set the team color. False for Yellow, true for Blue
+  required bool team_color = 3;
+  // Set the robot, that should be goalkeeper
+  required uint32 goalkeeper_id = 4;
+  // Set the max speed for the game in mm/s, 0 for unlimited
+  required uint32 max_speed = 5;
+}
+
+message InterfaceTest_CP {
+  // Set the test, that should be executed
+  required CPTests test = 2;
+  // Select the robots, that should be used for the test
+  repeated uint32 robot_ids = 3;
+}
+
+enum CPTests {
+  TEST_NONE = 0;
+  TEST_BALL_CONTROL = 1;
+  TEST_DRIBBLER = 2;
+  TEST_KICKER = 3;
+}
+
+enum CpMode {
+  MODE_MANUAL = 0;
+  MODE_GAME = 1;
+  MODE_TEST = 2;
 }

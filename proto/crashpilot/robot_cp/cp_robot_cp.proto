@@ -4,13 +4,14 @@ syntax = "proto2";
 message Robot_CP {
   required uint32 robot_id = 1;
 
-  optional float battery_voltage = 2;
+  optional uint32 battery_voltage = 2;
+  optional uint32 current = 3;
 
-  required bool kicker_ready = 3;
-  required bool has_ball = 4;
+  required bool kicker_ready = 4;
+  required bool has_ball = 5;
 
-  optional string error_msg = 5;
+  optional bool has_error = 6;
 
-  optional bool acting = 6;
-  optional uint32 last_rec_packet = 7;
+  optional bool acting = 7;
+  optional uint32 last_rec_packet = 8;
 }
