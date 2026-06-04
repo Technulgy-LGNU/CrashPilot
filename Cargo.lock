@@ -540,7 +540,7 @@ dependencies = [
 name = "strategy_presets"
 version = "0.1.0"
 dependencies = [
- "num-traits",
+ "core_dump",
 ]
 
 [[package]]
