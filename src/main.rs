@@ -35,6 +35,28 @@ struct RobotData {
   pub feedback: RobotCp,
 }
 
+#[derive(Debug, Clone)]
+struct FieldSetup {
+  pub width: u32,
+  pub height: u32,
+  pub goal_width: u32,
+  pub penalty_width: u32,
+  pub penalty_height: u32,
+  pub center_circle_radius: u32,
+}
+impl Default for FieldSetup {
+  fn default() -> Self {
+    Self {
+      width: 9000,
+      height: 6000,
+      goal_width: 1000,
+      penalty_width: 2000,
+      penalty_height: 1000,
+      center_circle_radius: 1000,
+    }
+  }
+}
+
 #[tokio::main]
 async fn main() {
   #[cfg(feature = "interface")]
@@ -100,6 +122,14 @@ async fn main() {
   let mut referee: Referee = Default::default();
   // Other Vars
   let mut state: GameState = Default::default();
+  // Team
+  //  - 0: Unknown
+  //  - 1: Yellow
+  //  - 2: Blue
+  let mut team: i32 = 0;
+  let mut site: i32 = 1;
+  // Field config
+  let mut field_setup: FieldSetup = Default::default();
 
   // Sending should not depend on receiving new packets: when vision/GC packets pause,
   // we still want to keep sending the latest known command/state to the robots.
@@ -125,6 +155,18 @@ async fn main() {
 
     if let Some(packet) = raw {
       vis_raw = packet;
+
+      // Create the FieldSetup Var
+      if let Some(geometry) = vis_raw.geometry.clone() {
+        field_setup = FieldSetup {
+          width: geometry.field.field_length as u32,
+          height: geometry.field.field_width as u32,
+          goal_width: geometry.field.goal_width as u32,
+          penalty_width: geometry.field.penalty_area_width.unwrap_or_default() as u32,
+          penalty_height: geometry.field.penalty_area_width.unwrap_or_default() as u32,
+          center_circle_radius: geometry.field.center_circle_radius.unwrap_or_default() as u32,
+        };
+      }
     }
     if let Some(packet) = tracked {
       metrics.record_tracked_frame(&packet).await;
@@ -136,6 +178,26 @@ async fn main() {
         robots_ws_data.insert(robot_command.robot_id, robot_command.command);
       }
       interface_command = packet.interface_command;
+      match interface_command.game.team_color {
+        // Yellow team
+        false => {
+          team = 1;
+        }
+        // Blue team
+        true => {
+          team = 2;
+        }
+      }
+      match interface_command.game.side {
+        // X+
+        false => {
+          site = 1;
+        }
+        // X-
+        true => {
+          site = -1;
+        }
+      }
     }
     if let Some(packet) = gc {
       referee = packet;
@@ -163,15 +225,16 @@ async fn main() {
     // Checks if one of multiple predetermine strategies apply
     //  - Goalie has Ball -> Chips automatically to the furthest own robot -> This robot should get the receive command
     // Still WIP, teamfaabs_ssl_robot_code is still in W.I.P., but nearing its completion
+    let ball_data = BallData::new(&vis_tracked);
     robots = game_logic(
       &config,
       robots,
       &mut state,
-      Robot::new_from_tracked(&vis_tracked),
-      BallData::new(&vis_tracked),
+      Robot::new_from_tracked(&vis_tracked, &ball_data.ball, team, site as f32, &field_setup),
+      ball_data,
       &referee,
       &interface_command,
-      &robots_ws_data
+      &robots_ws_data,
     )
     .await;
 
