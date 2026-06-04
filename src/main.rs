@@ -2,6 +2,7 @@ use crate::communication::communication_receiver;
 #[cfg(feature = "loki")]
 use crate::communication::loki::spawn_loki_publisher;
 use crate::communication::robot_sender::{NetworkSender, RobotSender};
+use crate::game_logic::{BallData, GameState, Robot, game_logic};
 use crate::helpers::robot_data::create_robot_data;
 use crate::metrics::PrometheusMetrics;
 use core_dump::proto::{
@@ -92,6 +93,8 @@ async fn main() {
   let mut vis_tracked: TrackerWrapperPacket = Default::default();
   let mut interface_command: InterfaceCommandCp = Default::default();
   let mut referee: Referee = Default::default();
+  // Other Vars
+  let mut state: GameState = Default::default();
 
   // Sending should not depend on receiving new packets: when vision/GC packets pause,
   // we still want to keep sending the latest known command/state to the robots.
@@ -157,6 +160,16 @@ async fn main() {
     // Checks if one of multiple predetermine strategies apply
     //  - Goalie has Ball -> Chips automatically to the furthest own robot -> This robot should get the receive command
     // Still WIP, teamfaabs_ssl_robot_code is still in W.I.P., but nearing its completion
+    robots = game_logic(
+      &config,
+      robots,
+      &mut state,
+      Robot::new_from_tracked(&vis_tracked),
+      BallData::new(),
+      &referee,
+      &interface_command,
+    )
+    .await;
 
     // Send the data to the robots
     robot_sender(
