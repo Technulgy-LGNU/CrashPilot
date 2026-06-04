@@ -68,14 +68,14 @@ pub fn create_robot_data(
       // Raw or Tracked vision can be used here
       // Tracked vision is superior and will be used by default
       // Ball
-      if !interface_command.ball_tracked {
+      if !interface_command.manual.ball_tracked {
         let vis_raw_balls: Vec<SslDetectionBall> = match vis_raw.detection.clone() {
           Some(frame) => frame.balls,
           None => vec![],
         };
-        robot.msg.ball = convert_ball(VisionBalls::Raw(vis_raw_balls), *interface_command);
+        robot.msg.ball = convert_ball(VisionBalls::Raw(vis_raw_balls), interface_command);
       } else {
-        robot.msg.ball = convert_ball(VisionBalls::Tracked(frame.balls), *interface_command);
+        robot.msg.ball = convert_ball(VisionBalls::Tracked(frame.balls), interface_command);
       }
     };
   }

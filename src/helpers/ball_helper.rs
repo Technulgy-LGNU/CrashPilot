@@ -7,7 +7,7 @@ pub enum VisionBalls {
 /// Convert a tracked ball into a CpBall
 /// Also does only select the ball who is in the designated test area, if test mode is enabled
 #[inline]
-pub fn convert_ball(balls: VisionBalls, interface_command: InterfaceCommandCp) -> CpBall {
+pub fn convert_ball(balls: VisionBalls, interface_command: &InterfaceCommandCp) -> CpBall {
   // The correct ball, that gets passed on
   let mut correct_ball: TrackedBall = Default::default();
   // Converts all balls to the TrackedBall, so the function works with the default vision
@@ -34,13 +34,13 @@ pub fn convert_ball(balls: VisionBalls, interface_command: InterfaceCommandCp) -
   }
 
   // Test field check, filters for the a specific part of the field
-  if interface_command.enable_testfield {
+  if interface_command.manual.enable_testfield {
     let mut correct_balls: Vec<&TrackedBall> = vec![];
     // Correct Balls
 
     // Switch between the test areas
     // We different between the four areas with their omen
-    match interface_command.testfield {
+    match interface_command.manual.testfield {
       // -x || +y
       0 => {
         correct_balls = balls_generic

@@ -3233,8 +3233,19 @@ pub struct InterfaceRobotCommandsCp {
     pub command: CpCommand,
 }
 /// buf:lint:ignore MESSAGE_PASCAL_CASE
-#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct InterfaceCommandCp {
+    #[prost(enumeration="CpMode", required, tag="1")]
+    pub mode: i32,
+    #[prost(message, required, tag="2")]
+    pub manual: InterfaceManualCp,
+    #[prost(message, required, tag="3")]
+    pub game: InterfaceGameCp,
+    #[prost(message, required, tag="4")]
+    pub test: InterfaceTestCp,
+}
+#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct InterfaceManualCp {
     /// You can decide which quadrant the robot should use to test
     /// 0: -x +y || 1: +x +y || 2: +x -y || 3: -x -y
     #[prost(bool, required, tag="1")]
@@ -3248,21 +3259,91 @@ pub struct InterfaceCommandCp {
     /// Enable listening to the game controller data, for testing you can switch it off to test the behaviour without the game controller data
     #[prost(bool, required, tag="4")]
     pub gc_data: bool,
-    /// Enable game mode, disables the manual control unit
-    #[prost(bool, required, tag="5")]
-    pub game_mode: bool,
+}
+#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct InterfaceGameCp {
     /// Set the side. false for x+, true for x-
-    #[prost(bool, required, tag="6")]
+    #[prost(bool, required, tag="2")]
     pub side: bool,
     /// Set the team color. False for Yellow, true for Blue
-    #[prost(bool, required, tag="7")]
+    #[prost(bool, required, tag="3")]
     pub team_color: bool,
     /// Set the robot, that should be goalkeeper
-    #[prost(uint32, required, tag="8")]
+    #[prost(uint32, required, tag="4")]
     pub goalkeeper_id: u32,
     /// Set the max speed for the game in mm/s, 0 for unlimited
-    #[prost(uint32, required, tag="9")]
+    #[prost(uint32, required, tag="5")]
     pub max_speed: u32,
+}
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct InterfaceTestCp {
+    /// Set the test, that should be executed
+    #[prost(enumeration="CpTests", required, tag="2")]
+    pub test: i32,
+    /// Select the robots, that should be used for the test
+    #[prost(uint32, repeated, packed="false", tag="3")]
+    pub robot_ids: ::prost::alloc::vec::Vec<u32>,
+}
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
+#[repr(i32)]
+pub enum CpTests {
+    TestNone = 0,
+    TestBallControl = 1,
+    TestDribbler = 2,
+    TestKicker = 3,
+}
+impl CpTests {
+    /// String value of the enum field names used in the ProtoBuf definition.
+    ///
+    /// The values are not transformed in any way and thus are considered stable
+    /// (if the ProtoBuf definition does not change) and safe for programmatic use.
+    pub fn as_str_name(&self) -> &'static str {
+        match self {
+            Self::TestNone => "TEST_NONE",
+            Self::TestBallControl => "TEST_BALL_CONTROL",
+            Self::TestDribbler => "TEST_DRIBBLER",
+            Self::TestKicker => "TEST_KICKER",
+        }
+    }
+    /// Creates an enum from field names used in the ProtoBuf definition.
+    pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
+        match value {
+            "TEST_NONE" => Some(Self::TestNone),
+            "TEST_BALL_CONTROL" => Some(Self::TestBallControl),
+            "TEST_DRIBBLER" => Some(Self::TestDribbler),
+            "TEST_KICKER" => Some(Self::TestKicker),
+            _ => None,
+        }
+    }
+}
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
+#[repr(i32)]
+pub enum CpMode {
+    ModeManual = 0,
+    ModeGame = 1,
+    ModeTest = 2,
+}
+impl CpMode {
+    /// String value of the enum field names used in the ProtoBuf definition.
+    ///
+    /// The values are not transformed in any way and thus are considered stable
+    /// (if the ProtoBuf definition does not change) and safe for programmatic use.
+    pub fn as_str_name(&self) -> &'static str {
+        match self {
+            Self::ModeManual => "MODE_MANUAL",
+            Self::ModeGame => "MODE_GAME",
+            Self::ModeTest => "MODE_TEST",
+        }
+    }
+    /// Creates an enum from field names used in the ProtoBuf definition.
+    pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
+        match value {
+            "MODE_MANUAL" => Some(Self::ModeManual),
+            "MODE_GAME" => Some(Self::ModeGame),
+            "MODE_TEST" => Some(Self::ModeTest),
+            _ => None,
+        }
+    }
 }
 /// The packet the robot should send back
 #[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
