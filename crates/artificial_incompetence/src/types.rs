@@ -1,5 +1,4 @@
-
-
+use core_dump::vec::types::Vec2;
 
 struct BallState {
     pos: Vec2<f32>,
