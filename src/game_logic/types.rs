@@ -1,6 +1,157 @@
+use std::collections::HashMap;
+
 use crate::FieldSetup;
-use core_dump::proto::TrackerWrapperPacket;
+use core_dump::proto::{InterfaceCommandCp, Referee, TrackerWrapperPacket};
+use core_dump::proto::referee::Command;
 use core_dump::vec::types::Vec2;
+
+/// GameState, GamePhase and RefMachine merged together with
+/// Advanced Update functions
+pub struct WorldState {
+  // Data
+  pub robots: Vec<Robot>,
+  pub ball: BallData,
+
+  pub referee: Referee,
+  pub iface_cmd: InterfaceCommandCp,
+
+  // Thinks to keep track of
+  pub goalie: Option<u8>,
+  pub defenders: Option<Vec<u8>>,
+
+  // States
+  pub ref_machine: RefMachine,
+  pub phase: GamePhase,
+}
+
+#[derive(Debug, Default, Clone)]
+pub enum GamePhase {
+  #[default]
+  UNKNOWN,
+
+  Halted,
+  Stopped,
+
+  OffensiveKickoff,
+  DefensiveKickoff,
+
+  OffensivePenalty,
+  DefensivePenalty,
+
+  OffensiveFreeKick,
+  DefensiveFreeKick,
+
+  Running,
+}
+
+#[derive(Debug, Default, Clone)]
+pub struct RefMachine {
+  pub state: RefState,
+}
+
+impl RefMachine {
+  pub fn apply(&mut self, cmd: Command) {
+    match Command::try_from(cmd).unwrap_or_default() {
+      Command::Halt => {
+        self.state = RefState::Halt;
+      }
+
+      Command::Stop => {
+        self.state = RefState::Stop;
+      }
+
+      Command::PrepareKickoffBlue => {
+        self.state = RefState::PrepareKickoff {
+          attacking: Team::Blue,
+        };
+      }
+
+      Command::PrepareKickoffYellow => {
+        self.state = RefState::PrepareKickoff {
+          attacking: Team::Yellow,
+        };
+      }
+
+      Command::NormalStart => {
+        self.state = RefState::Running;
+      }
+
+      Command::ForceStart => {
+        self.state = RefState::Running;
+      }
+
+      _ => {}
+    }
+  }
+}
+
+#[derive(Clone, Copy, Debug)]
+pub enum Team {
+  Yellow,
+  Blue,
+}
+
+#[derive(Debug, Copy, Default, Clone)]
+pub enum RefState {
+  #[default]
+  Halt,
+  Stop,
+
+  PrepareKickoff { attacking: Team },
+
+  PreparePenalty { attacking: Team },
+
+  BallPlacement { team: Team },
+
+  DirectFree { attacking: Team },
+
+  IndirectFree { attacking: Team },
+
+  Running,
+}
+
+impl WorldState {
+  #[inline]
+  pub fn update(
+    mut self,
+    robots: Vec<Robot>,
+    ball: BallData,
+    referee: Referee,
+    iface_cmd: InterfaceCommandCp,
+  ) -> Self {
+    self.robots = robots;
+    self.ball = ball;
+    self.referee = referee;
+    self.iface_cmd = iface_cmd;
+
+    self = self.update_states();
+
+    self
+  }
+
+  #[inline]
+  fn update_states(mut self) -> Self {
+    // Update Refmachine
+    self.ref_machine.apply(self.referee.command());
+
+    self
+  }
+}
+
+impl Default for WorldState {
+  fn default() -> Self {
+    Self {
+      robots: vec![],
+      ball: Default::default(),
+      referee: Default::default(),
+      iface_cmd: Default::default(),
+      goalie: None,
+      defenders: None,
+      ref_machine: Default::default(),
+      phase: Default::default(),
+    }
+  }
+}
 
 /// This a single robot.
 /// There are functions to create them from tracked
@@ -12,6 +163,7 @@ use core_dump::vec::types::Vec2;
 /// Everything is in:
 ///   - mm     &&     mm/s
 ///   - degree && degree/s
+#[derive(Debug)]
 pub struct Robot {
   pub robot_id: u8,
   // 0: Unknown
@@ -26,8 +178,8 @@ pub struct Robot {
   pub angular_vel: f32,
 
   // Distances to each robot
-  pub distance_team: Vec<Option<f32>>,
-  pub distance_opponent: Vec<Option<f32>>,
+  pub distance_team: HashMap<u8, f32>,
+  pub distance_opponent: HashMap<u8, f32>,
 
   // Distance to the ball & goal mid point
   pub distance_ball: Option<f32>,
@@ -50,13 +202,13 @@ impl Robot {
     ball: &Ball,
     team: i32,
     site: f32,
-    field_setup: &FieldSetup
+    field_setup: &FieldSetup,
   ) -> Vec<Robot> {
     let robots_tracked = vis_tracked.tracked_frame.clone().unwrap_or_default().robots;
     if robots_tracked.is_empty() {
       return vec![];
     }
-    let mut robots: Vec<Robot> = vec![];
+    let mut robots: Vec<Robot> = Vec::with_capacity(32);
 
     for robot in &robots_tracked {
       let goal_point = if robot.robot_id.team.unwrap_or_default() == team {
@@ -65,47 +217,47 @@ impl Robot {
         Vec2::new(field_setup.width as f32 * 0.5 * site * -1f32, 0f32) // Midpoint of the field
       };
 
-      robots.push(Robot {
-        robot_id: robot.robot_id.id.unwrap_or_default() as u8,
-        team: robot.robot_id.team.unwrap_or_default() as u8,
-        pos: Some(Vec2::new(robot.pos.x, robot.pos.y)),
-        vel: robot.vel.map(|vel| Vec2::new(vel.x, vel.y)),
-        orientation: robot.orientation.to_degrees(),
-        angular_vel: robot.vel_angular.unwrap_or_default().to_degrees(),
-        distance_team: robots_tracked
+      // Calculates the distances and puts them into the HashMap
+      let mut dist_team: HashMap<u8, f32> = HashMap::new();
+      let mut dist_opponent: HashMap<u8, f32> = HashMap::new();
+      for robot_t in robots_tracked.clone() {
+        let dist = Vec2::<f32>::new_from_cp(robot.pos)
+          .dot(&Vec2::new_from_cp(robot_t.pos))
+          .sqrt();
+        if team == robot_t.robot_id.team.unwrap_or_default()
+          && !dist_team
+            .iter()
+            .any(|r| *r.0 == robot_t.robot_id.id.unwrap_or_default() as u8)
+        {
+          dist_team.insert(robot_t.robot_id.id.unwrap_or_default() as u8, dist);
+        } else if !dist_opponent
           .iter()
-          .find(|r| r.robot_id.team.unwrap_or_default() == team)
-          .iter()
-          .map(|r| {
-            Some(
-              Vec2::new(r.pos.x, r.pos.y)
-                .dot(&Vec2::new_from_cp(robot.pos))
-                .sqrt(),
-            )
-          })
-          .collect(),
-        distance_opponent: robots_tracked
-          .iter()
-          .find(|r| r.robot_id.team.unwrap_or_default() != team)
-          .iter()
-          .map(|r| {
-            Some(
-              Vec2::new(r.pos.x, r.pos.y)
-                .dot(&Vec2::new_from_cp(robot.pos))
-                .sqrt(),
-            )
-          })
-          .collect(),
-        distance_ball: Some(
-          Vec2::new(robot.pos.x, robot.pos.y)
-            .dot(&ball.pos)
-            .sqrt(),
-        ),
-        distance_goal: Some(Vec2::new(robot.pos.x, robot.pos.y)
-          .dot(&goal_point)
-          .sqrt()),
-        distance_wall: Option::from(create_wall_points(&Vec2::new_from_cp(robot.pos), field_setup)),
-      });
+          .any(|r| *r.0 == robot_t.robot_id.id.unwrap_or_default() as u8)
+        {
+          dist_opponent.insert(robot_t.robot_id.id.unwrap_or_default() as u8, dist);
+        }
+      }
+
+      // Create the actual individual robot data
+      robots.insert(
+        robot.robot_id.id.unwrap_or_default() as usize,
+        Robot {
+          robot_id: robot.robot_id.id.unwrap_or_default() as u8,
+          team: robot.robot_id.team.unwrap_or_default() as u8,
+          pos: Some(Vec2::new(robot.pos.x, robot.pos.y)),
+          vel: robot.vel.map(|vel| Vec2::new(vel.x, vel.y)),
+          orientation: robot.orientation.to_degrees(),
+          angular_vel: robot.vel_angular.unwrap_or_default().to_degrees(),
+          distance_team: dist_team,
+          distance_opponent: dist_opponent,
+          distance_ball: Some(Vec2::new(robot.pos.x, robot.pos.y).dot(&ball.pos).sqrt()),
+          distance_goal: Some(Vec2::new(robot.pos.x, robot.pos.y).dot(&goal_point).sqrt()),
+          distance_wall: Option::from(create_wall_points(
+            &Vec2::new_from_cp(robot.pos),
+            field_setup,
+          )),
+        },
+      );
     }
 
     robots
@@ -114,12 +266,19 @@ impl Robot {
 
 fn create_wall_points(robot_pos: &Vec2<f32>, field_setup: &FieldSetup) -> Vec<f32> {
   vec![
-    robot_pos.dot(&Vec2::new(field_setup.width as f32 * 0.5, robot_pos.y)).sqrt(), // X+ Wall
-    robot_pos.dot(&Vec2::new(robot_pos.x, field_setup.height as f32 * 0.5)).sqrt(), // Y+ Wall
-    robot_pos.dot(&Vec2::new(field_setup.width as f32 * -0.5, robot_pos.y)).sqrt(), // X- Wall
-    robot_pos.dot(&Vec2::new(robot_pos.x, field_setup.height as f32 * -0.5)).sqrt(), // Y- Wall
+    robot_pos
+      .dot(&Vec2::new(field_setup.width as f32 * 0.5, robot_pos.y))
+      .sqrt(), // X+ Wall
+    robot_pos
+      .dot(&Vec2::new(robot_pos.x, field_setup.height as f32 * 0.5))
+      .sqrt(), // Y+ Wall
+    robot_pos
+      .dot(&Vec2::new(field_setup.width as f32 * -0.5, robot_pos.y))
+      .sqrt(), // X- Wall
+    robot_pos
+      .dot(&Vec2::new(robot_pos.x, field_setup.height as f32 * -0.5))
+      .sqrt(), // Y- Wall
   ]
-
 }
 
 #[derive(Debug, Default)]
@@ -176,17 +335,4 @@ impl BallData {
 
     Self { ball, kicked_ball }
   }
-}
-
-/// Stores central data about the game
-/// This includes:
-///   - Goalie
-///   - Defenders
-///   - Field side
-///   - more to come
-#[derive(Debug, Default)]
-pub struct GameState {
-  pub goalie: u8,
-  pub defenders: Option<Vec<u8>>,
-  pub field_side: u8,
 }

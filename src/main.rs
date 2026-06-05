@@ -2,7 +2,6 @@ use crate::communication::communication_receiver;
 #[cfg(feature = "loki")]
 use crate::communication::loki::spawn_loki_publisher;
 use crate::communication::robot_sender::{NetworkSender, RobotSender};
-use crate::game_logic::{BallData, GameState, Robot, game_logic};
 use crate::helpers::robot_data::create_robot_data;
 use crate::metrics::PrometheusMetrics;
 use core_dump::proto::{
@@ -19,6 +18,8 @@ use std::os::unix::fs::PermissionsExt;
 #[cfg(feature = "interface")]
 use std::process::Command;
 use tokio::time::{Duration, MissedTickBehavior, interval};
+use crate::game_logic::game_logic;
+use crate::game_logic::types::{BallData, Robot, WorldState};
 
 mod communication;
 mod config;
@@ -121,7 +122,7 @@ async fn main() {
   let mut interface_command: InterfaceCommandCp = Default::default();
   let mut referee: Referee = Default::default();
   // Other Vars
-  let mut state: GameState = Default::default();
+  let mut state: WorldState = Default::default();
   // Team
   //  - 0: Unknown
   //  - 1: Yellow
@@ -211,7 +212,10 @@ async fn main() {
       }
       metrics.record_robot_feedback(packet).await;
     }
-
+    // Create state
+    let ball_data = BallData::new(&vis_tracked);
+    state = state.update(Robot::new_from_tracked(&vis_tracked, &ball_data.ball, team, site as f32, &field_setup), ball_data, referee.clone(), interface_command.clone());
+    
     robots = create_robot_data(
       robots,
       packet_id,
@@ -224,19 +228,7 @@ async fn main() {
     // First checks, on game state, and coordinating robots for that
     // Checks if one of multiple predetermine strategies apply
     //  - Goalie has Ball -> Chips automatically to the furthest own robot -> This robot should get the receive command
-    // Still WIP, teamfaabs_ssl_robot_code is still in W.I.P., but nearing its completion
-    let ball_data = BallData::new(&vis_tracked);
-    robots = game_logic(
-      &config,
-      robots,
-      &mut state,
-      Robot::new_from_tracked(&vis_tracked, &ball_data.ball, team, site as f32, &field_setup),
-      ball_data,
-      &referee,
-      &interface_command,
-      &robots_ws_data,
-    )
-    .await;
+    robots = game_logic(&config, robots, &mut state, &robots_ws_data).await;
 
     // Send the data to the robots
     robot_sender(
