@@ -80,59 +80,16 @@ impl CrashPilot {
     // UDPSocket for robot communication
     let robot_socket = spawn_robot_socket(&config).await;
 
-    // Robots Hashmap
-    let mut robots: HashMap<u32, RobotData> = HashMap::new();
-    for robot in config.robots.iter() {
-      robots.insert(
-        *robot.0,
-        RobotData {
-          msg: CpRobot {
-            robot_id: *robot.0,
-            timestamp: Default::default(),
-            packet_id: 0,
-            ball: Default::default(),
-            robots_yellow: vec![],
-            robots_blue: vec![],
-            cmd: Default::default(),
-          },
-          feedback: Default::default(),
-        },
-      );
-    }
-    // Initialize the hashmap for the websocket data, which will be used to store the last command received for each robot
-    let mut robots_ws_data: HashMap<u32, CpCommand> = HashMap::new();
-    for robot in config.robots.iter() {
-      robots_ws_data.insert(*robot.0, Default::default());
-    }
-
-    // Other Vars
-    let state = WorldState::default();
-    // Team
-    //  - 0: Unknown
-    //  - 1: Yellow
-    //  - 2: Blue
-    let team: i32 = 0;
-    let site: i32 = 1;
-    // Field config
-    let field_setup = FieldSetup::default();
-
-    Self {
+    Self::new(
       config,
-      #[cfg(feature = "prometheus")]
-      metrics,
-      #[cfg(feature = "loki")]
-      loki: Some(loki),
       robot_socket,
-      robots,
-      robots_ws_data,
       rx,
       ws_out,
-      state,
-      team,
-      site,
-      field_setup,
-      packet_buffer: PacketBuffer::default(),
-    }
+      #[cfg(feature = "loki")]
+      loki,
+      #[cfg(feature = "prometheus")]
+      metrics,
+    )
   }
 
   /// Sends the latest data to all robots
@@ -186,7 +143,6 @@ impl CrashPilot {
     self.send().await;
   }
 
-
   pub async fn run(&mut self) {
     println!("Starting robots...");
 
@@ -205,7 +161,14 @@ impl CrashPilot {
 }
 
 impl<T> CrashPilot<T> {
-  pub fn new(config: Config, robot_socket: T, rx: EventShare, ws_out: WebsocketOut, #[cfg(feature = "loki")] loki: Option<LokiPublisher>, #[cfg(feature = "prometheus")] metrics: PrometheusMetrics) -> Self {
+  pub fn new(
+    config: Config,
+    robot_socket: T,
+    rx: EventShare,
+    ws_out: WebsocketOut,
+    #[cfg(feature = "loki")] loki: Option<LokiPublisher>,
+    #[cfg(feature = "prometheus")] metrics: PrometheusMetrics,
+  ) -> Self {
     // Robots Hashmap
     let mut robots: HashMap<u32, RobotData> = HashMap::new();
     for robot in config.robots.iter() {
@@ -242,8 +205,6 @@ impl<T> CrashPilot<T> {
     // Field config
     let field_setup = FieldSetup::default();
 
-
-
     Self {
       config,
       #[cfg(feature = "prometheus")]
@@ -260,11 +221,8 @@ impl<T> CrashPilot<T> {
       site,
       field_setup,
       packet_buffer: PacketBuffer::default(),
-
     }
-
   }
-
 
   pub fn interpret(&mut self, events: Events) {
     if let Some(packet) = events.raw {
@@ -374,8 +332,6 @@ impl<T> CrashPilot<T> {
       &self.robots_ws_data,
     )
   }
-
-
 
   pub fn step_with_data(
     &mut self,
