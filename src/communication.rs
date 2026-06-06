@@ -9,6 +9,7 @@ mod robot_receiver;
 pub mod robot_sender;
 mod ssl_communication;
 mod udp_listener;
+mod prometheus;
 
 use crate::communication::interface::spawn_websocket;
 use crate::communication::robot_receiver::robot_receiver;

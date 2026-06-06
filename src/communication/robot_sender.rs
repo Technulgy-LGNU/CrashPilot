@@ -1,6 +1,6 @@
 use crate::RobotData;
 #[cfg(feature = "loki")]
-use crate::communication::loki::LokiPublisher;
+pub(crate) use crate::communication::loki::LokiPublisher;
 use crate::config::Config;
 use anyhow::{Error, anyhow};
 use prost::Message;
@@ -12,7 +12,7 @@ pub struct NetworkSender<'a> {
   pub(crate) socket: &'a UdpSocket,
   pub(crate) data: &'a HashMap<u32, RobotData>,
   #[cfg(feature = "loki")]
-  pub(crate) loki: Option<LokiPublisher>,
+  pub(crate) loki: Option<&'a LokiPublisher>,
 }
 
 #[derive(Debug, Default)]

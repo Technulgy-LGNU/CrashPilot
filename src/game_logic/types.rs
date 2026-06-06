@@ -113,28 +113,24 @@ pub enum RefState {
 impl WorldState {
   #[inline]
   pub fn update(
-    mut self,
+    &mut self,
     robots: Vec<Robot>,
     ball: BallData,
     referee: Referee,
     iface_cmd: InterfaceCommandCp,
-  ) -> Self {
+  ) {
     self.robots = robots;
     self.ball = ball;
     self.referee = referee;
     self.iface_cmd = iface_cmd;
 
-    self = self.update_states();
-
-    self
+    self.update_states();
   }
 
   #[inline]
-  fn update_states(mut self) -> Self {
+  fn update_states(&mut self) {
     // Update Refmachine
     self.ref_machine.apply(self.referee.command());
-
-    self
   }
 }
 

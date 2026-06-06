@@ -1,5 +1,5 @@
 use crate::config::Config;
-use crate::proto::{CpBall, CpCommand, CpRobot, CpTrackedRobot, CpVector2};
+use core_dump::proto::{CpBall, CpCommand, CpRobot, CpTrackedRobot, CpVector2};
 use http_body_util::Full;
 use hyper::Request;
 use hyper::body::Bytes;

@@ -25,14 +25,12 @@ use std::collections::HashMap;
 #[inline]
 pub async fn game_logic(
   cfg: &config::Config,
-  mut robot_data: HashMap<u32, RobotData>,
+  robot_data: &mut HashMap<u32, RobotData>,
   state: &mut WorldState,
   robots_ws_data: &HashMap<u32, CpCommand>,
-) -> HashMap<u32, RobotData> {
+) {
   // Check, which mode is enabled:
   //  - Manual: Use the interface commands to control the robots
   //  - Game: Use the AI and hardcoded game logic
   //  - Test: Run the tests
-
-  robot_data
 }

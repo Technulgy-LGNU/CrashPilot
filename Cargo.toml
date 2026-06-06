@@ -28,4 +28,5 @@ members = [
 [features]
 default = []
 loki = []
+prometheus = []
 interface = []
