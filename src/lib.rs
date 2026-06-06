@@ -31,22 +31,26 @@ mod interface;
 mod metrics;
 mod utils;
 
-pub struct CrashPilot<T = UdpSocket> {
+pub struct CrashPilot<C = CommunicationChannels> {
   config: Config,
   #[cfg(feature = "prometheus")]
   metrics: PrometheusMetrics,
   #[cfg(feature = "loki")]
   loki: Option<LokiPublisher>,
-  robot_socket: T,
   robots: HashMap<u32, RobotData>,
   robots_ws_data: HashMap<u32, CpCommand>,
-  rx: EventShare,
-  ws_out: WebsocketOut,
   state: WorldState,
   team: i32,
   site: i32,
   field_setup: FieldSetup,
   packet_buffer: PacketBuffer,
+  comm: C,
+}
+
+pub struct CommunicationChannels {
+  robot_socket: UdpSocket,
+  rx: EventShare,
+  ws_out: WebsocketOut,
 }
 
 impl CrashPilot {
@@ -80,11 +84,15 @@ impl CrashPilot {
     // UDPSocket for robot communication
     let robot_socket = spawn_robot_socket(&config).await;
 
-    Self::new(
-      config,
+    let comm = CommunicationChannels {
       robot_socket,
       rx,
       ws_out,
+    };
+
+    Self::new(
+      config,
+      comm,
       #[cfg(feature = "loki")]
       loki,
       #[cfg(feature = "prometheus")]
@@ -96,7 +104,7 @@ impl CrashPilot {
   #[inline]
   pub async fn robot_sender(&self) {
     let network_sender: NetworkSender = NetworkSender {
-      socket: &self.robot_socket,
+      socket: &self.comm.robot_socket,
       data: &self.robots,
       #[cfg(feature = "loki")]
       loki,
@@ -158,14 +166,42 @@ impl CrashPilot {
       self.step().await;
     }
   }
+
+  pub async fn recv(&mut self) {
+    // Drain the *latest* events from the shared state. We handle all types each tick,
+    // not just one, so state stays fresh.
+    let events = {
+      let mut lock = self.comm.rx.lock().await;
+      lock.take()
+    };
+
+    #[cfg(feature = "prometheus")]
+    if let Some(packet) = tracked.as_ref() {
+      self.metrics.record_tracked_frame(&packet).await;
+    }
+
+    #[cfg(feature = "prometheus")]
+    if let Some(packet) = rf.as_ref() {
+      self.metrics.record_robot_feedback(packet).await;
+    }
+
+    self.interpret(events);
+  }
+
+  /// Broadcast the latest state to all websocket clients (CP -> interface)
+  /// Note: if no clients are connected, send() returns an error; that's fine.
+  #[inline]
+  pub async fn websocket_sender(&self) {
+    let ws_packet = self.interface_packet();
+
+    self.comm.ws_out.publish(ws_packet).await; // Publish the packet to the WebSocketOut channel
+  }
 }
 
-impl<T> CrashPilot<T> {
+impl<C> CrashPilot<C> {
   pub fn new(
     config: Config,
-    robot_socket: T,
-    rx: EventShare,
-    ws_out: WebsocketOut,
+    comm: C,
     #[cfg(feature = "loki")] loki: Option<LokiPublisher>,
     #[cfg(feature = "prometheus")] metrics: PrometheusMetrics,
   ) -> Self {
@@ -211,16 +247,14 @@ impl<T> CrashPilot<T> {
       metrics,
       #[cfg(feature = "loki")]
       loki,
-      robot_socket,
       robots,
       robots_ws_data,
-      rx,
-      ws_out,
       state,
       team,
       site,
       field_setup,
       packet_buffer: PacketBuffer::default(),
+      comm,
     }
   }
 
@@ -273,27 +307,6 @@ impl<T> CrashPilot<T> {
         data.feedback = packet;
       }
     }
-  }
-
-  pub async fn recv(&mut self) {
-    // Drain the *latest* events from the shared state. We handle all types each tick,
-    // not just one, so state stays fresh.
-    let events = {
-      let mut lock = self.rx.lock().await;
-      lock.take()
-    };
-
-    #[cfg(feature = "prometheus")]
-    if let Some(packet) = tracked.as_ref() {
-      self.metrics.record_tracked_frame(&packet).await;
-    }
-
-    #[cfg(feature = "prometheus")]
-    if let Some(packet) = rf.as_ref() {
-      self.metrics.record_robot_feedback(packet).await;
-    }
-
-    self.interpret(events);
   }
 
   pub fn update(&mut self) {
@@ -360,14 +373,5 @@ impl<T> CrashPilot<T> {
         .map(|robot| robot.msg.clone())
         .collect(),
     }
-  }
-
-  /// Broadcast the latest state to all websocket clients (CP -> interface)
-  /// Note: if no clients are connected, send() returns an error; that's fine.
-  #[inline]
-  pub async fn websocket_sender(&self) {
-    let ws_packet = self.interface_packet();
-
-    self.ws_out.publish(ws_packet).await; // Publish the packet to the WebSocketOut channel
   }
 }
