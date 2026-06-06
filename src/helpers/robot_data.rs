@@ -10,7 +10,7 @@ use std::time::SystemTime;
 
 #[inline]
 pub fn create_robot_data(
-  mut robots: &mut HashMap<u32, RobotData>,
+  robots: &mut HashMap<u32, RobotData>,
   packet_id: u32,
   vis_tracked: &TrackerWrapperPacket,
   vis_raw: &SslWrapperPacket,

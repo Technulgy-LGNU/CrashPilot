@@ -1,17 +1,15 @@
 #[cfg(feature = "loki")]
 use crate::communication::loki::LokiPublisher;
-use crate::communication::robot_sender::{NetworkSender, RobotSender};
 #[cfg(feature = "prometheus")]
 use crate::metrics::PrometheusMetrics;
-use crate::{communication, config};
+use crate::config;
 use core_dump::proto::{
-  CpInterfaceWrapper, CpRobot, InterfaceCommandCp, Referee, RobotCp, SslGeometryData,
+  CpRobot, InterfaceCommandCp, Referee, RobotCp, SslGeometryData,
   SslWrapperPacket, TrackerWrapperPacket,
 };
-use prost::Message;
-use std::collections::HashMap;
-use std::io::ErrorKind;
+use std::io::{ErrorKind};
 
+#[derive(Debug, Clone)]
 pub struct RobotData {
   pub msg: CpRobot,
   pub feedback: RobotCp,
@@ -92,71 +90,4 @@ pub async fn spawn_robot_socket(cfg: &config::Config) -> tokio::net::UdpSocket {
   }
 }
 
-/// Sends the latest data to all robots
-#[inline]
-pub async fn robot_sender(
-  cfg: &config::Config,
-  robot_socket: &tokio::net::UdpSocket,
-  robots: &HashMap<u32, RobotData>,
-  #[cfg(feature = "prometheus")] metrics: &PrometheusMetrics,
-  #[cfg(feature = "loki")] loki: Option<&LokiPublisher>,
-) {
-  let network_sender: NetworkSender = NetworkSender {
-    socket: robot_socket,
-    data: robots,
-    #[cfg(feature = "loki")]
-    loki,
-  };
-  let send_report = network_sender.send_to_all_robots(cfg).await;
-  if !send_report.failed.is_empty() {
-    eprintln!(
-      "Robot send: {} ok, {} failed",
-      send_report.sent,
-      send_report.failed.len()
-    );
-    for failure in &send_report.failed {
-      eprintln!("  robot {}: {:#}", failure.robot_id, failure.error);
-    }
-  }
 
-  #[cfg(feature = "prometheus")]
-  let failed_robot_ids: HashSet<u32> = send_report
-    .failed
-    .iter()
-    .map(|failure| failure.robot_id)
-    .collect();
-  #[cfg(feature = "prometheus")]
-  for robot_id in robots.keys().copied() {
-    metrics
-      .record_send_result(robot_id, !failed_robot_ids.contains(&robot_id))
-      .await;
-  }
-}
-
-/// Broadcast the latest state to all websocket clients (CP -> interface)
-/// Note: if no clients are connected, send() returns an error; that's fine.
-#[inline]
-pub async fn websocket_sender(
-  vis_raw: &SslWrapperPacket,
-  vis_tracked: &TrackerWrapperPacket,
-  referee: &Referee,
-  robots: &HashMap<u32, RobotData>,
-  ws_out: &communication::WebsocketOut,
-) {
-  let ws_packet = CpInterfaceWrapper {
-    vision_raw: Some(vis_raw.clone()),
-    vision_tracked: Some(vis_tracked.clone()),
-    gc_data: if referee.packet_timestamp != 0 {
-      Some(referee.clone())
-    } else {
-      None
-    },
-    robot_commands: robots.values().map(|robot| robot.msg.clone()).collect(),
-  };
-  let mut buf = Vec::with_capacity(ws_packet.encoded_len());
-  if let Err(e) = ws_packet.encode(&mut buf) {
-    eprintln!("Failed to encode websocket packet: {}", e);
-  } else {
-    ws_out.publish(buf.into()).await;
-  }
-}

@@ -1,5 +1,4 @@
-use crate::communication::EventShare;
-use core_dump::proto::{InterfaceWrapperCp, Referee, RobotCp, SslWrapperPacket, TrackerWrapperPacket};
+use crate::communication::{EventShare, Events};
 use prost::Message;
 use tokio::net::UdpSocket;
 use tokio::sync::MutexGuard;
@@ -7,13 +6,7 @@ use tokio::sync::MutexGuard;
 pub(crate) fn spawn_udp_listener<T>(
   socket: UdpSocket,
   tx: EventShare,
-  wrap: fn(T, MutexGuard<(
-      Option<SslWrapperPacket>,
-      Option<TrackerWrapperPacket>,
-      Option<InterfaceWrapperCp>,
-      Option<Referee>,
-      Option<RobotCp>,
-    )>,),
+  wrap: fn(T, MutexGuard<Events>),
 ) where
   T: Message + Default + Send + 'static,
 {

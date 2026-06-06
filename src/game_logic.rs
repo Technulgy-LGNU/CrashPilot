@@ -24,10 +24,10 @@ use std::collections::HashMap;
 /// has an easier time to understand them and apply them
 #[inline]
 pub fn game_logic(
-  cfg: &config::Config,
-  robot_data: &mut HashMap<u32, RobotData>,
-  state: &mut WorldState,
-  robots_ws_data: &HashMap<u32, CpCommand>,
+  _cfg: &config::Config,
+  _robot_data: &mut HashMap<u32, RobotData>,
+  _state: &mut WorldState,
+  _robots_ws_data: &HashMap<u32, CpCommand>,
 ) {
   // Check, which mode is enabled:
   //  - Manual: Use the interface commands to control the robots

@@ -2,8 +2,8 @@
 use crate::communication::loki::spawn_loki_publisher;
 #[cfg(feature = "loki")]
 use crate::communication::loki::LokiPublisher;
-use crate::communication::robot_sender::RobotSender;
-use crate::communication::{communication_receiver, EventShare, WebsocketOut};
+use crate::communication::robot_sender::{NetworkSender, RobotSender};
+use crate::communication::{communication_receiver, EventShare, Events, WebsocketOut};
 use crate::config::Config;
 use crate::game_logic::game_logic;
 use crate::game_logic::types::{BallData, Robot, WorldState};
@@ -11,11 +11,9 @@ use crate::helpers::robot_data::create_robot_data;
 #[cfg(feature = "prometheus")]
 use crate::metrics::PrometheusMetrics;
 use crate::utils::{
-  robot_sender, spawn_robot_socket, websocket_sender, FieldSetup, PacketBuffer, RobotData,
+  spawn_robot_socket, FieldSetup, PacketBuffer, RobotData,
 };
-use core_dump::proto::{
-  CpCommand, CpRobot, InterfaceWrapperCp, Referee, RobotCp, SslWrapperPacket, TrackerWrapperPacket,
-};
+use core_dump::proto::{CpCommand, CpInterfaceWrapper, CpRobot};
 use std::collections::HashMap;
 #[cfg(feature = "interface")]
 use std::fs;
@@ -139,15 +137,8 @@ impl CrashPilot {
     }
   }
 
-  pub fn interpret(
-    &mut self,
-    raw: Option<SslWrapperPacket>,
-    tracked: Option<TrackerWrapperPacket>,
-    ws: Option<InterfaceWrapperCp>,
-    gc: Option<Referee>,
-    rf: Option<RobotCp>,
-  ) {
-    if let Some(packet) = raw {
+  pub fn interpret(&mut self, events: Events) {
+    if let Some(packet) = events.raw {
       self.packet_buffer.vis_raw = packet;
 
       // Create the FieldSetup Var
@@ -156,11 +147,11 @@ impl CrashPilot {
       }
     }
 
-    if let Some(packet) = tracked {
+    if let Some(packet) = events.tracked {
       self.packet_buffer.vis_tracked = packet;
     }
 
-    if let Some(packet) = ws {
+    if let Some(packet) = events.ws {
       println!("{:?}", packet);
       for robot_command in packet.robot_commands {
         self
@@ -182,11 +173,11 @@ impl CrashPilot {
       }
     }
 
-    if let Some(packet) = gc {
+    if let Some(packet) = events.gc {
       self.packet_buffer.referee = packet;
     }
 
-    if let Some(packet) = rf {
+    if let Some(packet) = events.rf {
       if let Some((_, data)) = self
         .robots
         .iter_mut()
@@ -200,15 +191,9 @@ impl CrashPilot {
   pub async fn recv(&mut self) {
     // Drain the *latest* events from the shared state. We handle all types each tick,
     // not just one, so state stays fresh.
-    let (raw, tracked, ws, gc, rf) = {
+    let events = {
       let mut lock = self.rx.lock().await;
-      (
-        lock.0.take(),
-        lock.1.take(),
-        lock.2.take(),
-        lock.3.take(),
-        lock.4.take(),
-      )
+      lock.take()
     };
 
 
@@ -224,7 +209,7 @@ impl CrashPilot {
 
 
 
-    self.interpret(raw, tracked, ws, gc, rf);
+    self.interpret(events);
 
   }
 
@@ -267,26 +252,10 @@ impl CrashPilot {
 
   pub async fn send(&mut self) {
     // Send the data to the robots
-    robot_sender(
-      &self.config,
-      &self.robot_socket,
-      &self.robots,
-      #[cfg(feature = "prometheus")]
-      &self.metrics,
-      #[cfg(feature = "loki")]
-      self.loki.as_ref(),
-    )
-        .await;
+    self.robot_sender().await;
 
     // Websocket sender
-    websocket_sender(
-      &self.packet_buffer.vis_raw,
-      &self.packet_buffer.vis_tracked,
-      &self.packet_buffer.referee,
-      &self.robots,
-      &self.ws_out,
-    )
-        .await;
+    self.websocket_sender().await;
 
     // So the next packet has a higher id
     self.packet_buffer.packet_id += 1;
@@ -305,13 +274,80 @@ impl CrashPilot {
     loop {
       tick.tick().await;
 
-      self.tick().await;
+      self.step().await;
     }
   }
 
-  pub async fn tick(&mut self) {
+  pub async fn step(&mut self) {
     self.recv().await;
     self.update();
     self.send().await;
+  }
+
+  pub fn step_with_data(&mut self, events: Events) -> (CpInterfaceWrapper, HashMap<u32, RobotData>) {
+    self.interpret(events);
+    self.update();
+
+    let robot_data = self.robots.clone();
+
+    (self.interface_packet(), robot_data)
+  }
+
+  pub fn interface_packet(&self) -> CpInterfaceWrapper {
+    CpInterfaceWrapper {
+      vision_raw: Some(self.packet_buffer.vis_raw.clone()),
+      vision_tracked: Some(self.packet_buffer.vis_tracked.clone()),
+      gc_data: if self.packet_buffer.referee.packet_timestamp != 0 {
+        Some(self.packet_buffer.referee.clone())
+      } else {
+        None
+      },
+      robot_commands: self.robots.values().map(|robot| robot.msg.clone()).collect(),
+    }
+  }
+
+  /// Broadcast the latest state to all websocket clients (CP -> interface)
+  /// Note: if no clients are connected, send() returns an error; that's fine.
+  #[inline]
+  pub async fn websocket_sender(&self) {
+    let ws_packet = self.interface_packet();
+
+    self.ws_out.publish(ws_packet).await; // Publish the packet to the WebSocketOut channel
+  }
+
+
+  /// Sends the latest data to all robots
+  #[inline]
+  pub async fn robot_sender(&self) {
+    let network_sender: NetworkSender = NetworkSender {
+      socket: &self.robot_socket,
+      data: &self.robots,
+      #[cfg(feature = "loki")]
+      loki,
+    };
+    let send_report = network_sender.send_to_all_robots(&self.config).await;
+    if !send_report.failed.is_empty() {
+      eprintln!(
+        "Robot send: {} ok, {} failed",
+        send_report.sent,
+        send_report.failed.len()
+      );
+      for failure in &send_report.failed {
+        eprintln!("  robot {}: {:#}", failure.robot_id, failure.error);
+      }
+    }
+
+    #[cfg(feature = "prometheus")]
+    let failed_robot_ids: HashSet<u32> = send_report
+        .failed
+        .iter()
+        .map(|failure| failure.robot_id)
+        .collect();
+    #[cfg(feature = "prometheus")]
+    for robot_id in robots.keys().copied() {
+      metrics
+          .record_send_result(robot_id, !failed_robot_ids.contains(&robot_id))
+          .await;
+    }
   }
 }

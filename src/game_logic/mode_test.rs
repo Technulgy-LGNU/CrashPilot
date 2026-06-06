@@ -4,8 +4,8 @@ use std::collections::HashMap;
 
 #[inline]
 pub fn mode_test(
-  mut robot_data: HashMap<u32, RobotData>,
-  state: &mut WorldState,
+  robot_data: HashMap<u32, RobotData>,
+  _state: &mut WorldState,
 ) -> HashMap<u32, RobotData> {
   robot_data
 }

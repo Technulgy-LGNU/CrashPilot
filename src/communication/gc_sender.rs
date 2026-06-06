@@ -3,6 +3,6 @@ pub enum GCTask {
   Goalie,
 }
 
-pub fn gc_sender(robot_id: u16, task: GCTask) -> anyhow::Result<()> {
+pub fn gc_sender(_robot_id: u16, _task: GCTask) -> anyhow::Result<()> {
   Ok(())
 }
