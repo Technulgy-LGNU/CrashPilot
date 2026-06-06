@@ -23,7 +23,7 @@ use std::collections::HashMap;
 /// Also translates AI commands to robot commands (AI commands are more specific, so the AI
 /// has an easier time to understand them and apply them
 #[inline]
-pub async fn game_logic(
+pub fn game_logic(
   cfg: &config::Config,
   robot_data: &mut HashMap<u32, RobotData>,
   state: &mut WorldState,

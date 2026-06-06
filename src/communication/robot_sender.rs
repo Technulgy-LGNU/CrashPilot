@@ -48,6 +48,7 @@ impl RobotSender for NetworkSender<'_> {
     let mut report = SendReport::default();
     let mut buf = Vec::new();
 
+
     for (&robot_id, robot_data) in self.data.iter() {
       // Keep the buffer re-used but always reset before encoding.
       buf.clear();
@@ -98,6 +99,7 @@ impl RobotSender for NetworkSender<'_> {
       };
 
       let addr = SocketAddr::V4(SocketAddrV4::new(robot_cfg.ip, cfg.server.robots_port));
+
       match self.socket.send_to(&buf, addr).await {
         Ok(bytes_sent) if bytes_sent == buf.len() => {
           report.sent += 1;

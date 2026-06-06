@@ -139,7 +139,7 @@ impl CrashPilot {
     }
   }
 
-  pub async fn interpret(
+  pub fn interpret(
     &mut self,
     raw: Option<SslWrapperPacket>,
     tracked: Option<TrackerWrapperPacket>,
@@ -157,9 +157,6 @@ impl CrashPilot {
     }
 
     if let Some(packet) = tracked {
-      #[cfg(feature = "prometheus")]
-      self.metrics.record_tracked_frame(&packet).await;
-
       self.packet_buffer.vis_tracked = packet;
     }
 
@@ -197,9 +194,6 @@ impl CrashPilot {
       {
         data.feedback = packet;
       }
-
-      #[cfg(feature = "prometheus")]
-      self.metrics.record_robot_feedback(packet).await;
     }
   }
 
@@ -217,10 +211,24 @@ impl CrashPilot {
       )
     };
 
-    self.interpret(raw, tracked, ws, gc, rf).await;
+
+    #[cfg(feature = "prometheus")]
+    if let Some(packet) = tracked.as_ref() {
+      self.metrics.record_tracked_frame(&packet).await;
+    }
+
+    #[cfg(feature = "prometheus")]
+    if let Some(packet) = rf.as_ref() {
+      self.metrics.record_robot_feedback(packet).await;
+    }
+
+
+
+    self.interpret(raw, tracked, ws, gc, rf);
+
   }
 
-  pub async fn update(&mut self) {
+  pub fn update(&mut self) {
     // Create state
     let ball_data = BallData::new(&self.packet_buffer.vis_tracked);
 
@@ -255,8 +263,9 @@ impl CrashPilot {
       &mut self.state,
       &self.robots_ws_data,
     )
-    .await;
+  }
 
+  pub async fn send(&mut self) {
     // Send the data to the robots
     robot_sender(
       &self.config,
@@ -267,7 +276,7 @@ impl CrashPilot {
       #[cfg(feature = "loki")]
       self.loki.as_ref(),
     )
-    .await;
+        .await;
 
     // Websocket sender
     websocket_sender(
@@ -277,10 +286,11 @@ impl CrashPilot {
       &self.robots,
       &self.ws_out,
     )
-    .await;
+        .await;
 
     // So the next packet has a higher id
     self.packet_buffer.packet_id += 1;
+
   }
 
   pub async fn run(&mut self) {
@@ -301,6 +311,7 @@ impl CrashPilot {
 
   pub async fn tick(&mut self) {
     self.recv().await;
-    self.update().await;
+    self.update();
+    self.send().await;
   }
 }
