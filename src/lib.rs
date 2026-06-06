@@ -10,9 +10,7 @@ use crate::game_logic::types::{BallData, Robot, WorldState};
 use crate::helpers::robot_data::create_robot_data;
 #[cfg(feature = "prometheus")]
 use crate::metrics::PrometheusMetrics;
-use crate::utils::{
-  spawn_robot_socket, FieldSetup, PacketBuffer, RobotData,
-};
+use crate::utils::{spawn_robot_socket, FieldSetup, PacketBuffer, RobotData};
 use core_dump::proto::{CpCommand, CpInterfaceWrapper, CpRobot};
 use std::collections::HashMap;
 #[cfg(feature = "interface")]
@@ -33,13 +31,13 @@ mod interface;
 mod metrics;
 mod utils;
 
-pub struct CrashPilot {
+pub struct CrashPilot<T = UdpSocket> {
   config: Config,
   #[cfg(feature = "prometheus")]
   metrics: PrometheusMetrics,
   #[cfg(feature = "loki")]
   loki: Option<LokiPublisher>,
-  robot_socket: UdpSocket,
+  robot_socket: T,
   robots: HashMap<u32, RobotData>,
   robots_ws_data: HashMap<u32, CpCommand>,
   rx: EventShare,
@@ -137,6 +135,76 @@ impl CrashPilot {
     }
   }
 
+  /// Sends the latest data to all robots
+  #[inline]
+  pub async fn robot_sender(&self) {
+    let network_sender: NetworkSender = NetworkSender {
+      socket: &self.robot_socket,
+      data: &self.robots,
+      #[cfg(feature = "loki")]
+      loki,
+    };
+    let send_report = network_sender.send_to_all_robots(&self.config).await;
+    if !send_report.failed.is_empty() {
+      eprintln!(
+        "Robot send: {} ok, {} failed",
+        send_report.sent,
+        send_report.failed.len()
+      );
+      for failure in &send_report.failed {
+        eprintln!("  robot {}: {:#}", failure.robot_id, failure.error);
+      }
+    }
+    #[cfg(feature = "prometheus")]
+    let failed_robot_ids: HashSet<u32> = send_report
+      .failed
+      .iter()
+      .map(|failure| failure.robot_id)
+      .collect();
+    #[cfg(feature = "prometheus")]
+    for robot_id in robots.keys().copied() {
+      metrics
+        .record_send_result(robot_id, !failed_robot_ids.contains(&robot_id))
+        .await;
+    }
+  }
+
+  pub async fn send(&mut self) {
+    // Send the data to the robots
+    self.robot_sender().await;
+
+    // Websocket sender
+    self.websocket_sender().await;
+
+    // So the next packet has a higher id
+    self.packet_buffer.packet_id += 1;
+  }
+
+  pub async fn step(&mut self) {
+    self.recv().await;
+    self.update();
+    self.send().await;
+  }
+
+
+  pub async fn run(&mut self) {
+    println!("Starting robots...");
+
+    // Sending should not depend on receiving new packets: when vision/GC packets pause,
+    // we still want to keep sending the latest known command/state to the robots.
+    // Also, waiting on an interval prevents busy-spinning on `rx.lock()`.
+    let mut tick = interval(Duration::from_millis(2)); // ~500 Hz
+    tick.set_missed_tick_behavior(MissedTickBehavior::Skip);
+
+    loop {
+      tick.tick().await;
+
+      self.step().await;
+    }
+  }
+}
+
+impl<T> CrashPilot<T> {
   pub fn interpret(&mut self, events: Events) {
     if let Some(packet) = events.raw {
       self.packet_buffer.vis_raw = packet;
@@ -196,7 +264,6 @@ impl CrashPilot {
       lock.take()
     };
 
-
     #[cfg(feature = "prometheus")]
     if let Some(packet) = tracked.as_ref() {
       self.metrics.record_tracked_frame(&packet).await;
@@ -207,10 +274,7 @@ impl CrashPilot {
       self.metrics.record_robot_feedback(packet).await;
     }
 
-
-
     self.interpret(events);
-
   }
 
   pub fn update(&mut self) {
@@ -250,41 +314,12 @@ impl CrashPilot {
     )
   }
 
-  pub async fn send(&mut self) {
-    // Send the data to the robots
-    self.robot_sender().await;
 
-    // Websocket sender
-    self.websocket_sender().await;
 
-    // So the next packet has a higher id
-    self.packet_buffer.packet_id += 1;
-
-  }
-
-  pub async fn run(&mut self) {
-    println!("Starting robots...");
-
-    // Sending should not depend on receiving new packets: when vision/GC packets pause,
-    // we still want to keep sending the latest known command/state to the robots.
-    // Also, waiting on an interval prevents busy-spinning on `rx.lock()`.
-    let mut tick = interval(Duration::from_millis(2)); // ~500 Hz
-    tick.set_missed_tick_behavior(MissedTickBehavior::Skip);
-
-    loop {
-      tick.tick().await;
-
-      self.step().await;
-    }
-  }
-
-  pub async fn step(&mut self) {
-    self.recv().await;
-    self.update();
-    self.send().await;
-  }
-
-  pub fn step_with_data(&mut self, events: Events) -> (CpInterfaceWrapper, HashMap<u32, RobotData>) {
+  pub fn step_with_data(
+    &mut self,
+    events: Events,
+  ) -> (CpInterfaceWrapper, HashMap<u32, RobotData>) {
     self.interpret(events);
     self.update();
 
@@ -302,7 +337,11 @@ impl CrashPilot {
       } else {
         None
       },
-      robot_commands: self.robots.values().map(|robot| robot.msg.clone()).collect(),
+      robot_commands: self
+        .robots
+        .values()
+        .map(|robot| robot.msg.clone())
+        .collect(),
     }
   }
 
@@ -313,41 +352,5 @@ impl CrashPilot {
     let ws_packet = self.interface_packet();
 
     self.ws_out.publish(ws_packet).await; // Publish the packet to the WebSocketOut channel
-  }
-
-
-  /// Sends the latest data to all robots
-  #[inline]
-  pub async fn robot_sender(&self) {
-    let network_sender: NetworkSender = NetworkSender {
-      socket: &self.robot_socket,
-      data: &self.robots,
-      #[cfg(feature = "loki")]
-      loki,
-    };
-    let send_report = network_sender.send_to_all_robots(&self.config).await;
-    if !send_report.failed.is_empty() {
-      eprintln!(
-        "Robot send: {} ok, {} failed",
-        send_report.sent,
-        send_report.failed.len()
-      );
-      for failure in &send_report.failed {
-        eprintln!("  robot {}: {:#}", failure.robot_id, failure.error);
-      }
-    }
-
-    #[cfg(feature = "prometheus")]
-    let failed_robot_ids: HashSet<u32> = send_report
-        .failed
-        .iter()
-        .map(|failure| failure.robot_id)
-        .collect();
-    #[cfg(feature = "prometheus")]
-    for robot_id in robots.keys().copied() {
-      metrics
-          .record_send_result(robot_id, !failed_robot_ids.contains(&robot_id))
-          .await;
-    }
   }
 }
