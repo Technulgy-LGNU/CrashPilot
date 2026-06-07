@@ -1,9 +1,11 @@
+use std::fs;
+use std::process::Command;
+use std::os::unix::fs::PermissionsExt;
+
 // Embed frontend (crashpilot-interface) binary
-#[cfg(feature = "interface")]
 static GO_BINARY: &[u8] = include_bytes!("../crashpilot-interface");
 
 /// Starts the Crashpilot interface, has to be in the repository as a compiled binary
-#[cfg(feature = "interface")]
 pub fn spawn_interface() {
   tokio::spawn(async move {
     let path = "./crashpilot-interface";

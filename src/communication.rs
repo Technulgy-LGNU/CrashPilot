@@ -22,7 +22,7 @@ use tokio::sync::Notify;
 
 
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct Events {
   pub raw: Option<SslWrapperPacket>,
   pub tracked: Option<TrackerWrapperPacket>,
@@ -90,6 +90,16 @@ impl WebsocketOut {
     drop(lock);
     self.notify.notify_waiters();
   }
+
+  /// Publish a new binary payload.
+  pub fn publish_sync(&self, payload: CpInterfaceWrapper) {
+    let mut lock = self.state.blocking_lock();
+    lock.seq = lock.seq.wrapping_add(1);
+    lock.payload = Some(payload);
+    drop(lock);
+    self.notify.notify_waiters();
+  }
+  
 
   /// Wait until a payload newer than `last_seq` is available and return it.
   ///

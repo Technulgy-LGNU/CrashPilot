@@ -25,10 +25,14 @@ use std::collections::HashMap;
 #[inline]
 pub fn game_logic(
   _cfg: &config::Config,
-  _robot_data: &mut HashMap<u32, RobotData>,
+  robot_data: &mut HashMap<u32, RobotData>,
   _state: &mut WorldState,
-  _robots_ws_data: &HashMap<u32, CpCommand>,
+  robots_ws_data: &HashMap<u32, CpCommand>,
 ) {
+
+
+  mode_manual::mode_manual(robot_data, robots_ws_data, false, 0);
+
   // Check, which mode is enabled:
   //  - Manual: Use the interface commands to control the robots
   //  - Game: Use the AI and hardcoded game logic

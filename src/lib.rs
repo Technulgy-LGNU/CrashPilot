@@ -3,14 +3,15 @@ use crate::communication::loki::spawn_loki_publisher;
 #[cfg(feature = "loki")]
 use crate::communication::loki::LokiPublisher;
 use crate::communication::robot_sender::{NetworkSender, RobotSender};
-use crate::communication::{communication_receiver, EventShare, Events, WebsocketOut};
-use crate::config::Config;
+use crate::communication::{communication_receiver, EventShare, WebsocketOut};
+pub use crate::communication::Events;
+pub use crate::config::Config;
 use crate::game_logic::game_logic;
 use crate::game_logic::types::{BallData, Robot, WorldState};
 use crate::helpers::robot_data::create_robot_data;
 #[cfg(feature = "prometheus")]
 use crate::metrics::PrometheusMetrics;
-use crate::utils::{spawn_robot_socket, FieldSetup, PacketBuffer, RobotData};
+use crate::utils::{spawn_robot_socket, FieldSetup, PacketBuffer};
 use core_dump::proto::{CpCommand, CpInterfaceWrapper, CpRobot};
 use std::collections::HashMap;
 #[cfg(feature = "interface")]
@@ -22,14 +23,20 @@ use std::process::Command;
 use tokio::net::UdpSocket;
 use tokio::time::{interval, Duration, MissedTickBehavior};
 
-mod communication;
-mod config;
+pub use crate::utils::RobotData;
+
+pub mod communication;
+pub mod config;
 mod game_logic;
 mod helpers;
-mod interface;
+
+#[cfg(feature = "interface")]
+pub mod interface;
 #[cfg(feature = "prometheus")]
 mod metrics;
 mod utils;
+
+pub use core_dump;
 
 pub struct CrashPilot<C = CommunicationChannels> {
   config: Config,
@@ -90,7 +97,7 @@ impl CrashPilot {
       ws_out,
     };
 
-    Self::new(
+    Self::from_parts(
       config,
       comm,
       #[cfg(feature = "loki")]
@@ -198,8 +205,25 @@ impl CrashPilot {
   }
 }
 
-impl<C> CrashPilot<C> {
+impl<C: Default> CrashPilot<C> {
   pub fn new(
+    config: Config,
+    #[cfg(feature = "loki")] loki: Option<LokiPublisher>,
+    #[cfg(feature = "prometheus")] metrics: PrometheusMetrics,
+  ) -> Self {
+    Self::from_parts(
+      config,
+      C::default(),
+      #[cfg(feature = "loki")]
+      loki,
+      #[cfg(feature = "prometheus")]
+      metrics,
+    )
+  }
+}
+
+impl<C> CrashPilot<C> {
+  pub fn from_parts(
     config: Config,
     comm: C,
     #[cfg(feature = "loki")] loki: Option<LokiPublisher>,
