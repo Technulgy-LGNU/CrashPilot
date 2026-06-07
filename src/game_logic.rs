@@ -8,8 +8,11 @@ pub mod types;
 
 use crate::game_logic::types::WorldState;
 use crate::{RobotData, config};
-use core_dump::proto::CpCommand;
+use core_dump::proto::{CpCommand, CpMode};
 use std::collections::HashMap;
+use crate::game_logic::mode_game::mode_game;
+use crate::game_logic::mode_manual::mode_manual;
+use crate::game_logic::mode_test::mode_test;
 
 /// Main Game Logic
 /// Checks the game for:
@@ -33,6 +36,17 @@ pub async fn game_logic(
   //  - Manual: Use the interface commands to control the robots
   //  - Game: Use the AI and hardcoded game logic
   //  - Test: Run the tests
+  match CpMode::try_from(state.iface_cmd.mode).unwrap_or(CpMode::ModeManual) {
+    CpMode::ModeManual => {
+      robot_data = mode_manual(robot_data, robots_ws_data, state.iface_cmd.manual.gc_data, state.referee.command);
+    }
+    CpMode::ModeGame => {
+      robot_data = mode_game(robot_data, state);
+    }
+    CpMode::ModeTest => {
+      robot_data = mode_test(robot_data, state);
+    }
+  }
 
   robot_data
 }

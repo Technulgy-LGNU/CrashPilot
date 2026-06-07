@@ -4,10 +4,7 @@ use crate::communication::loki::spawn_loki_publisher;
 use crate::communication::robot_sender::{NetworkSender, RobotSender};
 use crate::helpers::robot_data::create_robot_data;
 use crate::metrics::PrometheusMetrics;
-use core_dump::proto::{
-  CpCommand, CpInterfaceWrapper, CpRobot, InterfaceCommandCp, Referee, RobotCp, SslWrapperPacket,
-  TrackerWrapperPacket,
-};
+use core_dump::proto::{CpCommand, CpInterfaceWrapper, CpRobot, InterfaceCommandCp, Referee, RobotCp, SslWrapperPacket, TrackedFrame, TrackerWrapperPacket};
 use prost::Message;
 use std::collections::{HashMap, HashSet};
 #[cfg(feature = "interface")]
@@ -17,6 +14,7 @@ use std::io::ErrorKind;
 use std::os::unix::fs::PermissionsExt;
 #[cfg(feature = "interface")]
 use std::process::Command;
+use std::time::{Instant, SystemTime};
 use tokio::time::{Duration, MissedTickBehavior, interval};
 use crate::game_logic::game_logic;
 use crate::game_logic::types::{BallData, Robot, WorldState};
@@ -62,6 +60,7 @@ impl Default for FieldSetup {
 async fn main() {
   #[cfg(feature = "interface")]
   spawn_interface();
+
   // Get config
   let config = match config::load_or_create_config("config.toml") {
     Ok(config) => config,
@@ -172,6 +171,24 @@ async fn main() {
     if let Some(packet) = tracked {
       metrics.record_tracked_frame(&packet).await;
       vis_tracked = packet;
+
+      match &vis_tracked.tracked_frame {
+        None => {
+        }
+        Some(frame) => {
+          let target = SystemTime::UNIX_EPOCH + Duration::from_secs_f64(frame.timestamp);
+          let now = SystemTime::now();
+
+          match now.duration_since(target) {
+            Ok(delay) => {
+              println!("Delay: {:?}", delay);
+            }
+            Err(_) => {
+              println!("Timestamp is in the past");
+            }
+          }
+        }
+      }
     }
     if let Some(packet) = ws {
       println!("{:?}", packet);
@@ -215,7 +232,7 @@ async fn main() {
     // Create state
     let ball_data = BallData::new(&vis_tracked);
     state = state.update(Robot::new_from_tracked(&vis_tracked, &ball_data.ball, team, site as f32, &field_setup), ball_data, referee.clone(), interface_command.clone());
-    
+
     robots = create_robot_data(
       robots,
       packet_id,
