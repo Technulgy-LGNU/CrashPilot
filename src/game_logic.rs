@@ -6,9 +6,12 @@ mod mode_manual;
 mod mode_test;
 pub mod types;
 
+use crate::game_logic::mode_game::mode_game;
+use crate::game_logic::mode_manual::mode_manual;
+use crate::game_logic::mode_test::mode_test;
 use crate::game_logic::types::WorldState;
 use crate::{RobotData, config};
-use core_dump::proto::CpCommand;
+use core_dump::proto::{CpCommand, CpMode};
 use std::collections::HashMap;
 
 /// Main Game Logic
@@ -26,15 +29,27 @@ use std::collections::HashMap;
 pub fn game_logic(
   _cfg: &config::Config,
   robot_data: &mut HashMap<u32, RobotData>,
-  _state: &mut WorldState,
+  state: &mut WorldState,
   robots_ws_data: &HashMap<u32, CpCommand>,
 ) {
-
-
-  mode_manual::mode_manual(robot_data, robots_ws_data, false, 0);
-
   // Check, which mode is enabled:
   //  - Manual: Use the interface commands to control the robots
   //  - Game: Use the AI and hardcoded game logic
   //  - Test: Run the tests
+  match CpMode::try_from(state.iface_cmd.mode).unwrap_or(CpMode::ModeManual) {
+    CpMode::ModeManual => {
+      mode_manual(
+        robot_data,
+        robots_ws_data,
+        state.iface_cmd.manual.gc_data,
+        state.referee.command,
+      );
+    }
+    CpMode::ModeGame => {
+      mode_game(robot_data, state);
+    }
+    CpMode::ModeTest => {
+      mode_test(robot_data, state);
+    }
+  }
 }

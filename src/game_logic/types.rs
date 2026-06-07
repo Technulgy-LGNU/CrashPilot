@@ -235,8 +235,7 @@ impl Robot {
       }
 
       // Create the actual individual robot data
-      robots.insert(
-        robot.robot_id.id.unwrap_or_default() as usize,
+      robots.push(
         Robot {
           robot_id: robot.robot_id.id.unwrap_or_default() as u8,
           team: robot.robot_id.team.unwrap_or_default() as u8,
