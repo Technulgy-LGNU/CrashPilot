@@ -1,6 +1,6 @@
 use crate::RobotData;
 #[cfg(feature = "loki")]
-use crate::communication::loki::LokiPublisher;
+pub(crate) use crate::communication::loki::LokiPublisher;
 use crate::config::Config;
 use anyhow::{Error, anyhow};
 use prost::Message;
@@ -12,7 +12,7 @@ pub struct NetworkSender<'a> {
   pub(crate) socket: &'a UdpSocket,
   pub(crate) data: &'a HashMap<u32, RobotData>,
   #[cfg(feature = "loki")]
-  pub(crate) loki: Option<LokiPublisher>,
+  pub(crate) loki: Option<&'a LokiPublisher>,
 }
 
 #[derive(Debug, Default)]
@@ -47,6 +47,7 @@ impl RobotSender for NetworkSender<'_> {
   async fn send_to_all_robots(&self, cfg: &Config) -> SendReport {
     let mut report = SendReport::default();
     let mut buf = Vec::new();
+
 
     for (&robot_id, robot_data) in self.data.iter() {
       // Keep the buffer re-used but always reset before encoding.
@@ -98,6 +99,7 @@ impl RobotSender for NetworkSender<'_> {
       };
 
       let addr = SocketAddr::V4(SocketAddrV4::new(robot_cfg.ip, cfg.server.robots_port));
+
       match self.socket.send_to(&buf, addr).await {
         Ok(bytes_sent) if bytes_sent == buf.len() => {
           report.sent += 1;

@@ -10,12 +10,12 @@ use std::time::SystemTime;
 
 #[inline]
 pub fn create_robot_data(
-  mut robots: HashMap<u32, RobotData>,
+  robots: &mut HashMap<u32, RobotData>,
   packet_id: u32,
   vis_tracked: &TrackerWrapperPacket,
   vis_raw: &SslWrapperPacket,
   interface_command: &InterfaceCommandCp,
-) -> HashMap<u32, RobotData> {
+) {
   // Create data for each robot
   for robot in robots.values_mut() {
     // Basic data
@@ -79,6 +79,4 @@ pub fn create_robot_data(
       }
     };
   }
-
-  robots
 }

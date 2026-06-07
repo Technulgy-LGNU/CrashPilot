@@ -1,6 +1,6 @@
-use crate::communication::EventShare;
+use crate::communication::{EventShare, Events};
 use crate::config;
-use core_dump::proto::{InterfaceWrapperCp, Referee, RobotCp, SslWrapperPacket, TrackerWrapperPacket};
+use core_dump::proto::RobotCp;
 use prost::Message;
 use tokio::sync::MutexGuard;
 
@@ -9,13 +9,7 @@ pub async fn robot_receiver(
   tx: EventShare,
   wrap: fn(
     RobotCp,
-    MutexGuard<(
-      Option<SslWrapperPacket>,
-      Option<TrackerWrapperPacket>,
-      Option<InterfaceWrapperCp>,
-      Option<Referee>,
-      Option<RobotCp>,
-    )>,
+    MutexGuard<Events>,
   ),
 ) {
   let addr = format!(

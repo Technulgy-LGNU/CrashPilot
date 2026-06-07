@@ -9,31 +9,58 @@ mod robot_receiver;
 pub mod robot_sender;
 mod ssl_communication;
 mod udp_listener;
+mod prometheus;
 
 use crate::communication::interface::spawn_websocket;
 use crate::communication::robot_receiver::robot_receiver;
 use crate::communication::ssl_communication::get_ssl_data;
 use crate::config;
-use core_dump::proto::{InterfaceWrapperCp, Referee, RobotCp, SslWrapperPacket, TrackerWrapperPacket};
-use prost::bytes::Bytes;
+use core_dump::proto::{CpInterfaceWrapper, InterfaceWrapperCp, Referee, RobotCp, SslWrapperPacket, TrackerWrapperPacket};
 use std::sync::Arc;
 use tokio::sync::Mutex;
 use tokio::sync::Notify;
 
-pub type EventShare = Arc<
-  Mutex<(
-    Option<SslWrapperPacket>,
-    Option<TrackerWrapperPacket>,
-    Option<InterfaceWrapperCp>,
-    Option<Referee>,
-    Option<RobotCp>,
-  )>,
->;
+
+
+#[derive(Debug, Clone)]
+pub struct Events {
+  pub raw: Option<SslWrapperPacket>,
+  pub tracked: Option<TrackerWrapperPacket>,
+  pub ws: Option<InterfaceWrapperCp>,
+  pub gc: Option<Referee>,
+  pub rf: Option<RobotCp>,
+}
+
+impl Events {
+  pub fn new() -> Self {
+    Self {
+      raw: None,
+      tracked: None,
+      ws: None,
+      gc: None,
+      rf: None,
+    }
+  }
+
+  pub fn take(&mut self) -> Self {
+    let events = Self {
+      raw: self.raw.take(),
+      tracked: self.tracked.take(),
+      ws: self.ws.take(),
+      gc: self.gc.take(),
+      rf: self.rf.take(),
+    };
+
+    events
+  }
+}
+
+pub type EventShare = Arc<Mutex<Events>>;
 
 #[derive(Default)]
 struct WsLatestState {
   seq: u64,
-  payload: Option<Bytes>,
+  payload: Option<CpInterfaceWrapper>,
 }
 
 /// Outbound WebSocket handle (CP -> interface).
@@ -56,7 +83,7 @@ impl WebsocketOut {
   }
 
   /// Publish a new binary payload.
-  pub async fn publish(&self, payload: Bytes) {
+  pub async fn publish(&self, payload: CpInterfaceWrapper) {
     let mut lock = self.state.lock().await;
     lock.seq = lock.seq.wrapping_add(1);
     lock.payload = Some(payload);
@@ -68,7 +95,7 @@ impl WebsocketOut {
   ///
   /// This is implemented in a race-free way (won't miss notifications): it creates the
   /// notification future *before* checking the current sequence.
-  pub async fn wait_latest_after(&self, last_seq: u64) -> (u64, Bytes) {
+  pub async fn wait_latest_after(&self, last_seq: u64) -> (u64, CpInterfaceWrapper) {
     loop {
       let notified = self.notify.notified();
 
@@ -97,7 +124,7 @@ pub struct CommunicationHandles {
 }
 
 pub async fn communication_receiver(cfg: &config::Config) -> anyhow::Result<CommunicationHandles> {
-  let events = Arc::new(Mutex::new((None, None, None, None, None)));
+  let events = Arc::new(Mutex::new(Events::new()));
   let ws_out = WebsocketOut::new();
 
   get_ssl_data(cfg, events.clone()).await;
@@ -105,7 +132,7 @@ pub async fn communication_receiver(cfg: &config::Config) -> anyhow::Result<Comm
   spawn_websocket(cfg, events.clone(), ws_out.clone()).await;
 
   robot_receiver(cfg, events.clone(), |event, mut lock| {
-    lock.4 = Some(event);
+    lock.rf = Some(event);
   })
   .await;
 

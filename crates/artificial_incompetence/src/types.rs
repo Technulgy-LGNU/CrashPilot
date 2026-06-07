@@ -49,6 +49,12 @@ enum RobotCommand {
 type Commands = [Option<RobotCommand>; 8];
 
 
-fn predict(state: &GameState, dt: f32) -> Commands {
-    todo!()
+struct ArtificialIncompetence {
+    // internal state, if needed
+}
+
+impl ArtificialIncompetence {
+    fn predict(&mut self, state: &GameState, dt: f32) -> Commands {
+        todo!()
+    }
 }

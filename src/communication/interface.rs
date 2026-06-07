@@ -4,6 +4,7 @@ use crate::config;
 use futures_util::{SinkExt, StreamExt};
 use prost::Message;
 use tokio::net::TcpListener;
+use tokio_tungstenite::tungstenite::Bytes;
 use core_dump::proto::InterfaceWrapperCp;
 
 pub async fn spawn_websocket(cfg: &config::Config, tx: EventShare, ws_out: WebsocketOut) {
@@ -52,8 +53,14 @@ pub async fn spawn_websocket(cfg: &config::Config, tx: EventShare, ws_out: Webso
           let (seq, payload) = ws_out.wait_latest_after(last_seq).await;
           last_seq = seq;
 
+          let mut buf = Vec::with_capacity(payload.encoded_len());
+          if let Err(e) = payload.encode(&mut buf) {
+            eprintln!("Protobuf encode error: {}", e);
+            continue;
+          }
+
           if let Err(e) = outgoing
-            .send(tokio_tungstenite::tungstenite::Message::Binary(payload))
+            .send(tokio_tungstenite::tungstenite::Message::Binary(Bytes::from(buf)))
             .await
           {
             eprintln!("WebSocket send error to {}: {}", peer_addr, e);
@@ -74,7 +81,7 @@ pub async fn spawn_websocket(cfg: &config::Config, tx: EventShare, ws_out: Webso
                 Ok(decoded) => {
                   let mut lock = tx.lock().await;
 
-                  lock.2 = Some(decoded);
+                  lock.ws = Some(decoded);
                 }
                 Err(e) => {
                   eprintln!("Protobuf decode error: {}", e);

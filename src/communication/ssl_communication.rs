@@ -13,7 +13,7 @@ pub async fn get_ssl_data(cfg: &Config, tx: EventShare) {
     };
 
   spawn_udp_listener::<SslWrapperPacket>(vis_raw_socket, tx.clone(), |event, mut lock| {
-    lock.0 = Some(event)
+    lock.raw = Some(event)
   });
 
   // Vision Tracked
@@ -29,7 +29,7 @@ pub async fn get_ssl_data(cfg: &Config, tx: EventShare) {
   };
 
   spawn_udp_listener::<TrackerWrapperPacket>(vis_tracked_socket, tx.clone(), |event, mut lock| {
-    lock.1 = Some(event);
+    lock.tracked = Some(event);
   });
 
   // Referee
@@ -39,7 +39,7 @@ pub async fn get_ssl_data(cfg: &Config, tx: EventShare) {
   };
 
   spawn_udp_listener::<Referee>(ref_socket, tx.clone(), |event, mut lock| {
-    lock.3 = Some(event);
+    lock.gc = Some(event);
   });
 
   // Drop extra sender on stream drop
