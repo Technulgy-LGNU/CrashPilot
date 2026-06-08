@@ -46,7 +46,14 @@ pub fn game_logic(
       );
     }
     CpMode::ModeGame => {
-      mode_game(robot_data, state);
+      // If you stop the game in the interface, stop every robot
+      if state.iface_cmd.game.running {
+        mode_game(robot_data, state);
+      } else {
+        for robot in robot_data {
+          robot.1.msg.cmd.state = 1;
+        }
+      }
     }
     CpMode::ModeTest => {
       mode_test(robot_data, state);

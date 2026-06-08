@@ -19,6 +19,9 @@ message CP_Robot {
 
   // The actual command
   required CP_Command cmd = 7;
+
+  // Info about the current game, including team, field setup etc
+  required CP_Infos infos = 8;
 }
 
 // The commands as enums and the fields are for stuff like drive to position and kick
@@ -77,4 +80,22 @@ enum CP_Task {
   STATE_KICKOFF = 9;
   // Free Kick, use the CP_Command::kick_orientation direction
   STATE_FREEKICK = 11;
+}
+
+message CP_Infos {
+  // false for yellow and true for blue
+  required bool team_color = 1;
+
+  // Our defensive site
+  // false for x+ and true for x-
+  required bool team_site = 2;
+
+  // General field info, used for orca
+  // Everything is in mm
+  required uint32 width = 3;
+  required uint32 height = 4;
+  required uint32 runoff_width = 5;
+  required uint32 penalty_area_width = 6;
+  required uint32 penalty_area_height = 7;
+  required uint32 goal_width = 8;
 }

@@ -1,27 +1,21 @@
-#[cfg(feature = "loki")]
-use crate::communication::loki::spawn_loki_publisher;
+pub use crate::communication::Events;
 #[cfg(feature = "loki")]
 use crate::communication::loki::LokiPublisher;
+#[cfg(feature = "loki")]
+use crate::communication::loki::spawn_loki_publisher;
 use crate::communication::robot_sender::{NetworkSender, RobotSender};
-use crate::communication::{communication_receiver, EventShare, WebsocketOut};
-pub use crate::communication::Events;
+use crate::communication::{EventShare, WebsocketOut, communication_receiver};
 pub use crate::config::Config;
 use crate::game_logic::game_logic;
 use crate::game_logic::types::{BallData, Robot, WorldState};
 use crate::helpers::robot_data::create_robot_data;
 #[cfg(feature = "prometheus")]
 use crate::metrics::PrometheusMetrics;
-use crate::utils::{spawn_robot_socket, FieldSetup, PacketBuffer};
+use crate::utils::{FieldSetup, PacketBuffer, spawn_robot_socket};
 use core_dump::proto::{CpCommand, CpInterfaceWrapper, CpRobot};
 use std::collections::HashMap;
-#[cfg(feature = "interface")]
-use std::fs;
-#[cfg(feature = "interface")]
-use std::os::unix::fs::PermissionsExt;
-#[cfg(feature = "interface")]
-use std::process::Command;
 use tokio::net::UdpSocket;
-use tokio::time::{interval, Duration, MissedTickBehavior};
+use tokio::time::{Duration, MissedTickBehavior, interval};
 
 pub use crate::utils::RobotData;
 
@@ -243,6 +237,7 @@ impl<C> CrashPilot<C> {
             robots_yellow: vec![],
             robots_blue: vec![],
             cmd: Default::default(),
+            infos: Default::default(),
           },
           feedback: Default::default(),
         },
@@ -356,6 +351,7 @@ impl<C> CrashPilot<C> {
       &self.packet_buffer.vis_tracked,
       &self.packet_buffer.vis_raw,
       &self.packet_buffer.interface_command,
+      &self.field_setup
     );
 
     // Actual game logic is going to happen here
