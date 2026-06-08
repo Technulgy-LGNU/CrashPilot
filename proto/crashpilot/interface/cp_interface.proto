@@ -48,6 +48,8 @@ message InterfaceManual_CP {
 }
 
 message InterfaceGame_CP {
+  // Start or Stop
+  required bool running = 1;
   // Set the side. false for x+, true for x-
   required bool side = 2;
   // Set the team color. False for Yellow, true for Blue

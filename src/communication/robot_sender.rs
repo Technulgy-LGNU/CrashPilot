@@ -162,6 +162,7 @@ mod tests {
           kick_speed: None,
           enemy_id: None,
         },
+        infos: Default::default(),
       },
       feedback: Default::default(),
     }

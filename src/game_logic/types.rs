@@ -1,8 +1,9 @@
+use std::cmp::PartialEq;
 use std::collections::HashMap;
 
 use crate::FieldSetup;
-use core_dump::proto::{InterfaceCommandCp, Referee, TrackerWrapperPacket};
 use core_dump::proto::referee::Command;
+use core_dump::proto::{InterfaceCommandCp, Referee, TrackerWrapperPacket};
 use core_dump::vec::types::Vec2;
 
 /// GameState, GamePhase and RefMachine merged together with
@@ -15,6 +16,9 @@ pub struct WorldState {
   pub referee: Referee,
   pub iface_cmd: InterfaceCommandCp,
 
+  pub team: Team,
+  pub site: i8,
+
   // Thinks to keep track of
   pub goalie: Option<u8>,
   pub defenders: Option<Vec<u8>>,
@@ -24,7 +28,7 @@ pub struct WorldState {
   pub phase: GamePhase,
 }
 
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 pub enum GamePhase {
   #[default]
   UNKNOWN,
@@ -85,27 +89,37 @@ impl RefMachine {
   }
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Team {
   Yellow,
   Blue,
 }
 
-#[derive(Debug, Copy, Default, Clone)]
+#[derive(Debug, Copy, Default, Clone, Eq, PartialEq)]
 pub enum RefState {
   #[default]
   Halt,
   Stop,
 
-  PrepareKickoff { attacking: Team },
+  PrepareKickoff {
+    attacking: Team,
+  },
 
-  PreparePenalty { attacking: Team },
+  PreparePenalty {
+    attacking: Team,
+  },
 
-  BallPlacement { team: Team },
+  BallPlacement {
+    team: Team,
+  },
 
-  DirectFree { attacking: Team },
+  DirectFree {
+    attacking: Team,
+  },
 
-  IndirectFree { attacking: Team },
+  IndirectFree {
+    attacking: Team,
+  },
 
   Running,
 }
@@ -124,13 +138,35 @@ impl WorldState {
     self.referee = referee;
     self.iface_cmd = iface_cmd;
 
+    // Update team and site dependent on referee data
+    if self.referee.yellow.name.to_string() == "" {    }
+
+
     self.update_states();
   }
 
   #[inline]
   fn update_states(&mut self) {
-    // Update Refmachine
+    // Update RefMachine
     self.ref_machine.apply(self.referee.command());
+
+    // Apply those to GamePhase
+    match RefState::try_from(self.ref_machine.state).unwrap_or_default() {
+      RefState::Halt => {
+        self.phase = GamePhase::Halted;
+      }
+      RefState::Stop => {
+        self.phase = GamePhase::Stopped;
+      }
+      RefState::PrepareKickoff { attacking } => {
+
+      },
+      RefState::PreparePenalty { .. } => {}
+      RefState::BallPlacement { .. } => {}
+      RefState::DirectFree { .. } => {}
+      RefState::IndirectFree { .. } => {}
+      RefState::Running => {}
+    }
   }
 }
 
@@ -141,6 +177,8 @@ impl Default for WorldState {
       ball: Default::default(),
       referee: Default::default(),
       iface_cmd: Default::default(),
+      team: Team::Yellow,
+      site: 0,
       goalie: None,
       defenders: None,
       ref_machine: Default::default(),
@@ -235,24 +273,22 @@ impl Robot {
       }
 
       // Create the actual individual robot data
-      robots.push(
-        Robot {
-          robot_id: robot.robot_id.id.unwrap_or_default() as u8,
-          team: robot.robot_id.team.unwrap_or_default() as u8,
-          pos: Some(Vec2::new(robot.pos.x, robot.pos.y)),
-          vel: robot.vel.map(|vel| Vec2::new(vel.x, vel.y)),
-          orientation: robot.orientation.to_degrees(),
-          angular_vel: robot.vel_angular.unwrap_or_default().to_degrees(),
-          distance_team: dist_team,
-          distance_opponent: dist_opponent,
-          distance_ball: Some(Vec2::new(robot.pos.x, robot.pos.y).dot(&ball.pos).sqrt()),
-          distance_goal: Some(Vec2::new(robot.pos.x, robot.pos.y).dot(&goal_point).sqrt()),
-          distance_wall: Option::from(create_wall_points(
-            &Vec2::new_from_cp(robot.pos),
-            field_setup,
-          )),
-        },
-      );
+      robots.push(Robot {
+        robot_id: robot.robot_id.id.unwrap_or_default() as u8,
+        team: robot.robot_id.team.unwrap_or_default() as u8,
+        pos: Some(Vec2::new(robot.pos.x, robot.pos.y)),
+        vel: robot.vel.map(|vel| Vec2::new(vel.x, vel.y)),
+        orientation: robot.orientation.to_degrees(),
+        angular_vel: robot.vel_angular.unwrap_or_default().to_degrees(),
+        distance_team: dist_team,
+        distance_opponent: dist_opponent,
+        distance_ball: Some(Vec2::new(robot.pos.x, robot.pos.y).dot(&ball.pos).sqrt()),
+        distance_goal: Some(Vec2::new(robot.pos.x, robot.pos.y).dot(&goal_point).sqrt()),
+        distance_wall: Option::from(create_wall_points(
+          &Vec2::new_from_cp(robot.pos),
+          field_setup,
+        )),
+      });
     }
 
     robots
