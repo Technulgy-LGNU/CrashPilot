@@ -3,7 +3,11 @@ name = "core_dump"
 version = "0.1.0"
 edition = "2024"
 
+[features]
+serde = ["dep:serde"]
+
 [dependencies]
 prost = "0.14.3"
 prost-types = "0.14.3"
 num-traits = "0.2.19"
+serde = { version = "1", features = ["derive"], optional = true }
