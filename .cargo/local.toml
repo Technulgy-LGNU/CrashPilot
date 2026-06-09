@@ -1,0 +1,20 @@
+# Usage:  cargo <cmd> --config .cargo/local.toml
+
+[patch."https://github.com/Technulgy-LGNU/core-dump"]
+core_dump = { path = "../core-dump" }
+
+[patch."https://github.com/Technulgy-LGNU/loguna"]
+loguna = { path = "../loguna/loguna" }
+
+[patch."https://github.com/Technulgy-LGNU/CrashPilot"]
+CrashPilot = { path = "../CrashPilot" }
+
+[patch."https://github.com/Technulgy-LGNU/teamfaabs-ssl-robot-code"]
+tf_jetsoncode = { path = "../teamfaabs-ssl-robot-code/tf_jetsoncode" }
+
+[patch."https://github.com/Technulgy-LGNU/referris"]
+referris = { path = "../referris" }
+referris-simhark = { path = "../referris/referris-simhark" }
+
+[patch."https://github.com/Technulgy-LGNU/simhark"]
+simhark = { path = "../simhark" }
