@@ -8,20 +8,25 @@ use crate::types::GameState;
 impl GameState {
     fn encode(&self, dev: tch::Device) -> Batch {
         let own = Tensor::zeros([MAX_ROBOTS_PER_TEAM, ROBOT_FEATURES], (Kind::Float, dev));
-        let own_mask = Tensor::zeros(MAX_ROBOTS_PER_TEAM, (Kind::Bool, dev));
+        let mut own_mask = [false; MAX_ROBOTS_PER_TEAM as usize];
 
-        let own_goalie_mask = Tensor::zeros(MAX_ROBOTS_PER_TEAM, (Kind::Bool, dev));
+        let mut own_goalie_mask = [false; MAX_ROBOTS_PER_TEAM as usize];
 
         for (i, robot) in self.own_robots.iter().enumerate().take(MAX_ROBOTS_PER_TEAM as usize) {
             if let Some(robot) = robot {
-                Tensor::from_slice()
+                own_mask[i] = true;
 
-                own_mask.i(i).fill_()
                 if robot.is_goalie {
-                    own_goalie_mask.i((i,)).fill_(true);
+                    own_goalie_mask[i] = true;
                 }
+
+                let features = robot.encode();
+                own.get(i as i64).copy_(&features);
             }
         }
+
+        let own_mask = Tensor::from_slice(&own_mask).to_kind(Kind::Bool).to_device(dev);
+        let own_goalie_mask = Tensor::from_slice(&own_goalie_mask).to_kind(Kind::Bool).to_device(dev);
 
 
 
