@@ -70,11 +70,11 @@ checksum = "9330f8b2ff13f34540b44e946ef35111825727b38d33286ef986142615121801"
 [[package]]
 name = "core_dump"
 version = "0.1.0"
+source = "git+https://github.com/Technulgy-LGNU/core-dump#85f8a203282b201ba663242e194ce97f3fc2ce0e"
 dependencies = [
  "num-traits",
  "prost",
  "prost-types",
- "serde",
 ]
 
 [[package]]
@@ -521,6 +521,10 @@ dependencies = [
  "cpufeatures",
  "digest",
 ]
+
+[[package]]
+name = "simhark_integration"
+version = "0.1.0"
 
 [[package]]
 name = "slab"
