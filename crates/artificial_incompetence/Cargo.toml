@@ -5,3 +5,4 @@ edition = "2024"
 
 [dependencies]
 core_dump = {path = "../core_dump"}
+tch = { version = "0.24.0" }

@@ -1,33 +1,33 @@
 use core_dump::vec::types::Vec2;
 
-struct BallState {
+pub struct BallState {
     pos: Vec2<f32>,
     vel: Vec2<f32>,
     stop_pos: Vec2<f32>,
     stop_time: f32,
 }
 
-struct RobotState {
-    id: u8,
-    pos: Vec2<f32>,
-    vel: Vec2<f32>,
-    heading: f32,
-    angular_vel: f32,
-    is_goalie: bool,
-    is_lnx: bool, // ignored for opponents
+pub struct RobotState {
+    pub id: u8,
+    pub pos: Vec2<f32>,
+    pub vel: Vec2<f32>,
+    pub heading: f32,
+    pub angular_vel: f32,
+    pub is_goalie: bool,
+    pub is_lnx: bool, // ignored for opponents
 }
 
-type Robots = [Option<RobotState>; 8];
+pub type Robots = [Option<RobotState>; 8];
 
 
-struct GameState {
-    own_robots: RobotState,
-    opp_robots: RobotState,
-    ball: BallState,
+pub struct GameState {
+    pub own_robots: Robots,
+    pub opp_robots: Robots,
+    pub ball: BallState,
 }
 
 
-enum RobotCommand {
+pub enum RobotCommand {
     Pos(Vec2<f32>),
     Kick(f32),
     Chip(f32),
@@ -46,10 +46,10 @@ enum RobotCommand {
 }
 
 
-type Commands = [Option<RobotCommand>; 8];
+pub type Commands = [Option<RobotCommand>; 8];
 
 
-struct ArtificialIncompetence {
+pub struct ArtificialIncompetence {
     // internal state, if needed
 }
 
