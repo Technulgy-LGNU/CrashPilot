@@ -55,14 +55,26 @@ pub struct SampleCommand {
 
 
 pub struct Batch {
-    own: tch::Tensor,
-    own_mask: tch::Tensor,
-    own_goalie_mask: tch::Tensor,
-    opp: tch::Tensor,
-    opp_mask: tch::Tensor,
-    ball: tch::Tensor,
-    zones: tch::Tensor,
-    zone_mask: tch::Tensor,
+    pub own: tch::Tensor,
+    pub own_mask: tch::Tensor,
+    pub own_goalie_mask: tch::Tensor,
+    pub opp: tch::Tensor,
+    pub opp_mask: tch::Tensor,
+    pub ball: tch::Tensor,
+    // pub zones: tch::Tensor,
+    // pub zone_mask: tch::Tensor,
+}
+
+
+pub struct MultiBatch {
+    pub own: tch::Tensor,
+    pub own_mask: tch::Tensor,
+    pub own_goalie_mask: tch::Tensor,
+    pub opp: tch::Tensor,
+    pub opp_mask: tch::Tensor,
+    pub ball: tch::Tensor,
+    // pub zones: tch::Tensor,
+    // pub zone_mask: tch::Tensor,
 }
 
 

@@ -1,12 +1,13 @@
 use core_dump::vec::types::Vec2;
 
 pub struct BallState {
-    pos: Vec2<f32>,
-    vel: Vec2<f32>,
-    stop_pos: Vec2<f32>,
-    stop_time: f32,
+    pub pos: Vec2<f32>,
+    pub vel: Vec2<f32>,
+    pub stop_pos: Vec2<f32>,
+    pub stop_time: f32,
 }
 
+#[derive(Clone, Copy, Default)]
 pub struct RobotState {
     pub id: u8,
     pub pos: Vec2<f32>,
@@ -16,6 +17,7 @@ pub struct RobotState {
     pub is_goalie: bool,
     pub is_lnx: bool, // ignored for opponents
 }
+
 
 pub type Robots = [Option<RobotState>; 8];
 
