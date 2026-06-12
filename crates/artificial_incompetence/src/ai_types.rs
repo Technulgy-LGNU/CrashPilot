@@ -1,4 +1,6 @@
-enum CommandType {
+
+#[repr(i64)]
+pub enum CommandType {
     Pos,
     Kick,
     Chip,
