@@ -15,7 +15,6 @@ pub struct RobotState {
     pub heading: f32,
     pub angular_vel: f32,
     pub is_goalie: bool,
-    pub is_lnx: bool, // ignored for opponents
 }
 
 
