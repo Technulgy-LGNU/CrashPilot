@@ -97,38 +97,40 @@ impl GameState {
       .map(|state| state.encode(dev))
       .collect::<Vec<_>>();
 
+    let empty = Tensor::new();
+
     for state in &mut states {
-      temp.push(mem::replace(&mut state.own, Tensor::new()));
+      temp.push(mem::replace(&mut state.own, empty.shallow_clone()));
     }
 
     let own = Tensor::stack(&temp, 0);
 
     for state in &mut states {
-      temp.push(mem::replace(&mut state.own_mask, Tensor::new()));
+      temp.push(mem::replace(&mut state.own_mask, empty.shallow_clone()));
     }
 
     let own_mask = Tensor::stack(&temp, 0);
 
     for state in &mut states {
-      temp.push(mem::replace(&mut state.own_goalie_mask, Tensor::new()));
+      temp.push(mem::replace(&mut state.own_goalie_mask, empty.shallow_clone()));
     }
 
     let own_goalie_mask = Tensor::stack(&temp, 0);
 
     for state in &mut states {
-      temp.push(mem::replace(&mut state.opp, Tensor::new()));
+      temp.push(mem::replace(&mut state.opp, empty.shallow_clone()));
     }
 
     let opp = Tensor::stack(&temp, 0);
 
     for state in &mut states {
-      temp.push(mem::replace(&mut state.opp_mask, Tensor::new()));
+      temp.push(mem::replace(&mut state.opp_mask, empty.shallow_clone()));
     }
 
     let opp_mask = Tensor::stack(&temp, 0);
 
     for state in &mut states {
-      temp.push(mem::replace(&mut state.ball, Tensor::new()));
+      temp.push(mem::replace(&mut state.ball, empty.shallow_clone()));
     }
 
     let ball = Tensor::stack(&temp, 0);
