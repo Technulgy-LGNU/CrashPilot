@@ -2,19 +2,19 @@ use tch::{IndexOp, Kind, Tensor};
 use crate::ai_types::{CommandType, MultiBatch, NUM_COMMANDS};
 use crate::config::{MAX_ROBOTS_PER_TEAM, NUM_ZONES};
 
-
 pub struct Masks {
     pub action_mask: Tensor,
     pub teammate_mask: Tensor,
 }
 
 pub fn estimate_has_ball(batch: &MultiBatch, ball_radius: f32) -> Tensor {
-    let own_xy = batch.own.i((.., .., 0..2));
-    let ball_xy = batch.ball.i((.., .., 0..2)).unsqueeze(1);
+    let own_xy = batch.own.narrow(-1, 0, 2);
+    let ball_xy = batch.ball.narrow(-1, 0, 2).unsqueeze(1);
 
     let diff = own_xy - ball_xy;
     let dist = (&diff * &diff)
-        .sum_dim_intlist(&[-1i64], false, Kind::Float)
+        .pow_tensor_scalar(2.0)
+        .sum_dim_intlist([-1].as_ref(), false, Kind::Float)
         .sqrt();
 
     dist.lt(ball_radius as f64).logical_and(&batch.own_mask)
@@ -34,85 +34,48 @@ fn build_action_masks(batch: &MultiBatch) -> Masks {
     let mut teammate_mask =
         Tensor::zeros([b, MAX_ROBOTS_PER_TEAM, MAX_ROBOTS_PER_TEAM], (Kind::Bool, device));
 
-    let zone_mask = base_zone_mask
-        .unsqueeze(1)
-        .expand([b, MAX_ROBOTS_PER_TEAM, NUM_ZONES], true);
-
     let has_ball = estimate_has_ball(batch, 0.18);
 
-    for i in 0..MAX_ROBOTS_PER_TEAM {
-        let mut row = teammate_mask.i((.., i, ..));
-        row.copy_(own_mask);
-
-        let mut diag = teammate_mask.i((.., i, i));
-        diag.copy_(&Tensor::zeros([b], (Kind::Bool, device)));
-    }
 
     for i in 0..MAX_ROBOTS_PER_TEAM {
-        let active = own_mask.i((.., i));
-        let goalie = own_goalie_mask.i((.., i));
+        let active = own_mask.narrow(1, i, 1).squeeze_dim(1);
+        let inactive = active.logical_not();
+
+        let goalie = batch.own_goalie_mask.narrow(1, i, 1).squeeze_dim(1);
         let field_player = active.logical_and(&goalie.logical_not());
+        let has_ball_i = has_ball.narrow(1, i, 1).squeeze_dim(1);
 
-        // let zone_ok = zone_mask.i((.., i, ..)).any_dim(-1, false);
-        let teammate_ok = teammate_mask.i((.., i, ..)).any_dim(-1, false);
-        let has_ball_i = has_ball.i((.., i));
+        let mut tm_row = teammate_mask.narrow(1, i, 1).squeeze_dim(1);
+        tm_row.copy_(own_mask);
+        let _ = tm_row.narrow(1, i, 1).fill_(0);
 
-        // pub enum RobotCommand {
-        //     Pos(Vec2<f32>), //Vec2 is calculated by the active zone logit (any zone is allowed)
-        //     Kick(f32), // similar to pos, but with a power parameter, it is calculated by the active kick power logit (any is allowed)
-        //     Chip(f32),
-        //     RecKick(f32),
-        //     Steal,
-        //     Dribble(Vec2<f32>),
-        //     PosBall(Vec2<f32>),
-        //     Kickoff(f32),
-        //     FreeKick(f32),
-        //     KickGoal,
-        //     PassTo(u8),
-        //     RecPass,
-        //     GoalWall,
-        //     GoalieGuard,
-        //     Hold,
 
-        {
-            let mut dst = action_mask.i((.., i, CommandType::Pos as i64));
-            dst.copy_(&active.logical_and(&zone_ok));
-        }
+        let has_ball = field_player.logical_and(&has_ball_i);
 
-        {
-            let mut dst = action_mask.i((.., i, CommandType::Hold as i64));
-            dst.copy_(&active);
-        }
-        {
-            let mut dst = action_mask.i((.., i, CommandType::Pos as i64));
-            dst.copy_(&active.logical_and(&zone_ok));
-        }
-        {
-            let mut dst = action_mask.i((.., i, CommandType::Ball as i64));
-            dst.copy_(&field_player);
-        }
-        {
-            let mut dst = action_mask.i((.., i, CommandType::PassToRobot as i64));
-            dst.copy_(&field_player.logical_and(&has_ball_i).logical_and(&teammate_ok));
-        }
-        {
-            let mut dst = action_mask.i((.., i, CommandType::ShootGoal as i64));
-            dst.copy_(&field_player.logical_and(&has_ball_i));
-        }
-        {
-            let mut dst = action_mask.i((.., i, CommandType::ReceivePass as i64));
-            dst.copy_(&field_player);
-        }
-        {
-            let mut dst = action_mask.i((.., i, CommandType::BuildWall as i64));
-            dst.copy_(&field_player.logical_and(&zone_ok));
-        }
-        {
-            let mut dst = action_mask.i((.., i, CommandType::GoalieGuard as i64));
-            dst.copy_(&goalie);
-        }
+
+        let setup_mask = |cmd_type, val| {
+            action_mask
+                .narrow(1, i, 1)
+                .narrow(2, cmd_type as i64, 1)
+                .copy_(val.unsqueeze(-1))
+        };
+
+        setup_mask(CommandType::Hold, &Tensor::ones(b, (Kind::Bool, device)));
+        setup_mask(CommandType::Pos, &active);
+        setup_mask(CommandType::Kick, &has_ball_i);
+        setup_mask(CommandType::Chip, &has_ball_i);
+        setup_mask(CommandType::RecKick, &has_ball_i);
+        setup_mask(CommandType::Steal, &has_ball_i);
+        setup_mask(CommandType::Dribble, &has_ball_i);
+        setup_mask(CommandType::PosBall, &has_ball_i);
+        setup_mask(CommandType::Kickoff, &has_ball_i);
+        setup_mask(CommandType::KickGoal, &has_ball_i);
+        setup_mask(CommandType::PassTo, &has_ball_i);
+        setup_mask(CommandType::RecPass, &field_player);
+        setup_mask(CommandType::GoalWall, &field_player);
+        setup_mask(CommandType::GoalWall, &field_player);
+        setup_mask(CommandType::GoalieGuard, &field_player); //TODO: should this be field_player?
     }
-
 
     Masks {
         action_mask,
