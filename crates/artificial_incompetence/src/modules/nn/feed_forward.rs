@@ -6,7 +6,7 @@ pub struct FeedForward {
 }
 
 impl FeedForward {
-    pub fn new(vs: &nn::Path<'_>, d_model: i64, hidden_dim: i64) -> Self {
+    pub fn new(vs: &nn::Path, d_model: i64, hidden_dim: i64) -> Self {
         let l1 = nn::linear(vs / "l1", d_model, hidden_dim, Default::default());
         let l2 = nn::linear(vs / "l2", hidden_dim, d_model, Default::default());
 

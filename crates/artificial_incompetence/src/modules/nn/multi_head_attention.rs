@@ -12,7 +12,7 @@ pub struct MultiHeadAttention {
 }
 
 impl MultiHeadAttention {
-    pub fn new(vs: &nn::Path<'_>, d_model: i64, num_heads: i64) -> Self {
+    pub fn new(vs: &nn::Path, d_model: i64, num_heads: i64) -> Self {
         assert!(d_model % num_heads == 0);
         let q_proj = nn::linear(vs / "q_proj", d_model, d_model, Default::default());
         let k_proj = nn::linear(vs / "k_proj", d_model, d_model, Default::default());

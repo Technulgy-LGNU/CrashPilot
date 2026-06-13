@@ -8,7 +8,7 @@ pub struct CrossAttentionBlock {
 }
 
 impl CrossAttentionBlock {
-    pub fn new(vs: &nn::Path<'_>, d_model: i64, num_heads: i64) -> Self {
+    pub fn new(vs: &nn::Path, d_model: i64, num_heads: i64) -> Self {
         let query_norm = nn::layer_norm(vs / "query_norm", vec![d_model], Default::default());
         let context_norm = nn::layer_norm(vs / "context_norm", vec![d_model], Default::default());
         let attn = MultiHeadAttention::new(&(vs / "attn"), d_model, num_heads);
