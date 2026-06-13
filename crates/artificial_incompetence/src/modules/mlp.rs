@@ -21,10 +21,10 @@ impl MLP {
 
 impl nn::Module for MLP {
     fn forward(&self, xs: &tch::Tensor) -> tch::Tensor {
-        let xs = self.head.forward(xs).relu();
+        let xs = self.head.forward(xs);
         let xs = self.n1.forward(&xs);
         let xs = xs.gelu("none");
-        let xs = self.hidden.forward(&xs).relu();
+        let xs = self.hidden.forward(&xs);
         let xs = self.n2.forward(&xs);
 
         xs.gelu("none")
