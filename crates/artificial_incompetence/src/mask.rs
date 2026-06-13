@@ -20,7 +20,7 @@ pub fn estimate_has_ball(batch: &MultiBatch, ball_radius: f32) -> Tensor {
     dist.lt(ball_radius as f64).logical_and(&batch.own_mask)
 }
 
-fn build_action_masks(batch: &MultiBatch) -> Masks {
+pub fn build_action_masks(batch: &MultiBatch) -> Masks {
     let own = &batch.own;
     let own_mask = &batch.own_mask;
     let own_goalie_mask = &batch.own_goalie_mask;
