@@ -49,6 +49,12 @@ fn build_action_masks(batch: &MultiBatch) -> Masks {
         tm_row.copy_(own_mask);
         let _ = tm_row.narrow(1, i, 1).fill_(0);
 
+        let has_tm = tm_row.any_dim(-1, false);
+        let fallback_self = has_tm.logical_not().logical_or(&inactive);
+        let _ = tm_row
+            .narrow(1, i, 1)
+            .copy_(&fallback_self.unsqueeze(-1).to_kind(Kind::Bool));
+
 
         let has_ball = field_player.logical_and(&has_ball_i);
 
@@ -65,14 +71,14 @@ fn build_action_masks(batch: &MultiBatch) -> Masks {
         setup_mask(CommandType::Kick, &has_ball_i);
         setup_mask(CommandType::Chip, &has_ball_i);
         setup_mask(CommandType::RecKick, &has_ball_i);
-        setup_mask(CommandType::Steal, &has_ball_i);
+        setup_mask(CommandType::Steal, &field_player);
         setup_mask(CommandType::Dribble, &has_ball_i);
         setup_mask(CommandType::PosBall, &has_ball_i);
         setup_mask(CommandType::Kickoff, &has_ball_i);
+        setup_mask(CommandType::FreeKick, &has_ball_i);
         setup_mask(CommandType::KickGoal, &has_ball_i);
-        setup_mask(CommandType::PassTo, &has_ball_i);
+        setup_mask(CommandType::PassTo, &has_ball_i.logical_and(&has_tm));
         setup_mask(CommandType::RecPass, &field_player);
-        setup_mask(CommandType::GoalWall, &field_player);
         setup_mask(CommandType::GoalWall, &field_player);
         setup_mask(CommandType::GoalieGuard, &field_player); //TODO: should this be field_player?
     }
