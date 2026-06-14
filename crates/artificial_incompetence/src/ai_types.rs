@@ -38,6 +38,45 @@ pub const COMMANDS: &[CommandType] = &[
 
 pub const NUM_COMMANDS: usize = COMMANDS.len();
 
+
+impl CommandType {
+    pub fn from_i64(v: i64) -> Self {
+        match v {
+            0 => Self::Pos,
+            1 => Self::Kick,
+            2 => Self::Chip,
+            3 => Self::RecKick,
+            4 => Self::Steal,
+            5 => Self::Dribble,
+            6 => Self::PosBall,
+            7 => Self::Kickoff,
+            8 => Self::FreeKick,
+            9 => Self::KickGoal,
+            10 => Self::PassTo,
+            11 => Self::RecPass,
+            12 => Self::GoalWall,
+            13 => Self::GoalieGuard,
+            14 => Self::Hold,
+            _ => Self::Hold,
+        }
+    }
+
+    pub fn uses_zone(self) -> bool {
+        matches!(self, Self::Pos | Self::Dribble | Self::PosBall)
+    }
+
+    pub fn uses_power(self) -> bool {
+        matches!(
+            self,
+            Self::Kick | Self::Chip | Self::RecKick | Self::Kickoff | Self::FreeKick
+        )
+    }
+
+    pub fn uses_teammate(self) -> bool {
+        matches!(self, Self::PassTo)
+    }
+}
+
 pub struct RawRobotCommand {
     cmd: CommandType,
     target_robot: Option<u8>,
