@@ -119,4 +119,12 @@ pub struct MultiBatch {
 }
 
 
+#[derive(Debug)]
+pub struct SampledRobotAction {
+    pub command_type: tch::Tensor, // [B, R]
+    pub target_robot: tch::Tensor, // [B, R]
+    pub target_zone: tch::Tensor,  // [B, R]
+    pub power_bin: tch::Tensor,    // [B, R]
+}
+
 
