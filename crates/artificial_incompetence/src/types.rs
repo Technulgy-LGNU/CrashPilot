@@ -28,6 +28,7 @@ pub struct GameState {
 }
 
 
+#[derive(Debug, Copy, Clone, Default PartialEq)]
 pub enum RobotCommand {
     Pos(Vec2<f32>),
     Kick(f32),
@@ -43,6 +44,7 @@ pub enum RobotCommand {
     RecPass,
     GoalWall,
     GoalieGuard,
+    #[default]
     Hold,
 }
 

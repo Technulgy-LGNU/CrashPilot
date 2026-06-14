@@ -8,7 +8,7 @@ use crate::modules::grid::GridZoneEncoder;
 use crate::modules::mlp::MLP;
 use crate::modules::nn::{CategoricalHead, CrossAttentionBlock, PointerHead};
 
-struct Actor {
+pub struct Actor {
     own_encoder: MLP,
     opp_encoder: MLP,
     ball_encoder: MLP,
@@ -126,7 +126,7 @@ impl Actor {
 }
 
 
-struct ActorRawOutput {
+pub struct ActorRawOutput {
     command_logits: Tensor,
     teammate_logits: Tensor,
     zone_logits: Tensor,
@@ -135,14 +135,14 @@ struct ActorRawOutput {
     zone_tokens: Tensor,
 }
 
-struct ActorOutput {
-    command_logits: Tensor,
-    teammate_logits: Tensor,
-    zone_logits: Tensor,
-    power_logits: Tensor,
-    robot_hidden: Tensor,
-    zone_tokens: Tensor,
-    masks: Masks,
+pub struct ActorOutput {
+    pub command_logits: Tensor,
+    pub teammate_logits: Tensor,
+    pub zone_logits: Tensor,
+    pub power_logits: Tensor,
+    pub robot_hidden: Tensor,
+    pub zone_tokens: Tensor,
+    pub masks: Masks,
 }
 
 

@@ -19,7 +19,7 @@ pub struct Critic {
 }
 
 impl Critic {
-    fn new(
+    pub fn new(
         vs: &nn::Path,
         grid_spec: GridSpec,
         d_model: i64,
@@ -48,7 +48,7 @@ impl Critic {
         }
     }
 
-    fn forward(&self, batch: &MultiBatch) -> Tensor {
+    pub fn forward(&self, batch: &MultiBatch) -> Tensor {
         let own_e = self.own_encoder.forward(&batch.own);
         let opp_e = self.opp_encoder.forward(&batch.opp);
         let ball_e = self.ball_encoder.forward(&batch.ball).unsqueeze(1);
