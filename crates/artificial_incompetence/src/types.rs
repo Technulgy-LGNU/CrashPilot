@@ -49,7 +49,7 @@ pub enum RobotCommand {
 }
 
 
-pub type Commands = [Option<RobotCommand>; 8];
+pub type Commands = [Option<RobotCommand>; 16];
 
 
 pub struct ArtificialIncompetence {
