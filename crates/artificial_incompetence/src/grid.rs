@@ -1,5 +1,8 @@
+use core_dump::vec::types::Vec2;
 use tch::{Device, Tensor};
-use crate::yeet::{Vec2, GRID_H, GRID_W};
+
+pub const GRID_W: i64 = 12;
+pub const GRID_H: i64 = 12;
 
 #[derive(Debug, Clone, Copy)]
 pub struct GridSpec {
