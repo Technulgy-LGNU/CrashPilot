@@ -68,16 +68,16 @@ pub fn build_action_masks(batch: &MultiBatch) -> Masks {
 
         setup_mask(CommandType::Hold, &Tensor::ones(b, (Kind::Bool, device)));
         setup_mask(CommandType::Pos, &active);
-        setup_mask(CommandType::Kick, &has_ball_i);
-        setup_mask(CommandType::Chip, &has_ball_i);
-        setup_mask(CommandType::RecKick, &has_ball_i);
+        setup_mask(CommandType::Kick, &has_ball);
+        setup_mask(CommandType::Chip, &has_ball);
+        setup_mask(CommandType::RecKick, &has_ball);
         setup_mask(CommandType::Steal, &field_player);
-        setup_mask(CommandType::Dribble, &has_ball_i);
-        setup_mask(CommandType::PosBall, &has_ball_i);
-        setup_mask(CommandType::Kickoff, &has_ball_i);
-        setup_mask(CommandType::FreeKick, &has_ball_i);
-        setup_mask(CommandType::KickGoal, &has_ball_i);
-        setup_mask(CommandType::PassTo, &has_ball_i.logical_and(&has_tm));
+        setup_mask(CommandType::Dribble, &has_ball);
+        setup_mask(CommandType::PosBall, &has_ball);
+        setup_mask(CommandType::Kickoff, &has_ball);
+        setup_mask(CommandType::FreeKick, &has_ball);
+        setup_mask(CommandType::KickGoal, &has_ball);
+        setup_mask(CommandType::PassTo, &has_ball.logical_and(&has_tm));
         setup_mask(CommandType::RecPass, &field_player);
         setup_mask(CommandType::GoalWall, &field_player);
         setup_mask(CommandType::GoalieGuard, &field_player); //TODO: should this be field_player?
