@@ -1,7 +1,7 @@
-pub mod types;
 mod ai_types;
-mod encode;
 mod config;
+mod encode;
+mod grid;
 mod mask;
 mod modules;
-mod grid;
+pub mod types;

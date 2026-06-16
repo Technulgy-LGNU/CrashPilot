@@ -1,4 +1,5 @@
 pub mod ball_helper;
+pub mod best_angle_to_goal;
 pub mod robot_data;
 
 use core_dump::proto::{CpVector2, Vector2};

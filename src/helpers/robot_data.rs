@@ -1,11 +1,14 @@
 use crate::RobotData;
 use crate::helpers::as_cp_vec2;
 use crate::helpers::ball_helper::{VisionBalls, convert_ball};
-use core_dump::proto::{CpInfos, CpTrackedRobot, InterfaceCommandCp, SslDetectionBall, SslWrapperPacket, TrackerWrapperPacket};
+use crate::utils::FieldSetup;
+use core_dump::proto::{
+  CpInfos, CpTrackedRobot, InterfaceCommandCp, SslDetectionBall, SslWrapperPacket,
+  TrackerWrapperPacket,
+};
 use prost_types::Timestamp;
 use std::collections::HashMap;
 use std::time::SystemTime;
-use crate::utils::FieldSetup;
 
 #[inline]
 pub fn create_robot_data(
@@ -78,9 +81,7 @@ pub fn create_robot_data(
         robot.msg.ball = convert_ball(VisionBalls::Tracked(frame.balls), interface_command);
       }
     };
-    
-    
-    
+
     // At last set info stuff
     robot.msg.infos = CpInfos {
       team_color: interface_command.game.team_color,
@@ -92,6 +93,5 @@ pub fn create_robot_data(
       penalty_area_height: field.penalty_height,
       goal_width: field.goal_width,
     }
-    
   }
 }

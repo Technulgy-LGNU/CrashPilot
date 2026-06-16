@@ -14,6 +14,7 @@ use crate::metrics::PrometheusMetrics;
 use crate::utils::{FieldSetup, PacketBuffer, spawn_robot_socket};
 use core_dump::proto::{CpCommand, CpInterfaceWrapper, CpRobot};
 use std::collections::HashMap;
+use std::time::Instant;
 use tokio::net::UdpSocket;
 use tokio::time::{Duration, MissedTickBehavior, interval};
 
@@ -30,7 +31,10 @@ pub mod interface;
 mod metrics;
 mod utils;
 
+use artificial_incompetence::types::ArtificialIncompetence;
 pub use core_dump;
+use core_dump::vec::types::Vec2;
+use http_body_util::BodyExt;
 
 pub struct CrashPilot<C = CommunicationChannels> {
   config: Config,
@@ -41,6 +45,8 @@ pub struct CrashPilot<C = CommunicationChannels> {
   robots: HashMap<u32, RobotData>,
   robots_ws_data: HashMap<u32, CpCommand>,
   state: WorldState,
+  ai_data: artificial_incompetence::types::GameState,
+  ai: ArtificialIncompetence,
   team: i32,
   site: i32,
   field_setup: FieldSetup,
@@ -269,6 +275,8 @@ impl<C> CrashPilot<C> {
       robots,
       robots_ws_data,
       state,
+      ai_data: Default::default(),
+      ai: Default::default(),
       team,
       site,
       field_setup,
@@ -351,19 +359,17 @@ impl<C> CrashPilot<C> {
       &self.packet_buffer.vis_tracked,
       &self.packet_buffer.vis_raw,
       &self.packet_buffer.interface_command,
-      &self.field_setup
+      &self.field_setup,
     );
+
+    // Create AI State
+    self.update_ai_data();
 
     // Actual game logic is going to happen here
     // First checks, on game state, and coordinating robots for that
     // Checks if one of multiple predetermine strategies apply
     //  - Goalie has Ball -> Chips automatically to the furthest own robot -> This robot should get the receive command
-    game_logic(
-      &self.config,
-      &mut self.robots,
-      &mut self.state,
-      &self.robots_ws_data,
-    )
+    game_logic(&mut self)
   }
 
   pub fn step_with_data(
@@ -394,4 +400,98 @@ impl<C> CrashPilot<C> {
         .collect(),
     }
   }
+
+  fn update_ai_data(&mut self) {
+    // Update robots by filtering between own and opponent team
+    self.ai_data.own_robots = self_robots_to_ai_robots(
+      self
+        .state
+        .robots
+        .iter()
+        .filter(|r| {
+          r.team
+            == if self.packet_buffer.interface_command.game.team_color {
+              2
+            } else {
+              1
+            }
+        })
+        .collect(),
+      self.field_setup,
+      self.state.goalie.unwrap_or_default(),
+    );
+    self.ai_data.opp_robots = self_robots_to_ai_robots(
+      self
+        .state
+        .robots
+        .iter()
+        .filter(|r| {
+          r.team
+            == if self.packet_buffer.interface_command.game.team_color {
+              1
+            } else {
+              2
+            }
+        })
+        .collect(),
+      self.field_setup,
+      self.state.goalie.unwrap_or_default(),
+    );
+
+    self.ai_data.ball.pos = self.state.ball.ball.pos / Vec2::new(
+      self.field_setup.width as f32,
+      self.field_setup.height as f32,
+    );
+    self.ai_data.ball.vel = self
+      .state
+      .ball
+      .ball
+      .vel / Vec2::new(10000f32, 10000f32);
+    self.ai_data.ball.stop_pos = self
+      .state
+      .ball
+      .kicked_ball
+      .end_point
+      .unwrap_or(self.state.ball.ball.pos / Vec2::new(
+        self.field_setup.width as f32,
+        self.field_setup.height as f32,
+      )) / Vec2::new(
+        self.field_setup.width as f32,
+        self.field_setup.height as f32,
+      );
+    self.ai_data.ball.stop_time = self
+      .state
+      .ball
+      .kicked_ball
+      .end_time
+      .unwrap_or(Instant::now().into());
+  }
+}
+
+fn self_robots_to_ai_robots(
+  robots: Vec<Robot>,
+  field: FieldSetup,
+  goalie_robot: u8,
+) -> artificial_incompetence::types::Robots {
+  let mut ai_robots: artificial_incompetence::types::Robots = Default::default();
+  for robot in robots {
+    let robot_id = robot.robot_id;
+    let is_goalie = if robot_id == goalie_robot {
+      true
+    } else {
+      false
+    };
+
+    let ai_robot = artificial_incompetence::types::RobotState {
+      id: robot_id,
+      pos: (robot.pos.unwrap_or_default()) / Vec2::new(field.width as f32, field.height as f32),
+      vel: (robot.vel.unwrap_or_default()) / Vec2::new(field.width as f32, field.height as f32),
+      heading: robot.orientation / 360f32,
+      angular_vel: robot.angular_vel / 3600f32,
+      is_goalie,
+    };
+
+    ai_robots[robot_id] = ai_robot;
+  }
+  ai_robots
 }

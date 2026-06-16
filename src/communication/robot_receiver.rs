@@ -7,10 +7,7 @@ use tokio::sync::MutexGuard;
 pub async fn robot_receiver(
   cfg: &config::Config,
   tx: EventShare,
-  wrap: fn(
-    RobotCp,
-    MutexGuard<Events>,
-  ),
+  wrap: fn(RobotCp, MutexGuard<Events>),
 ) {
   let addr = format!(
     "{}:{}",

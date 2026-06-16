@@ -112,7 +112,10 @@ impl GameState {
     let own_mask = Tensor::stack(&temp, 0);
 
     for state in &mut states {
-      temp.push(mem::replace(&mut state.own_goalie_mask, empty.shallow_clone()));
+      temp.push(mem::replace(
+        &mut state.own_goalie_mask,
+        empty.shallow_clone(),
+      ));
     }
 
     let own_goalie_mask = Tensor::stack(&temp, 0);

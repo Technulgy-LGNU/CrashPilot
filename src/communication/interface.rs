@@ -1,11 +1,11 @@
 use crate::communication::EventShare;
 use crate::communication::WebsocketOut;
 use crate::config;
+use core_dump::proto::InterfaceWrapperCp;
 use futures_util::{SinkExt, StreamExt};
 use prost::Message;
 use tokio::net::TcpListener;
 use tokio_tungstenite::tungstenite::Bytes;
-use core_dump::proto::InterfaceWrapperCp;
 
 pub async fn spawn_websocket(cfg: &config::Config, tx: EventShare, ws_out: WebsocketOut) {
   let addr = format!(
@@ -60,7 +60,9 @@ pub async fn spawn_websocket(cfg: &config::Config, tx: EventShare, ws_out: Webso
           }
 
           if let Err(e) = outgoing
-            .send(tokio_tungstenite::tungstenite::Message::Binary(Bytes::from(buf)))
+            .send(tokio_tungstenite::tungstenite::Message::Binary(
+              Bytes::from(buf),
+            ))
             .await
           {
             eprintln!("WebSocket send error to {}: {}", peer_addr, e);

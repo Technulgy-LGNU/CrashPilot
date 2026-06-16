@@ -1,4 +1,6 @@
-use core_dump::proto::{CpBall, CpVector2, InterfaceCommandCp, SslDetectionBall, TrackedBall, Vector3};
+use core_dump::proto::{
+  CpBall, CpVector2, InterfaceCommandCp, SslDetectionBall, TrackedBall, Vector3,
+};
 
 pub enum VisionBalls {
   Raw(Vec<SslDetectionBall>),

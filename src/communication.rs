@@ -5,22 +5,22 @@ mod gc_sender;
 pub mod interface;
 #[cfg(feature = "loki")]
 pub mod loki;
+mod prometheus;
 mod robot_receiver;
 pub mod robot_sender;
 mod ssl_communication;
 mod udp_listener;
-mod prometheus;
 
 use crate::communication::interface::spawn_websocket;
 use crate::communication::robot_receiver::robot_receiver;
 use crate::communication::ssl_communication::get_ssl_data;
 use crate::config;
-use core_dump::proto::{CpInterfaceWrapper, InterfaceWrapperCp, Referee, RobotCp, SslWrapperPacket, TrackerWrapperPacket};
+use core_dump::proto::{
+  CpInterfaceWrapper, InterfaceWrapperCp, Referee, RobotCp, SslWrapperPacket, TrackerWrapperPacket,
+};
 use std::sync::Arc;
 use tokio::sync::Mutex;
 use tokio::sync::Notify;
-
-
 
 #[derive(Debug, Clone, Default)]
 pub struct Events {
@@ -99,7 +99,6 @@ impl WebsocketOut {
     drop(lock);
     self.notify.notify_waiters();
   }
-  
 
   /// Wait until a payload newer than `last_seq` is available and return it.
   ///

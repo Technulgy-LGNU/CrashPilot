@@ -91,8 +91,11 @@ impl RefMachine {
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Team {
-  Yellow,
+  // Dont differentiate between colors, so there need to be less checks
+  Own,
+  Enemy,
   Blue,
+  Yellow,
 }
 
 #[derive(Debug, Copy, Default, Clone, Eq, PartialEq)]
@@ -139,8 +142,7 @@ impl WorldState {
     self.iface_cmd = iface_cmd;
 
     // Update team and site dependent on referee data
-    if self.referee.yellow.name.to_string() == "" {    }
-
+    if self.referee.yellow.name.to_string() == "" {}
 
     self.update_states();
   }
@@ -158,15 +160,17 @@ impl WorldState {
       RefState::Stop => {
         self.phase = GamePhase::Stopped;
       }
-      RefState::PrepareKickoff { attacking } => {
-
-      },
+      RefState::PrepareKickoff { attacking } => {}
       RefState::PreparePenalty { .. } => {}
       RefState::BallPlacement { .. } => {}
       RefState::DirectFree { .. } => {}
       RefState::IndirectFree { .. } => {}
-      RefState::Running => {}
+      RefState::Running => {
+        self.phase = GamePhase::Running;
+      }
     }
+    // For testing, just set always to running
+    self.phase = GamePhase::Running;
   }
 }
 
@@ -330,6 +334,7 @@ pub struct KickedBall {
   pub vel: Vec2<f32>,
 
   pub end_point: Option<Vec2<f32>>,
+  pub end_time: Option<f32>,
 }
 
 impl BallData {
@@ -362,6 +367,13 @@ impl BallData {
         .unwrap_or_default()
         .stop_pos
         .map(|ep| Vec2::new(ep.x, ep.y)),
+      end_time: Option::from(
+        frame
+          .kicked_ball
+          .unwrap_or_default()
+          .stop_timestamp
+          .unwrap_or_default() as f32,
+      ),
     };
 
     Self { ball, kicked_ball }

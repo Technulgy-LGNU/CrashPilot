@@ -48,7 +48,6 @@ impl RobotSender for NetworkSender<'_> {
     let mut report = SendReport::default();
     let mut buf = Vec::new();
 
-
     for (&robot_id, robot_data) in self.data.iter() {
       // Keep the buffer re-used but always reset before encoding.
       buf.clear();

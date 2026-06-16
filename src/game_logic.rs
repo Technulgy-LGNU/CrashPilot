@@ -6,13 +6,12 @@ mod mode_manual;
 mod mode_test;
 pub mod types;
 
+use crate::CrashPilot;
 use crate::game_logic::mode_game::mode_game;
 use crate::game_logic::mode_manual::mode_manual;
 use crate::game_logic::mode_test::mode_test;
 use crate::game_logic::types::WorldState;
-use crate::{RobotData, config};
-use core_dump::proto::{CpCommand, CpMode};
-use std::collections::HashMap;
+use core_dump::proto::CpMode;
 
 /// Main Game Logic
 /// Checks the game for:
@@ -26,37 +25,32 @@ use std::collections::HashMap;
 /// Also translates AI commands to robot commands (AI commands are more specific, so the AI
 /// has an easier time to understand them and apply them
 #[inline]
-pub fn game_logic(
-  _cfg: &config::Config,
-  robot_data: &mut HashMap<u32, RobotData>,
-  state: &mut WorldState,
-  robots_ws_data: &HashMap<u32, CpCommand>,
-) {
+pub fn game_logic(cp: &mut CrashPilot) {
   // Check, which mode is enabled:
   //  - Manual: Use the interface commands to control the robots
   //  - Game: Use the AI and hardcoded game logic
   //  - Test: Run the tests
-  match CpMode::try_from(state.iface_cmd.mode).unwrap_or(CpMode::ModeManual) {
+  match CpMode::try_from(cp.packet_buffer.interface_command.mode).unwrap_or(CpMode::ModeManual) {
     CpMode::ModeManual => {
       mode_manual(
-        robot_data,
-        robots_ws_data,
-        state.iface_cmd.manual.gc_data,
-        state.referee.command,
+        &mut cp.robots,
+        &cp.robots_ws_data,
+        cp.packet_buffer.interface_command.manual.gc_data,
+        cp.packet_buffer.referee.command,
       );
     }
     CpMode::ModeGame => {
       // If you stop the game in the interface, stop every robot
-      if state.iface_cmd.game.running {
-        mode_game(robot_data, state);
+      if cp.packet_buffer.interface_command.game.running {
+        mode_game(cp);
       } else {
-        for robot in robot_data {
+        for mut robot in cp.robots {
           robot.1.msg.cmd.state = 1;
         }
       }
     }
     CpMode::ModeTest => {
-      mode_test(robot_data, state);
+      mode_test(&mut cp.robots, &mut cp.state);
     }
   }
 }

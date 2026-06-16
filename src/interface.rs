@@ -1,6 +1,6 @@
 use std::fs;
-use std::process::Command;
 use std::os::unix::fs::PermissionsExt;
+use std::process::Command;
 
 // Embed frontend (crashpilot-interface) binary
 static GO_BINARY: &[u8] = include_bytes!("../crashpilot-interface");

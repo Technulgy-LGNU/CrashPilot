@@ -1,6 +1,3 @@
-
-
-
 pub struct MultiheadAttention {
-    // TODO
+  // TODO
 }

@@ -1,13 +1,13 @@
 #[cfg(feature = "loki")]
 use crate::communication::loki::LokiPublisher;
+use crate::config;
 #[cfg(feature = "prometheus")]
 use crate::metrics::PrometheusMetrics;
-use crate::config;
 use core_dump::proto::{
-  CpRobot, InterfaceCommandCp, Referee, RobotCp, SslGeometryData,
-  SslWrapperPacket, TrackerWrapperPacket,
+  CpRobot, InterfaceCommandCp, Referee, RobotCp, SslGeometryData, SslWrapperPacket,
+  TrackerWrapperPacket,
 };
-use std::io::{ErrorKind};
+use std::io::ErrorKind;
 
 #[derive(Debug, Clone)]
 pub struct RobotData {
@@ -92,5 +92,3 @@ pub async fn spawn_robot_socket(cfg: &config::Config) -> tokio::net::UdpSocket {
     },
   }
 }
-
-
