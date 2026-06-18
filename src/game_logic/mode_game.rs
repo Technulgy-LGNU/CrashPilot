@@ -131,7 +131,7 @@ pub fn mode_game<C, A: Ai>(cp: &mut CrashPilot<C, A>) {
                   robot.msg.cmd.task = TaskKick as i32;
 
                   // Get the direction to that robot
-                  for r in cp.state.robots {
+                  for r in cp.state.robots.clone() {
                     if r.team
                       == if cp.packet_buffer.interface_command.game.team_color {
                         2

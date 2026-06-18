@@ -34,9 +34,9 @@ pub fn best_shot_angle(
     let mut blocked = false;
 
     for robot in opponents {
-      let rel = robot.pos - shooter;
+      let rel = robot.pos.unwrap_or_default() - shooter;
 
-      let forward = rel.dot(dir);
+      let forward = rel.dot(&dir);
 
       if forward <= 0.0 {
         continue;

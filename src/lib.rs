@@ -34,7 +34,6 @@ mod utils;
 use artificial_incompetence::types::{Ai, ArtificialIncompetence};
 pub use core_dump;
 use core_dump::vec::types::Vec2;
-use http_body_util::BodyExt;
 
 pub struct CrashPilot<C = CommunicationChannels, A: Ai = ArtificialIncompetence> {
   config: Config,
@@ -419,9 +418,9 @@ impl<C, A: Ai> CrashPilot<C, A> {
               1
             }
         })
-          .cloned()
+        .cloned()
         .collect(),
-      self.field_setup,
+      self.field_setup.clone(),
       self.state.goalie.unwrap_or_default(),
     );
     self.ai_data.opp_robots = self_robots_to_ai_robots(
@@ -437,39 +436,34 @@ impl<C, A: Ai> CrashPilot<C, A> {
               2
             }
         })
-          .cloned()
+        .cloned()
         .collect(),
-      self.field_setup,
+      self.field_setup.clone(),
       self.state.goalie.unwrap_or_default(),
     );
 
-    self.ai_data.ball.pos = self.state.ball.ball.pos / Vec2::new(
-      self.field_setup.width as f32,
-      self.field_setup.height as f32,
-    );
-    self.ai_data.ball.vel = self
-      .state
-      .ball
-      .ball
-      .vel / Vec2::new(10000f32, 10000f32);
-    self.ai_data.ball.stop_pos = self
-      .state
-      .ball
-      .kicked_ball
-      .end_point
-      .unwrap_or(self.state.ball.ball.pos / Vec2::new(
-        self.field_setup.width as f32,
-        self.field_setup.height as f32,
-      )) / Vec2::new(
+    self.ai_data.ball.pos = self.state.ball.ball.pos
+      / Vec2::new(
         self.field_setup.width as f32,
         self.field_setup.height as f32,
       );
+    self.ai_data.ball.vel = self.state.ball.ball.vel / Vec2::new(10000f32, 10000f32);
+    self.ai_data.ball.stop_pos = self.state.ball.kicked_ball.end_point.unwrap_or(
+      self.state.ball.ball.pos
+        / Vec2::new(
+          self.field_setup.width as f32,
+          self.field_setup.height as f32,
+        ),
+    ) / Vec2::new(
+      self.field_setup.width as f32,
+      self.field_setup.height as f32,
+    );
     self.ai_data.ball.stop_time = self
       .state
       .ball
       .kicked_ball
       .end_time
-      .unwrap_or(Instant::now().into());
+      .unwrap_or(Instant::now().elapsed().as_millis() as f32);
   }
 }
 
