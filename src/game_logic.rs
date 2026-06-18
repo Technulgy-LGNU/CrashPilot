@@ -45,7 +45,7 @@ pub fn game_logic<C, A: Ai>(cp: &mut CrashPilot<C, A>) {
       if cp.packet_buffer.interface_command.game.running {
         mode_game(cp);
       } else {
-        for mut robot in cp.robots {
+        for robot in &mut cp.robots {
           robot.1.msg.cmd.state = 1;
         }
       }

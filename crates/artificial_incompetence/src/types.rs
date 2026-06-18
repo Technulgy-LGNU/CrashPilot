@@ -1,5 +1,6 @@
 use core_dump::vec::types::Vec2;
 
+#[derive(Debug, Clone, Copy, Default)]
 pub struct BallState {
   pub pos: Vec2<f32>,
   pub vel: Vec2<f32>,
@@ -7,7 +8,7 @@ pub struct BallState {
   pub stop_time: f32,
 }
 
-#[derive(Clone, Copy, Default)]
+#[derive(Debug, Clone, Copy, Default)]
 pub struct RobotState {
   pub id: u8,
   pub pos: Vec2<f32>,
@@ -17,15 +18,17 @@ pub struct RobotState {
   pub is_goalie: bool,
 }
 
+
 pub type Robots = [Option<RobotState>; 8];
 
+#[derive(Debug, Copy, Clone, Default)]
 pub struct GameState {
   pub own_robots: Robots,
   pub opp_robots: Robots,
   pub ball: BallState,
 }
 
-#[derive(Debug, Copy, Clone, Default PartialEq)]
+#[derive(Debug, Copy, Clone, Default, PartialEq)]
 pub enum RobotCommand {
   Pos(Vec2<f32>),
   Kick(f32),

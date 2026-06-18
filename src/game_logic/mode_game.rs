@@ -28,7 +28,7 @@ pub fn mode_game<C, A: Ai>(cp: &mut CrashPilot<C, A>) {
         for (id, command) in commands.iter().enumerate() {
           if command.is_some() {
             // Get the robot
-            let mut robot = cp.robots.get(&(id as u32)).unwrap_or_default().clone();
+            let mut robot = cp.robots.get(&(id as u32)).cloned().unwrap_or_default();
             if robot != Default::default() {
               robot.msg.cmd.state = StateFree as i32;
               match command.unwrap_or_default() {
@@ -95,8 +95,7 @@ pub fn mode_game<C, A: Ai>(cp: &mut CrashPilot<C, A>) {
                             1
                           }
                     })
-                    .unwrap_or_default()
-                    .pos
+                      .and_then(|r| r.pos)
                     .unwrap_or_default();
                   // Calculate the angle to the goal with no opponents in the way and the minimum distance from all robots
                   match best_shot_angle(
@@ -148,8 +147,7 @@ pub fn mode_game<C, A: Ai>(cp: &mut CrashPilot<C, A>) {
                             .robots
                             .iter()
                             .find(|r| r.robot_id == id as u8)
-                            .unwrap_or_default()
-                            .pos
+                            .and_then(|r| r.pos)
                             .unwrap_or_default())
                         .angle_in_u16() as u32,
                       );

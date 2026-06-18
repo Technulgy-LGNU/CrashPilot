@@ -201,7 +201,7 @@ impl Default for WorldState {
 /// Everything is in:
 ///   - mm     &&     mm/s
 ///   - degree && degree/s
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Robot {
   pub robot_id: u8,
   // 0: Unknown

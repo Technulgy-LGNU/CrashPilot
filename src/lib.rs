@@ -372,7 +372,7 @@ impl<C, A: Ai> CrashPilot<C, A> {
     // First checks, on game state, and coordinating robots for that
     // Checks if one of multiple predetermine strategies apply
     //  - Goalie has Ball -> Chips automatically to the furthest own robot -> This robot should get the receive command
-    game_logic(&mut self)
+    game_logic(self)
   }
 
   pub fn step_with_data(
@@ -419,6 +419,7 @@ impl<C, A: Ai> CrashPilot<C, A> {
               1
             }
         })
+          .cloned()
         .collect(),
       self.field_setup,
       self.state.goalie.unwrap_or_default(),
@@ -436,6 +437,7 @@ impl<C, A: Ai> CrashPilot<C, A> {
               2
             }
         })
+          .cloned()
         .collect(),
       self.field_setup,
       self.state.goalie.unwrap_or_default(),
@@ -494,7 +496,7 @@ fn self_robots_to_ai_robots(
       is_goalie,
     };
 
-    ai_robots[robot_id] = ai_robot;
+    ai_robots[robot_id as usize] = Some(ai_robot);
   }
   ai_robots
 }

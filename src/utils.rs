@@ -9,7 +9,7 @@ use core_dump::proto::{
 };
 use std::io::ErrorKind;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default, PartialEq)]
 pub struct RobotData {
   pub msg: CpRobot,
   pub feedback: RobotCp,
