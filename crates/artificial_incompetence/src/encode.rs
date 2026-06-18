@@ -73,10 +73,6 @@ impl GameState {
       .to_kind(Kind::Bool)
       .to_device(dev);
 
-    let own_goalie_mask = Tensor::from_slice(&own_goalie_mask)
-      .to_kind(Kind::Bool)
-      .to_device(dev);
-
     let ball = self.ball.encode().to_device(dev);
 
     Batch {

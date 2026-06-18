@@ -51,7 +51,7 @@ impl Coach {
   }
 
   fn log_prob_of(&self, batch: &MultiBatch, action: &SampledRobotAction) -> Tensor {
-    let out = self.forward_actor(batch);
+    let out = self.actor.forward(batch);
 
     let mut logp = categorical_log_prob(&out.command_logits, &action.command_type);
 
@@ -180,7 +180,7 @@ impl Coach {
 
         let cmd_type = CommandType::from_i64(cmd_idx);
         let cmd = self.decode_robot_command(cmd_type, zone_idx, power_idx, target_robot);
-        commands[i] = Some(cmd);
+        commands[i as usize] = Some(cmd);
       }
 
       let commands = self.resolve_team_consistency(commands);

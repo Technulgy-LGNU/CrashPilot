@@ -60,11 +60,11 @@ pub fn build_action_masks(batch: &MultiBatch) -> Masks {
 
     let has_ball = field_player.logical_and(&has_ball_i);
 
-    let setup_mask = |cmd_type, val| {
+    let setup_mask = |cmd_type, val: &Tensor| {
       action_mask
         .narrow(1, i, 1)
         .narrow(2, cmd_type as i64, 1)
-        .copy_(val.unsqueeze(-1))
+        .copy_(&val.unsqueeze(-1))
     };
 
     setup_mask(CommandType::Hold, &Tensor::ones(b, (Kind::Bool, device)));
