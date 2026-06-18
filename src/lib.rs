@@ -46,7 +46,7 @@ pub struct CrashPilot<C = CommunicationChannels, A: Ai = ArtificialIncompetence>
   robots_ws_data: HashMap<u32, CpCommand>,
   state: WorldState,
   ai_data: artificial_incompetence::types::GameState,
-  ai: ArtificialIncompetence,
+  ai: A,
   team: i32,
   site: i32,
   field_setup: FieldSetup,

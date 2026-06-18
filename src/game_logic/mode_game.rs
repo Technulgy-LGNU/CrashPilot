@@ -1,7 +1,7 @@
 use crate::CrashPilot;
 use crate::game_logic::types::GamePhase;
 use crate::helpers::best_angle_to_goal::best_shot_angle;
-use artificial_incompetence::types::RobotCommand;
+use artificial_incompetence::types::{Ai, RobotCommand};
 use core_dump::proto::CpState::StateFree;
 use core_dump::proto::CpTask::{
   TaskBlock, TaskDribble, TaskKick, TaskPos, TaskPosBall, TaskRecKick, TaskSteal,
@@ -9,7 +9,7 @@ use core_dump::proto::CpTask::{
 use core_dump::vec::types::Vec2;
 
 #[inline]
-pub fn mode_game(cp: &mut CrashPilot) {
+pub fn mode_game<C, A: Ai>(cp: &mut CrashPilot<C, A>) {
   match cp.state.phase {
     GamePhase::UNKNOWN => {}
     GamePhase::Halted => {}

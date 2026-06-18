@@ -58,8 +58,8 @@ pub struct ArtificialIncompetence {
   // internal state, if needed
 }
 
-impl ArtificialIncompetence {
-  pub fn predict(&mut self, state: &GameState, dt: f32) -> Commands {
+impl Ai for ArtificialIncompetence {
+  fn predict(&mut self, state: &GameState, dt: f32) -> Commands {
     todo!()
   }
 }
