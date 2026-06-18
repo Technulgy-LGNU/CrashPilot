@@ -1,5 +1,5 @@
 use crate::ai_types::{CommandType, MultiBatch, SampledRobotAction};
-use crate::config::MAX_ROBOTS_PER_TEAM;
+use crate::config::{MAX_ROBOTS_PER_TEAM, NUM_POWER_BINS};
 use crate::grid::GridSpec;
 use crate::modules::actor::{Actor, ActorOutput};
 use crate::modules::critic::Critic;
@@ -166,7 +166,7 @@ impl Coach {
     let mut plans = Vec::new();
 
     for b in 0..bsz {
-      let mut commands = [None; 8];
+      let mut commands = [None; MAX_ROBOTS_PER_TEAM as usize];
 
       for i in 0..MAX_ROBOTS_PER_TEAM {
         if batch.own_mask.int64_value(&[b, i]) == 0 {
@@ -193,7 +193,7 @@ impl Coach {
   fn resolve_team_consistency(&self, commands: Commands) -> Commands {
     let mut updated = commands.clone();
 
-    for (src, cmd) in commands.iter().enumerate() {
+    for (_, cmd) in commands.iter().enumerate() {
       if let Some(cmd) = cmd {
         if let RobotCommand::PassTo(dst) = cmd {
           let dst = *dst as usize;
@@ -211,17 +211,30 @@ impl Coach {
 }
 
 fn power_from_bin(idx: i64) -> f32 {
-  todo!()
+  (idx as f32 + 1.0) / NUM_POWER_BINS as f32
 }
 
-fn categorical_entropy(p0: &Tensor) -> Tensor {
-  todo!()
+fn categorical_entropy(logits: &Tensor) -> Tensor {
+  let p = logits.softmax(-1, Kind::Float);
+  let logp = logits.log_softmax(-1, Kind::Float);
+  -(p * logp).sum_dim_intlist([-1].as_ref(), false, Kind::Float)
 }
 
-fn sample_categorical_from_logits(p0: &Tensor, p1: bool) -> Tensor {
-  todo!()
+
+fn sample_categorical_from_logits(logits: &Tensor, deterministic: bool) -> Tensor {
+  if deterministic {
+    logits.argmax(-1, false)
+  } else {
+    logits
+        .softmax(-1, Kind::Float)
+        .multinomial(1, true)
+        .squeeze_dim(-1)
+  }
 }
 
-fn categorical_log_prob(p0: &Tensor, p1: &Tensor) -> Tensor {
-  todo!()
+fn categorical_log_prob(logits: &Tensor, actions: &Tensor) -> Tensor {
+  let logp = logits.log_softmax(-1, Kind::Float);
+  logp.gather(-1, &actions.unsqueeze(-1), false)
+      .squeeze_dim(-1)
 }
+
