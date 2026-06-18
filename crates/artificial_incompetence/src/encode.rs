@@ -153,6 +153,7 @@ impl RobotState {
   fn encode(&self, team_sign: f32) -> Tensor {
     self.encode_with_active(team_sign, true)
   }
+
   fn encode_with_active(&self, team_sign: f32, active: bool) -> Tensor {
     Tensor::from_slice(&[
       self.pos.x,

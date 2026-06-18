@@ -47,6 +47,13 @@ pub enum RobotCommand {
 
 pub type Commands = [Option<RobotCommand>; 16];
 
+
+
+pub trait Ai {
+  fn predict(&mut self, state: &GameState, dt: f32) -> Commands;
+}
+
+#[derive(Default)]
 pub struct ArtificialIncompetence {
   // internal state, if needed
 }

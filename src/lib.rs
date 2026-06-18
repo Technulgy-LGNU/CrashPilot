@@ -31,12 +31,12 @@ pub mod interface;
 mod metrics;
 mod utils;
 
-use artificial_incompetence::types::ArtificialIncompetence;
+use artificial_incompetence::types::{Ai, ArtificialIncompetence};
 pub use core_dump;
 use core_dump::vec::types::Vec2;
 use http_body_util::BodyExt;
 
-pub struct CrashPilot<C = CommunicationChannels> {
+pub struct CrashPilot<C = CommunicationChannels, A: Ai = ArtificialIncompetence> {
   config: Config,
   #[cfg(feature = "prometheus")]
   metrics: PrometheusMetrics,
@@ -100,6 +100,7 @@ impl CrashPilot {
     Self::from_parts(
       config,
       comm,
+      ArtificialIncompetence::default(),
       #[cfg(feature = "loki")]
       loki,
       #[cfg(feature = "prometheus")]
@@ -205,7 +206,7 @@ impl CrashPilot {
   }
 }
 
-impl<C: Default> CrashPilot<C> {
+impl<C: Default, A: Ai + Default> CrashPilot<C, A> {
   pub fn new(
     config: Config,
     #[cfg(feature = "loki")] loki: Option<LokiPublisher>,
@@ -214,6 +215,7 @@ impl<C: Default> CrashPilot<C> {
     Self::from_parts(
       config,
       C::default(),
+      A::default(),
       #[cfg(feature = "loki")]
       loki,
       #[cfg(feature = "prometheus")]
@@ -222,10 +224,11 @@ impl<C: Default> CrashPilot<C> {
   }
 }
 
-impl<C> CrashPilot<C> {
+impl<C, A: Ai> CrashPilot<C, A> {
   pub fn from_parts(
     config: Config,
     comm: C,
+    ai: A,
     #[cfg(feature = "loki")] loki: Option<LokiPublisher>,
     #[cfg(feature = "prometheus")] metrics: PrometheusMetrics,
   ) -> Self {
@@ -276,7 +279,7 @@ impl<C> CrashPilot<C> {
       robots_ws_data,
       state,
       ai_data: Default::default(),
-      ai: Default::default(),
+      ai,
       team,
       site,
       field_setup,
