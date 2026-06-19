@@ -338,7 +338,7 @@ impl<C, A: Ai> CrashPilot<C, A> {
     }
   }
 
-  pub fn update(&mut self) {
+  pub fn update_data(&mut self) {
     // Create state
     let ball_data = BallData::new(&self.packet_buffer.vis_tracked);
 
@@ -366,12 +366,19 @@ impl<C, A: Ai> CrashPilot<C, A> {
 
     // Create AI State
     self.update_ai_data();
+  }
 
+  pub fn update_logic(&mut self) {
     // Actual game logic is going to happen here
     // First checks, on game state, and coordinating robots for that
     // Checks if one of multiple predetermine strategies apply
     //  - Goalie has Ball -> Chips automatically to the furthest own robot -> This robot should get the receive command
     game_logic(self)
+  }
+
+  pub fn update(&mut self) {
+    self.update_data();
+    self.update_logic();
   }
 
   pub fn step_with_data(
@@ -380,6 +387,20 @@ impl<C, A: Ai> CrashPilot<C, A> {
   ) -> (CpInterfaceWrapper, HashMap<u32, RobotData>) {
     self.interpret(events);
     self.update();
+
+    let robot_data = self.robots.clone();
+
+    (self.interface_packet(), robot_data)
+  }
+
+  pub fn interpret_and_update(&mut self, events: Events) {
+    self.interpret(events);
+    self.update_data();
+  }
+
+  pub fn step_logic(&mut self) -> (CpInterfaceWrapper, HashMap<u32, RobotData>) {
+    self.update_logic();
+
 
     let robot_data = self.robots.clone();
 

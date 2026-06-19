@@ -9,7 +9,7 @@ pub struct ArtificialTrainer {
 
 impl Ai for ArtificialTrainer {
     fn predict(&mut self, _state: &crate::types::GameState, _dt: f32) -> Commands {
-        //TODO: we need somehow get state and dt to the trainer.
+        // state is already submitted in the first step during training!
 
         let mut data = unsafe { &**self.data.get() };
 
