@@ -5,4 +5,5 @@ mod grid;
 mod mask;
 mod modules;
 pub mod types;
+mod train;
 mod inference;
