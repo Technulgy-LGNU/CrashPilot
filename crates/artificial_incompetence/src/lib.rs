@@ -7,3 +7,8 @@ mod modules;
 pub mod types;
 mod train;
 mod inference;
+
+
+pub use inference::*;
+pub use train::*;
+pub use types::*;

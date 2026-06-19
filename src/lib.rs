@@ -31,7 +31,7 @@ pub mod interface;
 mod metrics;
 mod utils;
 
-use artificial_incompetence::types::{Ai, ArtificialIncompetence};
+use artificial_incompetence::{Ai, ArtificialIncompetence};
 pub use core_dump;
 use core_dump::vec::types::Vec2;
 
