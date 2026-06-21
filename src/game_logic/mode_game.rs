@@ -1,15 +1,20 @@
-use crate::CrashPilot;
-use crate::game_logic::types::GamePhase;
-use crate::helpers::best_angle_to_goal::best_shot_angle;
-use artificial_incompetence::types::{Ai, RobotCommand};
-use core_dump::proto::CpState::StateFree;
-use core_dump::proto::CpTask::{
-  TaskBlock, TaskDribble, TaskKick, TaskPos, TaskPosBall, TaskRecKick, TaskSteal,
-};
-use core_dump::vec::types::Vec2;
+use crate::game_logic::ai_handler::ai_handler;
+use crate::game_logic::types::{GamePhase, Robot};
+use crate::helpers::best_angle_to_goal::shoot_to_goal;
+use crate::{CrashPilot, RobotData};
+use artificial_incompetence::types::Ai;
+use core_dump::proto::CpTask::{TaskChip, TaskRecKick};
 
 #[inline]
 pub fn mode_game<C, A: Ai>(cp: &mut CrashPilot<C, A>) {
+  let all_robots: Vec<Robot> = cp
+    .state
+    .robots_self
+    .iter()
+    .chain(cp.state.robots_opp.iter())
+    .cloned()
+    .collect();
+
   match cp.state.phase {
     GamePhase::UNKNOWN => {}
     GamePhase::Halted => {}
@@ -21,159 +26,83 @@ pub fn mode_game<C, A: Ai>(cp: &mut CrashPilot<C, A>) {
     GamePhase::OffensiveFreeKick => {}
     GamePhase::DefensiveFreeKick => {}
     GamePhase::Running => {
-      // AI does it thing
-      let commands = cp.ai.predict(&cp.ai_data, 1f32);
-      // Convert the commands to robot commands
-      if commands.len() > 0 {
-        for (id, command) in commands.iter().enumerate() {
-          if command.is_some() {
-            // Get the robot
-            let mut robot = cp.robots.get(&(id as u32)).cloned().unwrap_or_default();
-            if robot != Default::default() {
-              robot.msg.cmd.state = StateFree as i32;
-              match command.unwrap_or_default() {
-                RobotCommand::Pos(pos) => {
-                  robot.msg.cmd.task = TaskPos as i32;
-                  robot.msg.cmd.pos = Option::from(
-                    (pos * Vec2::new(cp.field_setup.width as f32, cp.field_setup.height as f32))
-                      .to_cp_vec2(),
-                  );
-                  robot.msg.cmd.speed = Option::from(4000);
-                }
-                RobotCommand::Kick(orient) => {
-                  robot.msg.cmd.task = TaskKick as i32;
-                  robot.msg.cmd.kick_orient = Option::from((orient * 360f32) as u32);
-                  robot.msg.cmd.kick_speed = Option::from(200);
-                }
-                RobotCommand::Chip(orient) => {
-                  robot.msg.cmd.task = TaskKick as i32;
-                  robot.msg.cmd.kick_orient = Option::from((orient * 360f32) as u32);
-                  robot.msg.cmd.kick_speed = Option::from(200);
-                }
-                RobotCommand::RecKick(_) => {
-                  robot.msg.cmd.task = TaskRecKick as i32;
-                }
-                RobotCommand::Steal => {
-                  robot.msg.cmd.task = TaskSteal as i32;
-                  robot.msg.cmd.speed = Option::from(4000);
-                }
-                RobotCommand::Dribble(pos) => {
-                  robot.msg.cmd.task = TaskDribble as i32;
-                  robot.msg.cmd.pos = Option::from(
-                    (pos * Vec2::new(cp.field_setup.width as f32, cp.field_setup.height as f32))
-                      .to_cp_vec2(),
-                  );
-                  robot.msg.cmd.speed = Option::from(2000);
-                }
-                RobotCommand::PosBall(pos) => {
-                  robot.msg.cmd.task = TaskPosBall as i32;
-                  robot.msg.cmd.pos = Option::from(
-                    (pos * Vec2::new(cp.field_setup.width as f32, cp.field_setup.height as f32))
-                      .to_cp_vec2(),
-                  );
-                  robot.msg.cmd.speed = Option::from(2000);
-                }
-                RobotCommand::Kickoff(_) => {}
-                RobotCommand::FreeKick(_) => {}
-                RobotCommand::KickGoal => {
-                  let side = if cp.packet_buffer.interface_command.game.side {
-                    -1f32
-                  } else {
-                    1f32
-                  };
+      // First check if the goalie has the ball
+      if cp.state.goalie.is_some() {
+        match cp
+          .robots
+          .get(&(cp.state.goalie.unwrap_or_default() as u32))
+          .cloned()
+        {
+          None => return,
+          Some(mut goalie_robot) => {
+            if goalie_robot.feedback.has_ball {
+              // Get the state.robot
+              let goalie_robot_state: &Robot = match cp
+                .state
+                .robots_self
+                .iter()
+                .find(|r| r.robot_id == cp.state.goalie.unwrap_or_default())
+              {
+                None => return,
+                Some(robot) => robot,
+              };
 
-                  let robot_self_pos = cp
+              // Chip to robot the furthest away
+              if goalie_robot_state.distance_team.len() >= 2 {
+                let to_robot_id = goalie_robot_state
+                  .distance_team
+                  .iter()
+                  .max_by(|a, b| a.1.partial_cmp(b.1).unwrap());
+                if to_robot_id.is_some() {
+                  // Get the robots
+                  let mut to_robot_msg: RobotData =
+                    match cp.robots.get(&(*to_robot_id.unwrap().0 as u32)).cloned() {
+                      None => return,
+                      Some(robot) => robot,
+                    };
+                  let to_robot_state: &Robot = match cp
                     .state
-                    .robots
+                    .robots_self
                     .iter()
-                    .find(|r| {
-                      r.robot_id == id as u8
-                        && r.team
-                          == if cp.packet_buffer.interface_command.game.team_color {
-                            2
-                          } else {
-                            1
-                          }
-                    })
-                      .and_then(|r| r.pos)
-                    .unwrap_or_default();
-                  // Calculate the angle to the goal with no opponents in the way and the minimum distance from all robots
-                  match best_shot_angle(
-                    robot_self_pos,
-                    &*cp.state.robots,
-                    Vec2::new(
-                      cp.field_setup.width as f32 * 0.5 * side,
-                      cp.field_setup.goal_width as f32 * 0.5 * side,
-                    ),
-                    Vec2::new(
-                      cp.field_setup.width as f32 * 0.5 * side,
-                      (cp.field_setup.goal_width as f32 * -1f32) * 0.5 * side,
-                    ),
-                  ) {
-                    None => {
-                      // Try to shoot to the center
-                      let angle = (robot_self_pos
-                        + Vec2::new(cp.field_setup.width as f32 * side, 0f32))
-                      .angle_in_u16();
-
-                      robot.msg.cmd.task = TaskKick as i32;
-                      robot.msg.cmd.kick_orient = Option::from(angle as u32);
-                      robot.msg.cmd.kick_speed = Option::from(255);
-                    }
-                    Some(angle) => {
-                      robot.msg.cmd.task = TaskKick as i32;
-                      robot.msg.cmd.kick_orient = Option::from(angle);
-                      robot.msg.cmd.kick_speed = Option::from(255);
-                    }
+                    .find(|r| r.robot_id == *to_robot_id.unwrap().0)
+                  {
+                    None => return,
+                    Some(robot) => robot,
                   };
-                }
-                RobotCommand::PassTo(r_id) => {
-                  robot.msg.cmd.task = TaskKick as i32;
 
                   // Get the direction to that robot
-                  for r in cp.state.robots.clone() {
-                    if r.team
-                      == if cp.packet_buffer.interface_command.game.team_color {
-                        2
-                      } else {
-                        1
-                      }
-                      && r.robot_id == r_id
-                    {
-                      robot.msg.cmd.kick_orient = Option::from(
-                        (r.pos.unwrap_or_default()
-                          + cp
-                            .state
-                            .robots
-                            .iter()
-                            .find(|r| r.robot_id == id as u8)
-                            .and_then(|r| r.pos)
-                            .unwrap_or_default())
-                        .angle_in_u16() as u32,
-                      );
-                    }
-                  }
+                  goalie_robot.msg.cmd.kick_orient = Option::from(
+                    (to_robot_state.pos.unwrap_or_default()
+                      + goalie_robot_state.pos.unwrap_or_default())
+                    .angle_in_u16() as u32,
+                  );
+
+                  goalie_robot.msg.cmd.task = TaskChip as i32;
+                  goalie_robot.msg.cmd.kick_speed = Some(255);
+
+                  to_robot_msg.msg.cmd.task = TaskRecKick as i32;
+
+                  // Insert this command back into the robots hashmap
+                  cp.robots.insert(goalie_robot.msg.robot_id, goalie_robot);
+                  cp.robots.insert(to_robot_msg.msg.robot_id, to_robot_msg);
+                } else {
+                  // Chip to goal
+                  shoot_to_goal(&mut goalie_robot, goalie_robot_state, &all_robots, cp);
                 }
-                RobotCommand::RecPass => {
-                  robot.msg.cmd.task = TaskRecKick as i32;
-                }
-                RobotCommand::GoalWall => {
-                  // Select three robots and build a wall between the ball and the  goal
-                }
-                RobotCommand::GoalieGuard => {
-                  robot.msg.cmd.task = TaskBlock as i32;
-                  robot.msg.cmd.enemy_id = None;
-                  robot.msg.cmd.speed = Option::from(4000);
-                }
-                RobotCommand::Hold => {
-                  robot.msg.cmd.speed = Option::from(0);
-                }
+              } else {
+                // Chip to goal
+                shoot_to_goal(&mut goalie_robot, goalie_robot_state, &all_robots, cp);
               }
-              cp.robots.insert(id as u32, robot);
+            } else {
+              ai_handler(&all_robots, cp);
             }
           }
         }
+      } else {
+        ai_handler(&all_robots, cp);
       }
+
+      // Do goalie wall math
     }
   }
 }

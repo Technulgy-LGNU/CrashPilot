@@ -1,4 +1,4 @@
-use crate::ai_types::{Batch, MultiBatch, NUM_COMMANDS};
+use crate::ai_types::{MultiBatch, NUM_COMMANDS};
 use crate::config::{BALL_FEATURES, NEG_INF, NUM_POWER_BINS, ROBOT_FEATURES};
 use crate::grid::GridSpec;
 use crate::mask::{Masks, build_action_masks};

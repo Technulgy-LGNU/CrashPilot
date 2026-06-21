@@ -5,6 +5,7 @@ mod mode_game;
 mod mode_manual;
 mod mode_test;
 pub mod types;
+mod ai_handler;
 
 use crate::CrashPilot;
 use crate::game_logic::mode_game::mode_game;

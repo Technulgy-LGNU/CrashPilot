@@ -1,18 +1,18 @@
+use crate::types::{Ai, Commands};
 use std::cell::UnsafeCell;
 use std::sync::Arc;
-use crate::types::{Ai, Commands, RobotCommand};
 
 pub struct ArtificialTrainer {
-    pub id: usize,
-    pub data: Arc<UnsafeCell<Vec<Commands>>>
+  pub id: usize,
+  pub data: Arc<UnsafeCell<Vec<Commands>>>,
 }
 
 impl Ai for ArtificialTrainer {
-    fn predict(&mut self, _state: &crate::types::GameState, _dt: f32) -> Commands {
-        // state is already submitted in the first step during training!
+  fn predict(&mut self, _state: &crate::types::GameState, _dt: f32) -> Commands {
+    // state is already submitted in the first step during training!
 
-        let mut data = unsafe { &**self.data.get() };
+    let mut data = unsafe { &**self.data.get() };
 
-        data[self.id]
-    }
+    data[self.id]
+  }
 }

@@ -1,6 +1,42 @@
+use core_dump::proto::CpTask::TaskKick;
 use crate::game_logic::types::Robot;
 use core_dump::vec::types::Vec2;
+use artificial_incompetence::Ai;
+use crate::{CrashPilot, RobotData};
 
+#[inline]
+pub fn shoot_to_goal<C, A: Ai>(robot: &mut RobotData, robot_self: &Robot, all_robots: &Vec<Robot>, cp: &CrashPilot<C, A>) {
+  match best_shot_angle(
+    robot_self.pos.unwrap_or_default(),
+    &all_robots,
+    Vec2::new(
+      cp.field_setup.width as f32 * 0.5 * cp.state.site,
+      cp.field_setup.goal_width as f32 * 0.5 * cp.state.site,
+    ),
+    Vec2::new(
+      cp.field_setup.width as f32 * 0.5 * cp.state.site,
+      (cp.field_setup.goal_width as f32 * -1f32) * 0.5 * cp.state.site,
+    ),
+  ) {
+    None => {
+      // Try to shoot to the center
+      let angle = (robot_self.pos.unwrap_or_default()
+        + Vec2::new(cp.field_setup.width as f32 * cp.state.site, 0f32))
+        .angle_in_u16();
+
+      robot.msg.cmd.task = TaskKick as i32;
+      robot.msg.cmd.kick_orient = Option::from(angle as u32);
+      robot.msg.cmd.kick_speed = Option::from(255);
+    }
+    Some(angle) => {
+      robot.msg.cmd.task = TaskKick as i32;
+      robot.msg.cmd.kick_orient = Option::from(angle);
+      robot.msg.cmd.kick_speed = Option::from(255);
+    }
+  };
+}
+
+#[inline]
 pub fn best_shot_angle(
   shooter: Vec2<f32>,
   opponents: &[Robot],

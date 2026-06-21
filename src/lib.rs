@@ -341,15 +341,17 @@ impl<C, A: Ai> CrashPilot<C, A> {
   pub fn update_data(&mut self) {
     // Create state
     let ball_data = BallData::new(&self.packet_buffer.vis_tracked);
+    let (robots_self, robots_opp) = Robot::new_from_tracked(
+      &self.packet_buffer.vis_tracked,
+      &ball_data.ball,
+      self.team,
+      self.site as f32,
+      &self.field_setup,
+    );
 
     self.state.update(
-      Robot::new_from_tracked(
-        &self.packet_buffer.vis_tracked,
-        &ball_data.ball,
-        self.team,
-        self.site as f32,
-        &self.field_setup,
-      ),
+      robots_self,
+      robots_opp,
       ball_data,
       self.packet_buffer.referee.clone(),
       self.packet_buffer.interface_command.clone(),
@@ -401,7 +403,6 @@ impl<C, A: Ai> CrashPilot<C, A> {
   pub fn step_logic(&mut self) -> (CpInterfaceWrapper, HashMap<u32, RobotData>) {
     self.update_logic();
 
-
     let robot_data = self.robots.clone();
 
     (self.interface_packet(), robot_data)
@@ -427,38 +428,12 @@ impl<C, A: Ai> CrashPilot<C, A> {
   fn update_ai_data(&mut self) {
     // Update robots by filtering between own and opponent team
     self.ai_data.own_robots = self_robots_to_ai_robots(
-      self
-        .state
-        .robots
-        .iter()
-        .filter(|r| {
-          r.team
-            == if self.packet_buffer.interface_command.game.team_color {
-              2
-            } else {
-              1
-            }
-        })
-        .cloned()
-        .collect(),
+      self.state.robots_self.clone(),
       self.field_setup.clone(),
       self.state.goalie.unwrap_or_default(),
     );
     self.ai_data.opp_robots = self_robots_to_ai_robots(
-      self
-        .state
-        .robots
-        .iter()
-        .filter(|r| {
-          r.team
-            == if self.packet_buffer.interface_command.game.team_color {
-              1
-            } else {
-              2
-            }
-        })
-        .cloned()
-        .collect(),
+      self.state.robots_opp.clone(),
       self.field_setup.clone(),
       self.state.goalie.unwrap_or_default(),
     );
