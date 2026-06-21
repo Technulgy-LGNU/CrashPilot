@@ -37,7 +37,7 @@ pub fn shoot_to_goal<C, A: Ai>(robot: &mut RobotData, robot_self: &Robot, all_ro
 }
 
 #[inline]
-pub fn best_shot_angle(
+fn best_shot_angle(
   shooter: Vec2<f32>,
   opponents: &[Robot],
   goal_left: Vec2<f32>,

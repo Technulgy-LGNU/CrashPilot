@@ -4,6 +4,7 @@ use std::error::Error;
 use std::fs;
 use std::net::Ipv4Addr;
 use std::path::Path;
+use core_dump::proto::CpVector2;
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Config {
@@ -138,6 +139,12 @@ pub struct Vector2 {
 impl Default for Vector2 {
   fn default() -> Self {
     Self { x: 6200, y: 400 }
+  }
+}
+impl Vector2 {
+  #[inline]
+  pub fn to_cp_vec2(&self) -> CpVector2 {
+    CpVector2{x: self.x, y: self.y}
   }
 }
 

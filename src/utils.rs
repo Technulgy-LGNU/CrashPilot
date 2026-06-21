@@ -22,7 +22,7 @@ pub struct FieldSetup {
   pub goal_width: u32,
   pub penalty_width: u32,
   pub penalty_height: u32,
-  pub center_circle_radius: u32,
+  pub _center_circle_radius: u32,
   pub run_off_width: u32,
 }
 impl Default for FieldSetup {
@@ -33,7 +33,7 @@ impl Default for FieldSetup {
       goal_width: 1000,
       penalty_width: 2000,
       penalty_height: 1000,
-      center_circle_radius: 1000,
+      _center_circle_radius: 1000,
       run_off_width: 200,
     }
   }
@@ -47,7 +47,7 @@ impl From<&SslGeometryData> for FieldSetup {
       goal_width: geometry.field.goal_width as u32,
       penalty_width: geometry.field.penalty_area_width.unwrap_or_default() as u32,
       penalty_height: geometry.field.penalty_area_width.unwrap_or_default() as u32,
-      center_circle_radius: geometry.field.center_circle_radius.unwrap_or_default() as u32,
+      _center_circle_radius: geometry.field.center_circle_radius.unwrap_or_default() as u32,
       run_off_width: geometry.field.goal_substitution_area_width.unwrap_or(200) as u32,
     }
   }
@@ -63,7 +63,7 @@ pub struct PacketBuffer {
 }
 
 impl PacketBuffer {
-  pub fn clear(&mut self) {
+  pub fn _clear(&mut self) {
     self.vis_raw = SslWrapperPacket::default();
     self.vis_tracked = TrackerWrapperPacket::default();
     self.interface_command = InterfaceCommandCp::default();

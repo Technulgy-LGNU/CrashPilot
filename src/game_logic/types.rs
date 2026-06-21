@@ -47,6 +47,8 @@ pub enum GamePhase {
   DefensiveFreeKick,
 
   Running,
+  Timeout,
+  BallPlacement,
 }
 
 #[derive(Debug, Default, Clone)]
@@ -85,7 +87,50 @@ impl RefMachine {
         self.state = RefState::Running;
       }
 
-      _ => {}
+      Command::PreparePenaltyYellow => {
+        self.state = RefState::PreparePenalty {
+          attacking: Team::Yellow,
+        }
+      }
+      Command::PreparePenaltyBlue => {
+        self.state = RefState::PreparePenalty {
+          attacking: Team::Blue,
+        }
+      }
+      Command::DirectFreeYellow => {
+        self.state = RefState::DirectFree {
+          attacking: Team::Yellow,
+        }
+      }
+      Command::DirectFreeBlue => {
+        self.state = RefState::DirectFree {
+          attacking: Team::Blue,
+        }
+      }
+      Command::IndirectFreeYellow => {
+        self.state = RefState::IndirectFree {
+          attacking: Team::Yellow,
+        }
+      }
+      Command::IndirectFreeBlue => {
+        self.state = RefState::IndirectFree {
+          attacking: Team::Blue,
+        }
+      }
+      Command::TimeoutYellow => {
+        self.state = RefState::Timeout;
+      }
+      Command::TimeoutBlue => {
+        self.state = RefState::Timeout;
+      }
+      Command::GoalYellow => {
+        self.state = RefState::Halt;
+      }
+      Command::GoalBlue => {
+        self.state = RefState::Halt;
+      }
+      Command::BallPlacementYellow => self.state = RefState::BallPlacement { team: Team::Yellow },
+      Command::BallPlacementBlue => self.state = RefState::BallPlacement { team: Team::Blue },
     }
   }
 }
@@ -126,6 +171,7 @@ pub enum RefState {
   },
 
   Running,
+  Timeout,
 }
 
 impl WorldState {
@@ -168,13 +214,46 @@ impl WorldState {
       RefState::Stop => {
         self.phase = GamePhase::Stopped;
       }
-      RefState::PrepareKickoff { attacking } => {}
-      RefState::PreparePenalty { .. } => {}
-      RefState::BallPlacement { .. } => {}
-      RefState::DirectFree { .. } => {}
-      RefState::IndirectFree { .. } => {}
+      RefState::PrepareKickoff { attacking: team } => {
+        if team == self.team {
+          self.phase = GamePhase::OffensiveKickoff;
+        } else {
+          self.phase = GamePhase::DefensiveKickoff;
+        }
+      }
+      RefState::PreparePenalty { attacking } => {
+        if attacking == self.team { 
+          self.phase = GamePhase::OffensivePenalty;
+        } else {
+          self.phase = GamePhase::DefensivePenalty;
+        }
+      }
+      RefState::BallPlacement { team } => {
+        if team == self.team {
+          self.phase = GamePhase::BallPlacement;
+        } else {
+          self.phase = GamePhase::Halted;
+        }
+      }
+      RefState::DirectFree { attacking } => {
+        if attacking == self.team {
+          self.phase = GamePhase::OffensiveFreeKick;
+        } else {
+          self.phase = GamePhase::DefensiveFreeKick;
+        }
+      }
+      RefState::IndirectFree { attacking } => {
+        if attacking == self.team {
+          self.phase = GamePhase::OffensiveFreeKick;
+        } else {
+          self.phase = GamePhase::DefensiveFreeKick;
+        }
+      }
       RefState::Running => {
         self.phase = GamePhase::Running;
+      },
+      RefState::Timeout => {
+        self.phase = GamePhase::Timeout;
       }
     }
     // For testing, just set always to running

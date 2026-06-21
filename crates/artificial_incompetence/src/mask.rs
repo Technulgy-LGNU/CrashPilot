@@ -1,6 +1,6 @@
 use crate::ai_types::{CommandType, MultiBatch, NUM_COMMANDS};
-use crate::config::{MAX_ROBOTS_PER_TEAM, NUM_ZONES};
-use tch::{IndexOp, Kind, Tensor};
+use crate::config::MAX_ROBOTS_PER_TEAM;
+use tch::{Kind, Tensor};
 
 pub struct Masks {
   pub action_mask: Tensor,
