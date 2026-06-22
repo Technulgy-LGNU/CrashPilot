@@ -58,7 +58,7 @@ pub struct RefMachine {
 
 impl RefMachine {
   pub fn apply(&mut self, cmd: Command) {
-    match Command::try_from(cmd).unwrap_or_default() {
+    match cmd {
       Command::Halt => {
         self.state = RefState::Halt;
       }
@@ -222,7 +222,7 @@ impl WorldState {
         }
       }
       RefState::PreparePenalty { attacking } => {
-        if attacking == self.team { 
+        if attacking == self.team {
           self.phase = GamePhase::OffensivePenalty;
         } else {
           self.phase = GamePhase::DefensivePenalty;
@@ -251,7 +251,7 @@ impl WorldState {
       }
       RefState::Running => {
         self.phase = GamePhase::Running;
-      },
+      }
       RefState::Timeout => {
         self.phase = GamePhase::Timeout;
       }

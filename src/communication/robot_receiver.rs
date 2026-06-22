@@ -1,4 +1,3 @@
-use std::time::{SystemTime, UNIX_EPOCH};
 use crate::communication::{EventShare, Events};
 use crate::config;
 use core_dump::proto::RobotCp;
@@ -33,11 +32,6 @@ pub async fn robot_receiver(
           if robots.iter().find(|x| addr.ip() == x.1.ip).is_some() {
             if let Ok(msg) = RobotCp::decode(&buf[..size]) {
               let lock = tx.lock().await;
-              let now_ts = SystemTime::now()
-                .duration_since(UNIX_EPOCH)
-                .unwrap()
-                .as_secs_f64();
-              println!("Delay from Crashpilot -> Robot -> Crashpilot: {:?}", now_ts - msg.timestamp);
               wrap(msg, lock);
             } else {
               eprintln!("Failed to decode message from robot: {:?}", addr);
