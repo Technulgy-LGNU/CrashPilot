@@ -21,6 +21,10 @@ websocket_host = "0.0.0.0"
 websocket_port = 4096
 
 [robots]
-0 = { ip = "10.0.64.101", substitution_pos = { x = 6200, y = 400 } }
-1 = { ip = "10.0.64.102", substitution_pos = { x = 6200, y = 600 } }
+1 = { ip = "10.0.64.102", substitution_pos = { x = 400, y = 0 } }
+0 = { ip = "10.0.64.101", substitution_pos = { x = 800, y = 0 } }
+2 = { ip = "10.0.64.103", substitution_pos = { x = 1200, y = 0 } }
+3 = { ip = "10.0.64.104", substitution_pos = { x = 1600, y = 0 } }
+7 = { ip = "10.0.64.121", substitution_pos = { x = 6200, y = 600 } } # LNX
+8 = { ip = "10.0.64.122", substitution_pos = { x = 6200, y = 600 } } # LNX
 

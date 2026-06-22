@@ -6,9 +6,8 @@ use core_dump::proto::{
   CpInfos, CpTrackedRobot, InterfaceCommandCp, SslDetectionBall, SslWrapperPacket,
   TrackerWrapperPacket,
 };
-use prost_types::Timestamp;
 use std::collections::HashMap;
-use std::time::SystemTime;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 #[inline]
 pub fn create_robot_data(
@@ -23,7 +22,10 @@ pub fn create_robot_data(
   for robot in robots.values_mut() {
     // Basic data
     robot.msg.packet_id = packet_id;
-    robot.msg.timestamp = Timestamp::from(SystemTime::now());
+    robot.msg.timestamp = SystemTime::now()
+      .duration_since(UNIX_EPOCH)
+      .unwrap()
+      .as_secs_f64();
 
     // Tracked frame, if not empty
     // Robot Position Data

@@ -61,6 +61,10 @@ pub struct CommunicationChannels {
 
 impl CrashPilot {
   pub async fn default() -> Self {
+    // Interface as feature
+    #[cfg(feature = "interface")]
+    interface::spawn_interface();
+
     let config = match config::load_or_create_config("config.toml") {
       Ok(config) => config,
       Err(e) => panic!("{}", e),
@@ -160,7 +164,6 @@ impl CrashPilot {
 
   pub async fn run(&mut self) {
     println!("Starting robots...");
-
     // Sending should not depend on receiving new packets: when vision/GC packets pause,
     // we still want to keep sending the latest known command/state to the robots.
     // Also, waiting on an interval prevents busy-spinning on `rx.lock()`.
@@ -327,14 +330,13 @@ impl<C, A: Ai> CrashPilot<C, A> {
       self.packet_buffer.referee = packet;
     }
 
-    if let Some(packet) = events.rf {
-      if let Some((_, data)) = self
+    if let Some(packet) = events.rf
+      && let Some((_, data)) = self
         .robots
         .iter_mut()
         .find(|(_, data)| data.msg.robot_id == packet.robot_id)
-      {
-        data.feedback = packet;
-      }
+    {
+      data.feedback = packet;
     }
   }
 
@@ -471,11 +473,7 @@ fn self_robots_to_ai_robots(
   let mut ai_robots: artificial_incompetence::types::Robots = Default::default();
   for robot in robots {
     let robot_id = robot.robot_id;
-    let is_goalie = if robot_id == goalie_robot {
-      true
-    } else {
-      false
-    };
+    let is_goalie = robot_id == goalie_robot;
 
     let ai_robot = artificial_incompetence::types::RobotState {
       id: robot_id,

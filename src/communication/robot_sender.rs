@@ -40,7 +40,7 @@ pub trait RobotSender {
   ///
   /// The function is **best-effort**: it will continue sending even if some robots fail.
   /// Returned `SendReport` describes successes and failures.
-  async fn send_to_all_robots(&self, cfg: &Config) -> SendReport;
+  fn send_to_all_robots(&self, cfg: &Config) -> impl Future<Output = SendReport> + Send;
 }
 
 impl RobotSender for NetworkSender<'_> {
@@ -131,7 +131,6 @@ mod tests {
   use super::*;
   use crate::config::{Config, RobotConfig};
   use core_dump::proto::{CpBall, CpCommand, CpRobot, CpVector2};
-  use prost_types::Timestamp;
   use std::net::Ipv4Addr;
   use std::time::Duration;
   use tokio::time::timeout;
@@ -140,10 +139,7 @@ mod tests {
     RobotData {
       msg: CpRobot {
         robot_id,
-        timestamp: Timestamp {
-          seconds: 0,
-          nanos: 0,
-        },
+        timestamp: 0f64,
         packet_id: 1,
         ball: CpBall {
           pos: CpVector2 { x: 0, y: 0 },

@@ -19,7 +19,7 @@ pub struct RobotState {
 }
 
 
-pub type Robots = [Option<RobotState>; 8];
+pub type Robots = [Option<RobotState>; 16];
 
 #[derive(Debug, Copy, Clone, Default)]
 pub struct GameState {

@@ -8,14 +8,14 @@ use crate::{CrashPilot, RobotData};
 pub fn shoot_to_goal<C, A: Ai>(robot: &mut RobotData, robot_self: &Robot, all_robots: &Vec<Robot>, cp: &CrashPilot<C, A>) {
   match best_shot_angle(
     robot_self.pos.unwrap_or_default(),
-    &all_robots,
+    all_robots,
     Vec2::new(
       cp.field_setup.width as f32 * 0.5 * cp.state.site,
       cp.field_setup.goal_width as f32 * 0.5 * cp.state.site,
     ),
     Vec2::new(
       cp.field_setup.width as f32 * 0.5 * cp.state.site,
-      (cp.field_setup.goal_width as f32 * -1f32) * 0.5 * cp.state.site,
+      -(cp.field_setup.goal_width as f32) * 0.5 * cp.state.site,
     ),
   ) {
     None => {

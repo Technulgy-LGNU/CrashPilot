@@ -43,15 +43,13 @@ impl Events {
   }
 
   pub fn take(&mut self) -> Self {
-    let events = Self {
+    Self {
       raw: self.raw.take(),
       tracked: self.tracked.take(),
       ws: self.ws.take(),
       gc: self.gc.take(),
       rf: self.rf.take(),
-    };
-
-    events
+    }
   }
 }
 
