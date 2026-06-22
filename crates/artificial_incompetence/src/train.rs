@@ -1,12 +1,27 @@
-use crate::types::{Ai, Commands};
 mod ppo;
 
 use std::cell::UnsafeCell;
 use std::sync::Arc;
+use tch::nn::{Optimizer, VarStore};
+use crate::modules::coach::Coach;
+use crate::types::{Ai, Commands, RobotCommand};
+
+
+pub type Data = Arc<UnsafeCell<Vec<Commands>>>;
+
+pub struct Trainer {
+    pub data: Data,
+    pub vs: VarStore,
+    pub policy: Coach,
+    pub opt: Optimizer,
+
+}
+
+
 
 pub struct ArtificialTrainer {
-  pub id: usize,
-  pub data: Arc<UnsafeCell<Vec<Commands>>>,
+    pub id: usize,
+    pub data: Data,
 }
 
 impl Ai for ArtificialTrainer {
