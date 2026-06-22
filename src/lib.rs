@@ -86,7 +86,7 @@ impl CrashPilot {
     let loki = spawn_loki_publisher(&config);
 
     // Receiver for the communication
-    let (rx, ws_out) = match communication_receiver(&config).await {
+    let (rx, ws_out) = match communication_receiver(&config) {
       Ok(comm) => (comm.events, comm.ws_out),
       Err(e) => panic!("{}", e),
     };
@@ -167,7 +167,7 @@ impl CrashPilot {
     // Sending should not depend on receiving new packets: when vision/GC packets pause,
     // we still want to keep sending the latest known command/state to the robots.
     // Also, waiting on an interval prevents busy-spinning on `rx.lock()`.
-    let mut tick = interval(Duration::from_millis(2)); // ~500 Hz
+    let mut tick = interval(Duration::from_millis(8)); // ~500 Hz
     tick.set_missed_tick_behavior(MissedTickBehavior::Skip);
 
     loop {

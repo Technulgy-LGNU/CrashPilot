@@ -7,20 +7,20 @@ use prost::Message;
 use tokio::net::TcpListener;
 use tokio_tungstenite::tungstenite::Bytes;
 
-pub async fn spawn_websocket(cfg: &config::Config, tx: EventShare, ws_out: WebsocketOut) {
+pub fn spawn_websocket(cfg: &config::Config, tx: EventShare, ws_out: WebsocketOut) {
   let addr = format!(
     "{}:{}",
     cfg.server.websocket_host, cfg.server.websocket_port
   );
 
-  // Create raw TCP Stream
-  let tcp_socket = match TcpListener::bind(&addr).await {
-    Ok(socket) => socket,
-    Err(e) => panic!("Can't bind websocket to {}: {}", addr, e),
-  };
-
   // Accept incoming connections
   tokio::spawn(async move {
+    // Create raw TCP Stream
+    let tcp_socket = match TcpListener::bind(&addr).await {
+      Ok(socket) => socket,
+      Err(e) => panic!("Can't bind websocket to {}: {}", addr, e),
+    };
+    
     loop {
       let (stream, peer_addr) = match tcp_socket.accept().await {
         Ok(connection) => connection,

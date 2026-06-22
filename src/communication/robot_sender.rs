@@ -6,7 +6,9 @@ use anyhow::{Error, anyhow};
 use prost::Message;
 use std::collections::HashMap;
 use std::net::{SocketAddr, SocketAddrV4};
+use std::time::Duration;
 use tokio::net::UdpSocket;
+use tokio::time::timeout;
 
 pub struct NetworkSender<'a> {
   pub(crate) socket: &'a UdpSocket,
@@ -99,24 +101,32 @@ impl RobotSender for NetworkSender<'_> {
 
       let addr = SocketAddr::V4(SocketAddrV4::new(robot_cfg.ip, cfg.server.robots_port));
 
-      match self.socket.send_to(&buf, addr).await {
-        Ok(bytes_sent) if bytes_sent == buf.len() => {
+      // Wrap send_to with timeout to prevent hanging on unreachable robots
+      let send_timeout = Duration::from_millis(10);
+      match timeout(send_timeout, self.socket.send_to(&buf, addr)).await {
+        Ok(Ok(bytes_sent)) if bytes_sent == buf.len() => {
           report.sent += 1;
           #[cfg(feature = "loki")]
           if let Some(loki) = &self.loki {
             loki.publish_robot_message(robot_data.msg.clone());
           }
         }
-        Ok(bytes_sent) => {
+        Ok(Ok(bytes_sent)) => {
           report.push_failure(
             robot_id,
             anyhow!("partial UDP send: sent {bytes_sent} of {} bytes", buf.len()),
           );
         }
-        Err(e) => {
+        Ok(Err(e)) => {
           report.push_failure(
             robot_id,
             Error::new(e).context(format!("failed to send UDP datagram to {addr}")),
+          );
+        }
+        Err(_) => {
+          report.push_failure(
+            robot_id,
+            anyhow!("UDP send to {addr} timed out after {send_timeout:?}"),
           );
         }
       }

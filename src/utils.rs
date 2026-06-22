@@ -79,7 +79,7 @@ pub async fn spawn_robot_socket(cfg: &config::Config) -> tokio::net::UdpSocket {
     "{}:{}",
     cfg.server.robot_socket_host, cfg.server.robot_socket_port
   ))
-  .await
+    .await
   {
     Ok(socket) => socket,
     Err(e) => match e.kind() {

@@ -4,7 +4,7 @@ use crate::communication::udp_listener::spawn_udp_listener;
 use crate::config::Config;
 use core_dump::proto::{Referee, SslWrapperPacket, TrackerWrapperPacket};
 
-pub async fn get_ssl_data(cfg: &Config, tx: EventShare) {
+pub fn get_ssl_data(cfg: &Config, tx: EventShare) {
   // Vision raw
   let vis_raw_socket =
     match create_multicast_socket(cfg.ssl.ssl_vision_raw_ip, cfg.ssl.ssl_vision_raw_port) {

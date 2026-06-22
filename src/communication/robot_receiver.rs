@@ -1,10 +1,11 @@
+use std::time::SystemTime;
 use crate::communication::{EventShare, Events};
 use crate::config;
 use core_dump::proto::RobotCp;
 use prost::Message;
 use tokio::sync::RwLockWriteGuard;
 
-pub async fn robot_receiver(
+pub fn robot_receiver(
   cfg: &config::Config,
   tx: EventShare,
   wrap: fn(RobotCp, RwLockWriteGuard<Events>),
@@ -25,13 +26,18 @@ pub async fn robot_receiver(
 
     println!("Robot receiver listening on {}", addr);
 
-    let mut buf = [0u8; 65535];
     loop {
+      let mut buf = [0u8; 1024];
       match socket.recv_from(&mut buf).await {
         Ok((size, addr)) => {
           if robots.iter().find(|x| addr.ip() == x.1.ip).is_some() {
             if let Ok(msg) = RobotCp::decode(&buf[..size]) {
               let lock = tx.write().await;
+
+              // Print Delay
+              let delay = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap().as_secs_f64();
+              println!("Delay: {}", delay - msg.timestamp);
+
               wrap(msg, lock);
             } else {
               eprintln!("Failed to decode message from robot: {:?}", addr);

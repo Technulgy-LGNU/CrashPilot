@@ -89,15 +89,6 @@ impl WebsocketOut {
     self.notify.notify_waiters();
   }
 
-  /// Publish a new binary payload.
-  pub fn publish_sync(&self, payload: CpInterfaceWrapper) {
-    let mut lock = self.state.blocking_write();
-    lock.seq = lock.seq.wrapping_add(1);
-    lock.payload = Some(payload);
-    drop(lock);
-    self.notify.notify_waiters();
-  }
-
   /// Wait until a payload newer than `last_seq` is available and return it.
   ///
   /// This is implemented in a race-free way (won't miss notifications): it creates the
@@ -130,18 +121,17 @@ pub struct CommunicationHandles {
   pub ws_out: WebsocketOut,
 }
 
-pub async fn communication_receiver(cfg: &config::Config) -> anyhow::Result<CommunicationHandles> {
+pub fn communication_receiver(cfg: &config::Config) -> anyhow::Result<CommunicationHandles> {
   let events = Arc::new(RwLock::new(Events::new()));
   let ws_out = WebsocketOut::new();
 
-  get_ssl_data(cfg, events.clone()).await;
+  get_ssl_data(cfg, events.clone());
 
-  spawn_websocket(cfg, events.clone(), ws_out.clone()).await;
+  spawn_websocket(cfg, events.clone(), ws_out.clone());
 
   robot_receiver(cfg, events.clone(), |event, mut lock| {
     lock.rf = Some(event);
-  })
-  .await;
+  });
 
   Ok(CommunicationHandles { events, ws_out })
 }
