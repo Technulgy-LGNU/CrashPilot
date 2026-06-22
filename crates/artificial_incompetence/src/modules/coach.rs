@@ -6,7 +6,7 @@ use crate::modules::critic::Critic;
 use crate::types::{Commands, RobotCommand};
 use tch::{Kind, Tensor, nn};
 
-struct Coach {
+pub struct Coach {
   actor: Actor,
   critic: Critic,
   grid_spec: GridSpec,
@@ -83,7 +83,7 @@ impl Coach {
     logp * batch.own_mask.to_kind(Kind::Float)
   }
 
-  fn evaluate_actions(
+  pub fn evaluate_actions(
     &self,
     batch: &MultiBatch,
     action: &SampledRobotAction,
