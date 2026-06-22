@@ -1,19 +1,18 @@
 use crate::communication::{EventShare, Events};
 use prost::Message;
 use tokio::net::UdpSocket;
-use tokio::sync::MutexGuard;
+use tokio::sync::RwLockWriteGuard;
 
-pub(crate) fn spawn_udp_listener<T>(
+pub fn spawn_udp_listener<T>(
   socket: UdpSocket,
   tx: EventShare,
-  wrap: fn(T, MutexGuard<Events>),
+  wrap: fn(T, RwLockWriteGuard<Events>),
 ) where
   T: Message + Default + Send + 'static,
 {
   tokio::spawn(async move {
-    let mut buf = [0u8; 65536];
-
     loop {
+      let mut buf = [0; 1024];
       match socket.recv_from(&mut buf).await {
         Ok((size, _)) => {
           if let Ok(mut latest_msg) = T::decode(&buf[..size]) {
@@ -33,7 +32,7 @@ pub(crate) fn spawn_udp_listener<T>(
               }
             }
 
-            let lock = tx.lock().await;
+            let lock = tx.write().await;
             wrap(latest_msg, lock);
           }
         }

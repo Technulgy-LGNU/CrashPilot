@@ -81,7 +81,7 @@ pub async fn spawn_websocket(cfg: &config::Config, tx: EventShare, ws_out: Webso
 
               match InterfaceWrapperCp::decode(&*data) {
                 Ok(decoded) => {
-                  let mut lock = tx.lock().await;
+                  let mut lock = tx.write().await;
 
                   lock.ws = Some(decoded);
                 }

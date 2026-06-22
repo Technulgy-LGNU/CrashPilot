@@ -19,7 +19,7 @@ use core_dump::proto::{
   CpInterfaceWrapper, InterfaceWrapperCp, Referee, RobotCp, SslWrapperPacket, TrackerWrapperPacket,
 };
 use std::sync::Arc;
-use tokio::sync::Mutex;
+use tokio::sync::RwLock;
 use tokio::sync::Notify;
 
 #[derive(Debug, Clone, Default)]
@@ -53,7 +53,7 @@ impl Events {
   }
 }
 
-pub type EventShare = Arc<Mutex<Events>>;
+pub type EventShare = Arc<RwLock<Events>>;
 
 #[derive(Default)]
 struct WsLatestState {
@@ -63,26 +63,26 @@ struct WsLatestState {
 
 /// Outbound WebSocket handle (CP -> interface).
 ///
-/// This is intentionally implemented as an `Arc<Mutex<...>>` holding only the *latest* message.
+/// This is intentionally implemented as an `Arc<RwLock<...>>` holding only the *latest* message.
 /// If producers publish faster than a client can send, the client will skip intermediate updates
 /// and only transmit the newest snapshot.
 #[derive(Clone, Default)]
 pub struct WebsocketOut {
-  state: Arc<Mutex<WsLatestState>>,
+  state: Arc<RwLock<WsLatestState>>,
   notify: Arc<Notify>,
 }
 
 impl WebsocketOut {
   pub fn new() -> Self {
     Self {
-      state: Arc::new(Mutex::new(WsLatestState::default())),
+      state: Arc::new(RwLock::new(WsLatestState::default())),
       notify: Arc::new(Notify::new()),
     }
   }
 
   /// Publish a new binary payload.
   pub async fn publish(&self, payload: CpInterfaceWrapper) {
-    let mut lock = self.state.lock().await;
+    let mut lock = self.state.write().await;
     lock.seq = lock.seq.wrapping_add(1);
     lock.payload = Some(payload);
     drop(lock);
@@ -91,7 +91,7 @@ impl WebsocketOut {
 
   /// Publish a new binary payload.
   pub fn publish_sync(&self, payload: CpInterfaceWrapper) {
-    let mut lock = self.state.blocking_lock();
+    let mut lock = self.state.blocking_write();
     lock.seq = lock.seq.wrapping_add(1);
     lock.payload = Some(payload);
     drop(lock);
@@ -107,7 +107,7 @@ impl WebsocketOut {
       let notified = self.notify.notified();
 
       {
-        let lock = self.state.lock().await;
+        let lock = self.state.read().await;
         if lock.seq != last_seq
           && let Some(payload) = lock.payload.clone()
         {
@@ -131,7 +131,7 @@ pub struct CommunicationHandles {
 }
 
 pub async fn communication_receiver(cfg: &config::Config) -> anyhow::Result<CommunicationHandles> {
-  let events = Arc::new(Mutex::new(Events::new()));
+  let events = Arc::new(RwLock::new(Events::new()));
   let ws_out = WebsocketOut::new();
 
   get_ssl_data(cfg, events.clone()).await;

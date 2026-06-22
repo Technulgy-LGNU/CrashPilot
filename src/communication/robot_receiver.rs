@@ -2,12 +2,12 @@ use crate::communication::{EventShare, Events};
 use crate::config;
 use core_dump::proto::RobotCp;
 use prost::Message;
-use tokio::sync::MutexGuard;
+use tokio::sync::RwLockWriteGuard;
 
 pub async fn robot_receiver(
   cfg: &config::Config,
   tx: EventShare,
-  wrap: fn(RobotCp, MutexGuard<Events>),
+  wrap: fn(RobotCp, RwLockWriteGuard<Events>),
 ) {
   let addr = format!(
     "{}:{}",
@@ -31,7 +31,7 @@ pub async fn robot_receiver(
         Ok((size, addr)) => {
           if robots.iter().find(|x| addr.ip() == x.1.ip).is_some() {
             if let Ok(msg) = RobotCp::decode(&buf[..size]) {
-              let lock = tx.lock().await;
+              let lock = tx.write().await;
               wrap(msg, lock);
             } else {
               eprintln!("Failed to decode message from robot: {:?}", addr);

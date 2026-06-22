@@ -181,7 +181,7 @@ impl CrashPilot {
     // Drain the *latest* events from the shared state. We handle all types each tick,
     // not just one, so state stays fresh.
     let events = {
-      let mut lock = self.comm.rx.lock().await;
+      let mut lock = self.comm.rx.write().await;
       lock.take()
     };
 
