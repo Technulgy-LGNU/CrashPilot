@@ -1,6 +1,6 @@
-use crate::communication::EventShare;
 use crate::communication::create_multicast_socket::create_multicast_socket;
 use crate::communication::udp_listener::spawn_udp_listener;
+use crate::communication::EventShare;
 use crate::config::Config;
 use core_dump::proto::{Referee, SslWrapperPacket, TrackerWrapperPacket};
 

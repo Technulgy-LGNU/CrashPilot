@@ -1,3 +1,4 @@
+mod ai_handler;
 pub mod ball_placement;
 pub mod defend;
 pub mod kick_off;
@@ -5,15 +6,14 @@ mod mode_game;
 mod mode_manual;
 mod mode_test;
 pub mod types;
-mod ai_handler;
 
-use crate::CrashPilot;
 use crate::game_logic::mode_game::mode_game;
 use crate::game_logic::mode_manual::mode_manual;
 use crate::game_logic::mode_test::mode_test;
 use crate::game_logic::types::WorldState;
-use core_dump::proto::CpMode;
+use crate::CrashPilot;
 use artificial_incompetence::types::Ai;
+use core_dump::proto::CpMode;
 
 /// Main Game Logic
 /// Checks the game for:

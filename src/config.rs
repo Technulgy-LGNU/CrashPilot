@@ -1,10 +1,10 @@
+use core_dump::proto::CpVector2;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::error::Error;
 use std::fs;
 use std::net::Ipv4Addr;
 use std::path::Path;
-use core_dump::proto::CpVector2;
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Config {
@@ -144,7 +144,10 @@ impl Default for Vector2 {
 impl Vector2 {
   #[inline]
   pub fn to_cp_vec2(&self) -> CpVector2 {
-    CpVector2{x: self.x, y: self.y}
+    CpVector2 {
+      x: self.x,
+      y: self.y,
+    }
   }
 }
 
