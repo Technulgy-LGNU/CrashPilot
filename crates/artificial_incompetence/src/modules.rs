@@ -1,6 +1,8 @@
 pub mod actor;
 pub mod attention;
+#[cfg(feature = "train")]
 pub mod coach;
+#[cfg(feature = "train")]
 pub mod critic;
 pub mod grid;
 pub mod mlp;
