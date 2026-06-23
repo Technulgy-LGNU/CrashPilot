@@ -1,9 +1,10 @@
 use simhark::WorldState;
 use tch::Tensor;
+use crate::GameState;
 
 #[derive(Debug)]
 pub struct Transition {
-    pub obs: Vec<WorldState>,
+    pub obs: Vec<GameState>,
     pub command_type: Tensor, // [R]
     pub target_robot: Tensor, // [N, R]
     pub target_zone: Tensor,  // [N, R]
