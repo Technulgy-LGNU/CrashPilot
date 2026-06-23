@@ -3,6 +3,7 @@ mod data;
 mod buffer;
 mod transition;
 mod reward;
+mod gae;
 
 use std::cell::UnsafeCell;
 use std::mem;
