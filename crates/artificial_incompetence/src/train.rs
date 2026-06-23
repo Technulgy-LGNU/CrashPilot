@@ -1,6 +1,7 @@
 mod ppo;
 mod data;
 mod transition;
+mod reward;
 
 use std::cell::UnsafeCell;
 use std::sync::Arc;
