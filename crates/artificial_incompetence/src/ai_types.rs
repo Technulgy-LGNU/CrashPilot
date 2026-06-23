@@ -113,7 +113,7 @@ pub struct MultiBatch {
   // pub zone_mask: tch::Tensor,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct SampledRobotAction {
   pub command_type: tch::Tensor, // [B, R]
   pub target_robot: tch::Tensor, // [B, R]
