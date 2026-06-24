@@ -8,7 +8,7 @@ pub mod types;
 #[cfg(feature = "train")]
 mod train;
 mod inference;
-
+mod loader;
 
 pub use inference::*;
 #[cfg(feature = "train")]
