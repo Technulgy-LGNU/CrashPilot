@@ -1,14 +1,14 @@
 use crate::game_logic::ai_handler::ai_handler;
 use crate::game_logic::types::{GamePhase, Robot};
 use crate::helpers::best_angle_to_goal::shoot_to_goal;
-use crate::{CrashPilot, RobotData};
+use crate::{CommunicationChannels, CrashPilot, RobotData};
 use artificial_incompetence::types::Ai;
-use core_dump::proto::CpState::{StateHalt, StateStop};
+use core_dump::proto::CpState::{StateGoalie, StateHalt, StateStop};
 use core_dump::proto::CpTask::{TaskChip, TaskPos, TaskPosBall, TaskRecKick};
 use core_dump::proto::CpVector2;
 
 #[inline]
-pub fn mode_game<C, A: Ai>(cp: &mut CrashPilot<C, A>) {
+pub fn mode_game<A: Ai + Send>(cp: &mut CrashPilot<CommunicationChannels, A>) {
   let all_robots: Vec<Robot> = cp
     .state
     .robots_self
@@ -17,8 +17,22 @@ pub fn mode_game<C, A: Ai>(cp: &mut CrashPilot<C, A>) {
     .cloned()
     .collect();
 
+  // Give the goalie the goalie command and check if the goalie has changed
+  if let (Some(current_goalie), Some(new_goalie)) = (cp.state.goalie, cp.state.new_goalie) {
+    // Use `unwrap_or(32)` because the max id is 15
+    if current_goalie != new_goalie && new_goalie != cp.state.last_requested_goalie.unwrap_or(32) {
+      let gc = cp.comm.gc.clone();
+      tokio::spawn(async move {
+        if let Err(err) = gc.desired_keeper(new_goalie as i32).await {
+          eprintln!("Failed to request new goalie {new_goalie}: {err:#}");
+        }
+      });
+      cp.state.last_requested_goalie = Some(new_goalie);
+    }
+  }
+
   match cp.state.phase {
-    GamePhase::UNKNOWN => {
+    GamePhase::Unknown => {
       for robot in cp.robots.values_mut() {
         robot.msg.cmd.state = StateHalt as i32;
       }
@@ -40,6 +54,10 @@ pub fn mode_game<C, A: Ai>(cp: &mut CrashPilot<C, A>) {
     GamePhase::OffensiveFreeKick => {}
     GamePhase::DefensiveFreeKick => {}
     GamePhase::Running => {
+      // Set the goalie
+      if let Some(goalie) = cp.state.goalie {
+        cp.robots.get_mut(&(goalie as u32)).unwrap().msg.cmd.state = StateGoalie as i32;
+      }
       // First check if the goalie has the ball
       if cp.state.goalie.is_some() {
         match cp

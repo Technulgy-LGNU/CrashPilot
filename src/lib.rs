@@ -21,8 +21,8 @@ use tokio::time::{Duration, MissedTickBehavior, interval};
 
 pub use crate::utils::RobotData;
 
-pub mod communication;
-pub mod config;
+mod communication;
+mod config;
 mod game_logic;
 mod helpers;
 
@@ -73,7 +73,6 @@ impl CrashPilot {
       Ok(config) => config,
       Err(e) => panic!("{}", e),
     };
-
 
     // Prometheus metrics endpoint and shared per-robot registry.
     #[cfg(feature = "prometheus")]
@@ -341,6 +340,7 @@ impl<C, A: Ai> CrashPilot<C, A> {
           .insert(robot_command.robot_id, robot_command.command);
       }
       self.packet_buffer.interface_command = packet.interface_command;
+      self.state.new_goalie = Some(self.packet_buffer.interface_command.game.goalkeeper_id as u8);
 
       if self.packet_buffer.interface_command.game.team_color {
         self.team = 2;
@@ -401,42 +401,9 @@ impl<C, A: Ai> CrashPilot<C, A> {
     self.update_ai_data();
   }
 
-  pub fn update_logic(&mut self) {
-    // Actual game logic is going to happen here
-    // First checks, on game state, and coordinating robots for that
-    // Checks if one of multiple predetermine strategies apply
-    //  - Goalie has Ball -> Chips automatically to the furthest own robot -> This robot should get the receive command
-    game_logic(self)
-  }
-
-  pub fn update(&mut self) {
-    self.update_data();
-    self.update_logic();
-  }
-
-  pub fn step_with_data(
-    &mut self,
-    events: Events,
-  ) -> (CpInterfaceWrapper, HashMap<u32, RobotData>) {
-    self.interpret(events);
-    self.update();
-
-    let robot_data = self.robots.clone();
-
-    (self.interface_packet(), robot_data)
-  }
-
   pub fn interpret_and_update(&mut self, events: Events) {
     self.interpret(events);
     self.update_data();
-  }
-
-  pub fn step_logic(&mut self) -> (CpInterfaceWrapper, HashMap<u32, RobotData>) {
-    self.update_logic();
-
-    let robot_data = self.robots.clone();
-
-    (self.interface_packet(), robot_data)
   }
 
   pub fn interface_packet(&self) -> CpInterfaceWrapper {
@@ -491,6 +458,41 @@ impl<C, A: Ai> CrashPilot<C, A> {
       .kicked_ball
       .end_time
       .unwrap_or(Instant::now().elapsed().as_millis() as f32);
+  }
+}
+
+impl<A: Ai + Send> CrashPilot<CommunicationChannels, A> {
+  pub fn update_logic(&mut self) {
+    // Actual game logic is going to happen here
+    // First checks, on game state, and coordinating robots for that
+    // Checks if one of multiple predetermine strategies apply
+    //  - Goalie has Ball -> Chips automatically to the furthest own robot -> This robot should get the receive command
+    game_logic(self)
+  }
+
+  pub fn update(&mut self) {
+    self.update_data();
+    self.update_logic();
+  }
+
+  pub fn step_with_data(
+    &mut self,
+    events: Events,
+  ) -> (CpInterfaceWrapper, HashMap<u32, RobotData>) {
+    self.interpret(events);
+    self.update();
+
+    let robot_data = self.robots.clone();
+
+    (self.interface_packet(), robot_data)
+  }
+
+  pub fn step_logic(&mut self) -> (CpInterfaceWrapper, HashMap<u32, RobotData>) {
+    self.update_logic();
+
+    let robot_data = self.robots.clone();
+
+    (self.interface_packet(), robot_data)
   }
 }
 

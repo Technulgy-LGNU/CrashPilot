@@ -1,8 +1,8 @@
-use std::time::SystemTime;
 use crate::communication::{EventShare, Events};
 use crate::config;
 use core_dump::proto::RobotCp;
 use prost::Message;
+use std::time::SystemTime;
 use tokio::sync::RwLockWriteGuard;
 
 pub fn robot_receiver(
@@ -35,7 +35,10 @@ pub fn robot_receiver(
               let lock = tx.write().await;
 
               // Print Delay
-              let delay = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap().as_secs_f64();
+              let delay = SystemTime::now()
+                .duration_since(SystemTime::UNIX_EPOCH)
+                .unwrap()
+                .as_secs_f64();
               println!("Delay: {}", delay - msg.timestamp);
 
               wrap(msg, lock);

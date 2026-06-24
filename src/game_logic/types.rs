@@ -22,6 +22,8 @@ pub struct WorldState {
 
   // Thinks to keep track of
   pub goalie: Option<u8>,
+  pub new_goalie: Option<u8>,
+  pub last_requested_goalie: Option<u8>,
   pub defenders: Vec<u8>,
 
   // States
@@ -211,8 +213,15 @@ impl WorldState {
     // Update RefMachine
     self.ref_machine.apply(self.referee.command());
 
+    // Apply goalie update
+    if self.site.is_sign_positive() {
+      self.goalie = Some(self.referee.yellow.goalkeeper as u8)
+    } else {
+      self.goalie = Some(self.referee.blue.goalkeeper as u8)
+    }
+
     // Apply those to GamePhase
-    match RefState::try_from(self.ref_machine.state).unwrap_or_default() {
+    match self.ref_machine.state {
       RefState::Halt => {
         self.phase = GamePhase::Halted;
       }
@@ -277,6 +286,8 @@ impl Default for WorldState {
       team: Team::Yellow,
       site: 0f32,
       goalie: None,
+      new_goalie: None,
+      last_requested_goalie: None,
       defenders: vec![],
       ref_machine: Default::default(),
       phase: Default::default(),
@@ -317,6 +328,7 @@ pub struct Robot {
   ///  - 1: Y+ Wall
   ///  - 2: X- Wall
   ///  - 3: Y- Wall
+  ///
   /// This corresponds to the angle in each direction
   pub distance_wall: Option<Vec<f32>>,
 }

@@ -1,3 +1,4 @@
+mod ai_handler;
 pub mod ball_placement;
 pub mod defend;
 pub mod kick_off;
@@ -5,15 +6,14 @@ mod mode_game;
 mod mode_manual;
 mod mode_test;
 pub mod types;
-mod ai_handler;
 
-use crate::CrashPilot;
 use crate::game_logic::mode_game::mode_game;
 use crate::game_logic::mode_manual::mode_manual;
 use crate::game_logic::mode_test::mode_test;
 use crate::game_logic::types::WorldState;
-use core_dump::proto::CpMode;
+use crate::{CommunicationChannels, CrashPilot};
 use artificial_incompetence::types::Ai;
+use core_dump::proto::CpMode;
 
 /// Main Game Logic
 /// Checks the game for:
@@ -27,7 +27,7 @@ use artificial_incompetence::types::Ai;
 /// Also translates AI commands to robot commands (AI commands are more specific, so the AI
 /// has an easier time to understand them and apply them
 #[inline]
-pub fn game_logic<C, A: Ai>(cp: &mut CrashPilot<C, A>) {
+pub fn game_logic<A: Ai + Send>(cp: &mut CrashPilot<CommunicationChannels, A>) {
   // Check, which mode is enabled:
   //  - Manual: Use the interface commands to control the robots
   //  - Game: Use the AI and hardcoded game logic

@@ -1,3 +1,4 @@
+use crate::TEAM_NAME;
 use crate::communication::EventShare;
 use crate::config::Config;
 use anyhow::{Context, bail};
@@ -11,7 +12,6 @@ use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::TcpStream;
 use tokio::sync::{mpsc, oneshot};
 use tokio::time::{Duration, sleep};
-use crate::TEAM_NAME;
 
 const MAX_FRAME_LEN: usize = 1024 * 1024;
 const RECONNECT_DELAY: Duration = Duration::from_secs(5);
