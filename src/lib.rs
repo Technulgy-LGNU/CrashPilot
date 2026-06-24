@@ -1,11 +1,12 @@
-pub use crate::communication::Events;
-#[cfg(feature = "loki")]
-use crate::communication::loki::LokiPublisher;
 #[cfg(feature = "loki")]
 use crate::communication::loki::spawn_loki_publisher;
+#[cfg(feature = "loki")]
+use crate::communication::loki::LokiPublisher;
 use crate::communication::robot_sender::{NetworkSender, RobotSender};
 pub use crate::communication::ssl_gc_handler::SslGameController;
 use crate::communication::{EventShare, WebsocketOut, communication_receiver};
+pub use crate::communication::Events;
+use crate::communication::{communication_receiver, EventShare, WebsocketOut};
 pub use crate::config::Config;
 use crate::game_logic::game_logic;
 use crate::game_logic::types::{BallData, Robot, WorldState};
@@ -14,10 +15,14 @@ use crate::helpers::robot_data::create_robot_data;
 use crate::metrics::PrometheusMetrics;
 use crate::utils::{FieldSetup, PacketBuffer, spawn_robot_socket};
 use core_dump::proto::{AdvantageChoice, ControllerToTeam, CpCommand, CpInterfaceWrapper, CpRobot};
+use crate::utils::{spawn_robot_socket, FieldSetup, PacketBuffer};
+use core_dump::proto::{CpCommand, CpInterfaceWrapper, CpRobot};
 use std::collections::HashMap;
+use std::sync::atomic::AtomicU64;
+use std::sync::Arc;
 use std::time::Instant;
 use tokio::net::UdpSocket;
-use tokio::time::{Duration, MissedTickBehavior, interval};
+use tokio::time::{interval, Duration, MissedTickBehavior};
 
 pub use crate::utils::RobotData;
 
@@ -32,6 +37,7 @@ pub mod interface;
 mod metrics;
 mod utils;
 
+use crate::communication::RobotHeartbeat;
 use artificial_incompetence::{Ai, ArtificialIncompetence};
 pub use core_dump;
 use core_dump::vec::types::Vec2;
@@ -54,6 +60,8 @@ pub struct CrashPilot<C = CommunicationChannels, A: Ai = ArtificialIncompetence>
   field_setup: FieldSetup,
   packet_buffer: PacketBuffer,
   comm: C,
+  heartbeat: RobotHeartbeat,
+  process_start: tokio::time::Instant,
 }
 
 pub struct CommunicationChannels {
@@ -65,6 +73,7 @@ pub struct CommunicationChannels {
 
 impl CrashPilot {
   pub async fn default() -> Self {
+    let process_start = tokio::time::Instant::now();
     // Interface as feature
     #[cfg(feature = "interface")]
     interface::spawn_interface();
@@ -73,6 +82,9 @@ impl CrashPilot {
       Ok(config) => config,
       Err(e) => panic!("{}", e),
     };
+
+    // Heartbeats
+    let robot_heartbeats = Arc::new((0..16).map(|_| AtomicU64::new(0)).collect::<Vec<_>>());
 
     // Prometheus metrics endpoint and shared per-robot registry.
     #[cfg(feature = "prometheus")]
@@ -113,6 +125,8 @@ impl CrashPilot {
       loki,
       #[cfg(feature = "prometheus")]
       metrics,
+      robot_heartbeats,
+      process_start,
     )
   }
 
@@ -124,18 +138,21 @@ impl CrashPilot {
       data: &self.robots,
       #[cfg(feature = "loki")]
       loki,
+      heartbeats: &self.heartbeat,
+      cfg: &self.config,
+      process_start: self.process_start,
     };
-    let send_report = network_sender.send_to_all_robots(&self.config).await;
-    if !send_report.failed.is_empty() {
-      eprintln!(
-        "Robot send: {} ok, {} failed",
-        send_report.sent,
-        send_report.failed.len()
-      );
-      for failure in &send_report.failed {
-        eprintln!("  robot {}: {:#}", failure.robot_id, failure.error);
-      }
-    }
+    let _send_report = network_sender.send_to_all_robots();
+    // if !send_report.failed.is_empty() {
+    //   eprintln!(
+    //     "Robot send: {} ok, {} failed",
+    //     send_report.sent,
+    //     send_report.failed.len()
+    //   );
+    //   for failure in &send_report.failed {
+    //     eprintln!("  robot {}: {:#}", failure.robot_id, failure.error);
+    //   }
+    // }
     #[cfg(feature = "prometheus")]
     let failed_robot_ids: HashSet<u32> = send_report
       .failed
@@ -250,6 +267,8 @@ impl<C: Default, A: Ai + Default> CrashPilot<C, A> {
       loki,
       #[cfg(feature = "prometheus")]
       metrics,
+      RobotHeartbeat::default(),
+      tokio::time::Instant::now(),
     )
   }
 }
@@ -261,6 +280,8 @@ impl<C, A: Ai> CrashPilot<C, A> {
     ai: A,
     #[cfg(feature = "loki")] loki: Option<LokiPublisher>,
     #[cfg(feature = "prometheus")] metrics: PrometheusMetrics,
+    heartbeats: RobotHeartbeat,
+    process_start: tokio::time::Instant,
   ) -> Self {
     // Robots Hashmap
     let mut robots: HashMap<u32, RobotData> = HashMap::new();
@@ -315,6 +336,8 @@ impl<C, A: Ai> CrashPilot<C, A> {
       field_setup,
       packet_buffer: PacketBuffer::default(),
       comm,
+      heartbeat: heartbeats,
+      process_start,
     }
   }
 

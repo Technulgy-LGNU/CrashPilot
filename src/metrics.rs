@@ -459,7 +459,6 @@ fn now_seconds() -> f64 {
 
 #[cfg(test)]
 mod tests {
-  use super::*;
   use core_dump::proto::{RobotId, Team, TrackedFrame, TrackedRobot, Vector2};
 
   #[tokio::test]

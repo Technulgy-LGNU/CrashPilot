@@ -1,7 +1,6 @@
 use crate::Trainer;
 use crate::ai_types::{MultiBatch, SampledRobotAction};
-use std::collections::HashMap;
-use tch::{Kind, Tensor, nn};
+use tch::{Kind, Tensor};
 
 pub struct UpdateResult {
   loss: f64,
@@ -11,7 +10,7 @@ pub struct UpdateResult {
 }
 
 impl Trainer {
-  fn ppo_update(
+  pub(crate) fn ppo_update(
     &mut self,
     batch: &MultiBatch,
     action_batch: &SampledRobotAction,

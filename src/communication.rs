@@ -4,7 +4,6 @@ mod create_multicast_socket;
 pub mod interface;
 #[cfg(feature = "loki")]
 pub mod loki;
-mod prometheus;
 mod robot_receiver;
 pub mod robot_sender;
 mod ssl_communication;
@@ -20,6 +19,7 @@ use core_dump::proto::{
   ControllerToTeam, CpInterfaceWrapper, InterfaceWrapperCp, Referee, RobotCp, SslWrapperPacket,
   TrackerWrapperPacket,
 };
+use std::sync::atomic::AtomicU64;
 use std::sync::Arc;
 use tokio::sync::Notify;
 use tokio::sync::RwLock;
@@ -128,7 +128,11 @@ pub struct CommunicationHandles {
   pub ws_out: WebsocketOut,
 }
 
-pub fn communication_receiver(cfg: &config::Config) -> anyhow::Result<CommunicationHandles> {
+pub fn communication_receiver(
+  cfg: &config::Config,
+  heartbeats: &RobotHeartbeat,
+  process_start: Instant,
+) -> anyhow::Result<CommunicationHandles> {
   let events = Arc::new(RwLock::new(Events::new()));
   let ws_out = WebsocketOut::new();
 
@@ -138,9 +142,15 @@ pub fn communication_receiver(cfg: &config::Config) -> anyhow::Result<Communicat
 
   spawn_websocket(cfg, events.clone(), ws_out.clone());
 
-  robot_receiver(cfg, events.clone(), |event, mut lock| {
-    lock.rf = Some(event);
-  });
+  robot_receiver(
+    cfg,
+    heartbeats.clone(),
+    events.clone(),
+    |event, mut lock| {
+      lock.rf = Some(event);
+    },
+    process_start,
+  );
 
   Ok(CommunicationHandles { events, gc, ws_out })
 }

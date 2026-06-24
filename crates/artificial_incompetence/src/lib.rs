@@ -5,10 +5,12 @@ mod grid;
 mod mask;
 mod modules;
 pub mod types;
+#[cfg(feature = "train")]
 mod train;
 mod inference;
-
+mod loader;
 
 pub use inference::*;
+#[cfg(feature = "train")]
 pub use train::*;
 pub use types::*;

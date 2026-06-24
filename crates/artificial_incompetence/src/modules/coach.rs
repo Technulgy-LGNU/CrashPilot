@@ -8,12 +8,12 @@ use tch::{Kind, Tensor, nn};
 
 pub struct Coach {
   actor: Actor,
-  critic: Critic,
+  pub critic: Critic,
   grid_spec: GridSpec,
 }
 
 impl Coach {
-  fn new(vs: &nn::Path, grid_spec: GridSpec) -> Self {
+  pub(crate) fn new(vs: &nn::Path, grid_spec: GridSpec) -> Self {
     let actor = Actor::new(&(vs / "actor"), grid_spec, 128, 256, 4);
     let critic = Critic::new(&(vs / "critic"), grid_spec, 128, 256, 4, 2);
 
@@ -24,7 +24,7 @@ impl Coach {
     }
   }
 
-  fn act(
+  pub fn act(
     &self,
     batch: &MultiBatch,
     deterministic: bool,

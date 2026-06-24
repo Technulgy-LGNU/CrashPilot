@@ -1,14 +1,18 @@
+use crate::communication::RobotHeartbeat;
 use crate::communication::{EventShare, Events};
 use crate::config;
 use core_dump::proto::RobotCp;
 use prost::Message;
-use std::time::SystemTime;
+use std::sync::atomic::Ordering;
 use tokio::sync::RwLockWriteGuard;
+use tokio::time::Instant;
 
 pub fn robot_receiver(
   cfg: &config::Config,
+  heartbeats: RobotHeartbeat,
   tx: EventShare,
   wrap: fn(RobotCp, RwLockWriteGuard<Events>),
+  process_start: Instant,
 ) {
   let addr = format!(
     "{}:{}",
@@ -30,24 +34,17 @@ pub fn robot_receiver(
       let mut buf = [0u8; 1024];
       match socket.recv_from(&mut buf).await {
         Ok((size, addr)) => {
-          if robots.iter().find(|x| addr.ip() == x.1.ip).is_some() {
+          if let Some(robot_idx) = robots.iter().find(|x| addr.ip() == x.1.ip) {
+            {
+              let now_ms = process_start.elapsed().as_millis() as u64;
+
+              heartbeats[*robot_idx.0 as usize].store(now_ms, Ordering::Relaxed);
+            }
+
             if let Ok(msg) = RobotCp::decode(&buf[..size]) {
               let lock = tx.write().await;
-
-              // Print Delay
-              let delay = SystemTime::now()
-                .duration_since(SystemTime::UNIX_EPOCH)
-                .unwrap()
-                .as_secs_f64();
-              println!("Delay: {}", delay - msg.timestamp);
-
               wrap(msg, lock);
-            } else {
-              eprintln!("Failed to decode message from robot: {:?}", addr);
             }
-          } else {
-            eprintln!("IP not found for robot: {:?}", addr);
-            continue;
           }
         }
         Err(e) => {

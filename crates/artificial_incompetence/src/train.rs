@@ -1,35 +1,17 @@
 mod ppo;
+mod data;
+mod transition;
+mod reward;
+mod gae;
+mod trainer;
 
-use std::cell::UnsafeCell;
-use std::sync::Arc;
-use tch::nn::{Optimizer, VarStore};
-use crate::modules::coach::Coach;
-use crate::types::{Ai, Commands, RobotCommand};
-
-
-pub type Data = Arc<UnsafeCell<Vec<Commands>>>;
-
-pub struct Trainer {
-    pub data: Data,
-    pub vs: VarStore,
-    pub policy: Coach,
-    pub opt: Optimizer,
-
-}
+use tch::Device;
+use tch::nn::{Path, VarStore};
+pub use trainer::*;
 
 
 
-pub struct ArtificialTrainer {
-    pub id: usize,
-    pub data: Data,
-}
+pub fn train(epochs: usize, worlds: usize, model_path: &Path, dev: Device) {
+    let var_store = VarStore::fill_safetensors()
 
-impl Ai for ArtificialTrainer {
-  fn predict(&mut self, _state: &crate::types::GameState, _dt: f32) -> Commands {
-    // state is already submitted in the first step during training!
-
-    let mut data = unsafe { &**self.data.get() };
-
-    data[self.id]
-  }
 }
