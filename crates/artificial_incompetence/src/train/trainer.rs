@@ -101,6 +101,7 @@ impl Trainer {
         }
 
         let obs = mem::replace(&mut self.old_state, states);
+        self.old_sim_state = sim_states;
 
         self.buf.push(Transition {
             obs,
@@ -166,18 +167,18 @@ impl Trainer {
         let returns = Tensor::from_slice(&returns)
             .to_kind(Kind::Float)
             .to_device(self.dev);
-        
+
         let adv = Tensor::from_slice(&advantages)
             .to_kind(Kind::Float)
             .to_device(self.dev);
-        
+
         let adv_mean = adv.mean(Kind::Float);
-        
+
         let adv_std = (&adv - &adv_mean)
             .pow_tensor_scalar(2.0)
             .mean(Kind::Float)
             .sqrt();
-        
+
         let adv = (&adv - &adv_mean) / (adv_std + 1e-8);
         let advantages = adv.unsqueeze(-1).expand([rows, MAX_ROBOTS_PER_TEAM], true);
 
@@ -192,11 +193,11 @@ impl Trainer {
             0.01,
             0.5,
         );
-        
-        
+
+
         stats
 
-        
+
     }
 }
 
