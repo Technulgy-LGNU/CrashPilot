@@ -225,10 +225,14 @@ fn sample_categorical_from_logits(logits: &Tensor, deterministic: bool) -> Tenso
   if deterministic {
     logits.argmax(-1, false)
   } else {
+    let mut sample_shape = logits.size();
+    let num_categories = sample_shape.pop().unwrap_or(1);
     logits
-        .softmax(-1, Kind::Float)
-        .multinomial(1, true)
-        .squeeze_dim(-1)
+      .view([-1, num_categories])
+      .softmax(-1, Kind::Float)
+      .multinomial(1, true)
+      .squeeze_dim(-1)
+      .view(sample_shape.as_slice())
   }
 }
 
@@ -237,4 +241,3 @@ fn categorical_log_prob(logits: &Tensor, actions: &Tensor) -> Tensor {
   logp.gather(-1, &actions.unsqueeze(-1), false)
       .squeeze_dim(-1)
 }
-

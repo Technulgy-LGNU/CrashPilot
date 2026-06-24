@@ -20,9 +20,9 @@ impl GameState {
       .enumerate()
       .take(MAX_ROBOTS_PER_TEAM as usize)
     {
-      own_mask[i] = true;
-
       let features = if let Some(robot) = robot {
+        own_mask[i] = true;
+
         if robot.is_goalie {
           own_goalie_mask[i] = true;
         }
@@ -56,9 +56,8 @@ impl GameState {
       .enumerate()
       .take(MAX_ROBOTS_PER_TEAM as usize)
     {
-      opp_mask[i] = true;
-
       let features = if let Some(robot) = robot {
+        opp_mask[i] = true;
         robot.encode(-1.0)
       } else {
         RobotState::encode_empty(-1.0)
@@ -86,8 +85,6 @@ impl GameState {
   }
 
   pub fn encode_multiple(states: &[GameState], dev: tch::Device) -> MultiBatch {
-    let mut temp = Vec::with_capacity(states.len());
-
     let mut states = states
       .iter()
       .map(|state| state.encode(dev))
@@ -95,18 +92,21 @@ impl GameState {
 
     let empty = Tensor::new();
 
+    let mut temp = Vec::with_capacity(states.len());
     for state in &mut states {
       temp.push(mem::replace(&mut state.own, empty.shallow_clone()));
     }
 
     let own = Tensor::stack(&temp, 0);
 
+    temp.clear();
     for state in &mut states {
       temp.push(mem::replace(&mut state.own_mask, empty.shallow_clone()));
     }
 
     let own_mask = Tensor::stack(&temp, 0);
 
+    temp.clear();
     for state in &mut states {
       temp.push(mem::replace(
         &mut state.own_goalie_mask,
@@ -116,18 +116,21 @@ impl GameState {
 
     let own_goalie_mask = Tensor::stack(&temp, 0);
 
+    temp.clear();
     for state in &mut states {
       temp.push(mem::replace(&mut state.opp, empty.shallow_clone()));
     }
 
     let opp = Tensor::stack(&temp, 0);
 
+    temp.clear();
     for state in &mut states {
       temp.push(mem::replace(&mut state.opp_mask, empty.shallow_clone()));
     }
 
     let opp_mask = Tensor::stack(&temp, 0);
 
+    temp.clear();
     for state in &mut states {
       temp.push(mem::replace(&mut state.ball, empty.shallow_clone()));
     }

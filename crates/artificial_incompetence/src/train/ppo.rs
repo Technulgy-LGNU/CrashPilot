@@ -2,11 +2,12 @@ use crate::Trainer;
 use crate::ai_types::{MultiBatch, SampledRobotAction};
 use tch::{Kind, Tensor};
 
+#[derive(Debug, Clone, Copy)]
 pub struct UpdateResult {
-  loss: f64,
-  policy_loss: f64,
-  value_loss: f64,
-  entropy: f64,
+  pub loss: f64,
+  pub policy_loss: f64,
+  pub value_loss: f64,
+  pub entropy: f64,
 }
 
 impl Trainer {

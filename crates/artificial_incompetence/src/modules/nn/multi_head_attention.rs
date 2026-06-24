@@ -60,12 +60,13 @@ impl MultiHeadAttention {
     let scores = q.matmul(&k.transpose(-2, -1)) / scale;
 
     let expanded_mask = key_mask
+      .to_kind(Kind::Float)
       .unsqueeze(1)
       .unsqueeze(1)
       .expand([b, self.num_heads, q_len, k_len], true);
 
-    let neg = Tensor::full_like(&scores, NEG_INF);
-    let scores = expanded_mask.where_self(&scores, &neg);
+    let invalid_mask = Tensor::ones_like(&expanded_mask) - expanded_mask;
+    let scores = &scores + invalid_mask * NEG_INF;
 
     let attn = scores.softmax(-1, Kind::Float);
 

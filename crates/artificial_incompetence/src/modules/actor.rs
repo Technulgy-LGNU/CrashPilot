@@ -160,5 +160,5 @@ impl PolicyBody {
 
 pub fn masked_logits(logits: &Tensor, mask: &Tensor) -> Tensor {
   let neg = Tensor::full_like(logits, NEG_INF);
-  mask.where_self(logits, &neg)
+  logits.where_self(&mask.to_kind(Kind::Bool), &neg)
 }
