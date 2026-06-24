@@ -1,6 +1,6 @@
-use crate::CrashPilot;
 use crate::game_logic::types::Robot;
 use crate::helpers::best_angle_to_goal::shoot_to_goal;
+use crate::CrashPilot;
 use artificial_incompetence::{Ai, RobotCommand};
 use core_dump::proto::CpState::StateFree;
 use core_dump::proto::CpTask::{

@@ -1,5 +1,5 @@
-use crate::RobotData;
 use crate::game_logic::WorldState;
+use crate::RobotData;
 use std::collections::HashMap;
 
 #[inline]

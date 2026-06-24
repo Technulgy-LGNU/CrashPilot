@@ -20,7 +20,7 @@ pub fn spawn_websocket(cfg: &config::Config, tx: EventShare, ws_out: WebsocketOu
       Ok(socket) => socket,
       Err(e) => panic!("Can't bind websocket to {}: {}", addr, e),
     };
-    
+
     loop {
       let (stream, peer_addr) = match tcp_socket.accept().await {
         Ok(connection) => connection,
