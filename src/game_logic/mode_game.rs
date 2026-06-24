@@ -47,12 +47,42 @@ pub fn mode_game<A: Ai + Send>(cp: &mut CrashPilot<CommunicationChannels, A>) {
         robot.msg.cmd.state = StateStop as i32;
       }
     }
-    GamePhase::OffensiveKickoff => {}
-    GamePhase::DefensiveKickoff => {}
-    GamePhase::OffensivePenalty => {}
-    GamePhase::DefensivePenalty => {}
-    GamePhase::OffensiveFreeKick => {}
-    GamePhase::DefensiveFreeKick => {}
+    GamePhase::OffensiveKickoff => {
+      // Set the goalie
+      if let Some(goalie) = cp.state.goalie {
+        cp.robots.get_mut(&(goalie as u32)).unwrap().msg.cmd.state = StateGoalie as i32;
+      }
+    }
+    GamePhase::DefensiveKickoff => {
+      // Set the goalie
+      if let Some(goalie) = cp.state.goalie {
+        cp.robots.get_mut(&(goalie as u32)).unwrap().msg.cmd.state = StateGoalie as i32;
+      }
+    }
+    GamePhase::OffensivePenalty => {
+      // Set the goalie
+      if let Some(goalie) = cp.state.goalie {
+        cp.robots.get_mut(&(goalie as u32)).unwrap().msg.cmd.state = StateGoalie as i32;
+      }
+    }
+    GamePhase::DefensivePenalty => {
+      // Set the goalie
+      if let Some(goalie) = cp.state.goalie {
+        cp.robots.get_mut(&(goalie as u32)).unwrap().msg.cmd.state = StateGoalie as i32;
+      }
+    }
+    GamePhase::OffensiveFreeKick => {
+      // Set the goalie
+      if let Some(goalie) = cp.state.goalie {
+        cp.robots.get_mut(&(goalie as u32)).unwrap().msg.cmd.state = StateGoalie as i32;
+      }
+    }
+    GamePhase::DefensiveFreeKick => {
+      // Set the goalie
+      if let Some(goalie) = cp.state.goalie {
+        cp.robots.get_mut(&(goalie as u32)).unwrap().msg.cmd.state = StateGoalie as i32;
+      }
+    }
     GamePhase::Running => {
       // Set the goalie
       if let Some(goalie) = cp.state.goalie {

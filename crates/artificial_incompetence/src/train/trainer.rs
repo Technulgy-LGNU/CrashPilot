@@ -240,7 +240,7 @@ pub struct ArtificialTrainer {
 }
 
 impl Ai for ArtificialTrainer {
-  fn predict(&mut self, _state: &crate::types::GameState, _dt: f32) -> Commands {
+  fn predict(&mut self, _state: &GameState, _dt: f32) -> Commands {
     // state is already submitted in the first step during training!
     self.data.get(self.id)
   }
