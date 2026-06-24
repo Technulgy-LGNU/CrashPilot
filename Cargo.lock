@@ -290,7 +290,6 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "artificial_incompetence",
- "bytes",
  "core_dump",
  "futures-util",
  "http-body-util",
