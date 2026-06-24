@@ -6,7 +6,7 @@ use core_dump::proto::referee::Command;
 use core_dump::proto::{InterfaceCommandCp, Referee, TrackerWrapperPacket};
 use core_dump::vec::types::Vec2;
 
-/// GameState, GamePhase and RefMachine merged together with
+/// GameState, GamePhase, and RefMachine merged
 /// Advanced Update functions
 pub struct WorldState {
   // Data
@@ -22,6 +22,8 @@ pub struct WorldState {
 
   // Thinks to keep track of
   pub goalie: Option<u8>,
+  pub new_goalie: Option<u8>,
+  pub last_requested_goalie: Option<u8>,
   pub defenders: Vec<u8>,
 
   // States
@@ -32,7 +34,7 @@ pub struct WorldState {
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 pub enum GamePhase {
   #[default]
-  UNKNOWN,
+  Unknown,
 
   Halted,
   Stopped,
@@ -138,8 +140,6 @@ impl RefMachine {
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Team {
   // Dont differentiate between colors, so there need to be less checks
-  Own,
-  Enemy,
   Blue,
   Yellow,
 }
@@ -191,11 +191,18 @@ impl WorldState {
     self.iface_cmd = iface_cmd;
 
     // Update team and site dependent on referee data
-    // ToDo: Update site assignment
-    if self.referee.yellow.name.to_string() == "" {
-      self.site = 1f32
+    if self.referee.blue_team_on_positive_half.is_some() {
+      if self.referee.blue_team_on_positive_half.unwrap() {
+        self.site = -1f32
+      } else {
+        self.site = 1f32
+      }
     } else {
-      self.site = -1f32
+      if self.iface_cmd.game.side {
+        self.site = 1f32
+      } else {
+        self.site = -1f32
+      }
     }
 
     self.update_states();
@@ -206,8 +213,15 @@ impl WorldState {
     // Update RefMachine
     self.ref_machine.apply(self.referee.command());
 
+    // Apply goalie update
+    if self.site.is_sign_positive() {
+      self.goalie = Some(self.referee.yellow.goalkeeper as u8)
+    } else {
+      self.goalie = Some(self.referee.blue.goalkeeper as u8)
+    }
+
     // Apply those to GamePhase
-    match RefState::try_from(self.ref_machine.state).unwrap_or_default() {
+    match self.ref_machine.state {
       RefState::Halt => {
         self.phase = GamePhase::Halted;
       }
@@ -272,6 +286,8 @@ impl Default for WorldState {
       team: Team::Yellow,
       site: 0f32,
       goalie: None,
+      new_goalie: None,
+      last_requested_goalie: None,
       defenders: vec![],
       ref_machine: Default::default(),
       phase: Default::default(),
@@ -287,15 +303,11 @@ impl Default for WorldState {
 /// which makes it way easier to do math with it
 ///
 /// Everything is in:
-///   - mm     &&     mm/s
+///   - mm && mm/s
 ///   - degree && degree/s
 #[derive(Debug, Clone)]
 pub struct Robot {
   pub robot_id: u8,
-  // 0: Unknown
-  // 1: Yellow
-  // 2: Blue
-  pub team: u8,
 
   pub pos: Option<Vec2<f32>>,
   pub vel: Option<Vec2<f32>>,
@@ -311,11 +323,12 @@ pub struct Robot {
   pub distance_ball: Option<f32>,
   pub distance_goal: Option<f32>,
 
-  /// Distance to each wall in following order:
+  /// Distance to each wall in the following order:
   ///  - 0: X+ Wall
   ///  - 1: Y+ Wall
   ///  - 2: X- Wall
   ///  - 3: Y- Wall
+  ///
   /// This corresponds to the angle in each direction
   pub distance_wall: Option<Vec<f32>>,
 }
@@ -341,7 +354,7 @@ impl Robot {
       let goal_point = if robot.robot_id.team.unwrap_or_default() == team {
         Vec2::new(field_setup.width as f32 * site * 0.5, 0f32) // Midpoint of the field
       } else {
-        Vec2::new(field_setup.width as f32 * 0.5 * site * -1f32, 0f32) // Midpoint of the field
+        Vec2::new(-(field_setup.width as f32 * 0.5 * site), 0f32) // Midpoint of the field
       };
 
       // Calculates the distances and puts them into the HashMap
@@ -369,7 +382,6 @@ impl Robot {
       if robot.robot_id.team.unwrap_or_default() == team {
         robots_self.push(Robot {
           robot_id: robot.robot_id.id.unwrap_or_default() as u8,
-          team: robot.robot_id.team.unwrap_or_default() as u8,
           pos: Some(Vec2::new(robot.pos.x, robot.pos.y)),
           vel: robot.vel.map(|vel| Vec2::new(vel.x, vel.y)),
           orientation: robot.orientation.to_degrees(),
@@ -386,7 +398,6 @@ impl Robot {
       } else {
         robots_opp.push(Robot {
           robot_id: robot.robot_id.id.unwrap_or_default() as u8,
-          team: robot.robot_id.team.unwrap_or_default() as u8,
           pos: Some(Vec2::new(robot.pos.x, robot.pos.y)),
           vel: robot.vel.map(|vel| Vec2::new(vel.x, vel.y)),
           orientation: robot.orientation.to_degrees(),

@@ -3,6 +3,8 @@ use crate::communication::loki::spawn_loki_publisher;
 #[cfg(feature = "loki")]
 use crate::communication::loki::LokiPublisher;
 use crate::communication::robot_sender::{NetworkSender, RobotSender};
+pub use crate::communication::ssl_gc_handler::SslGameController;
+use crate::communication::{EventShare, WebsocketOut, communication_receiver};
 pub use crate::communication::Events;
 use crate::communication::{communication_receiver, EventShare, WebsocketOut};
 pub use crate::config::Config;
@@ -11,6 +13,8 @@ use crate::game_logic::types::{BallData, Robot, WorldState};
 use crate::helpers::robot_data::create_robot_data;
 #[cfg(feature = "prometheus")]
 use crate::metrics::PrometheusMetrics;
+use crate::utils::{FieldSetup, PacketBuffer, spawn_robot_socket};
+use core_dump::proto::{AdvantageChoice, ControllerToTeam, CpCommand, CpInterfaceWrapper, CpRobot};
 use crate::utils::{spawn_robot_socket, FieldSetup, PacketBuffer};
 use core_dump::proto::{CpCommand, CpInterfaceWrapper, CpRobot};
 use std::collections::HashMap;
@@ -22,8 +26,8 @@ use tokio::time::{interval, Duration, MissedTickBehavior};
 
 pub use crate::utils::RobotData;
 
-pub mod communication;
-pub mod config;
+mod communication;
+mod config;
 mod game_logic;
 mod helpers;
 
@@ -37,6 +41,8 @@ use crate::communication::RobotHeartbeat;
 use artificial_incompetence::{Ai, ArtificialIncompetence};
 pub use core_dump;
 use core_dump::vec::types::Vec2;
+
+const TEAM_NAME: &str = "Robocup Junior SSL Team";
 
 pub struct CrashPilot<C = CommunicationChannels, A: Ai = ArtificialIncompetence> {
   config: Config,
@@ -61,6 +67,7 @@ pub struct CrashPilot<C = CommunicationChannels, A: Ai = ArtificialIncompetence>
 pub struct CommunicationChannels {
   robot_socket: UdpSocket,
   rx: EventShare,
+  gc: SslGameController,
   ws_out: WebsocketOut,
 }
 
@@ -95,8 +102,8 @@ impl CrashPilot {
     let loki = spawn_loki_publisher(&config);
 
     // Receiver for the communication
-    let (rx, ws_out) = match communication_receiver(&config, &robot_heartbeats, process_start) {
-      Ok(comm) => (comm.events, comm.ws_out),
+    let (rx, gc, ws_out) = match communication_receiver(&config) {
+      Ok(comm) => (comm.events, comm.gc, comm.ws_out),
       Err(e) => panic!("{}", e),
     };
 
@@ -106,6 +113,7 @@ impl CrashPilot {
     let comm = CommunicationChannels {
       robot_socket,
       rx,
+      gc,
       ws_out,
     };
 
@@ -220,6 +228,29 @@ impl CrashPilot {
 
     self.comm.ws_out.publish(ws_packet).await; // Publish the packet to the WebSocketOut channel
   }
+
+  pub fn game_controller(&self) -> &SslGameController {
+    &self.comm.gc
+  }
+
+  pub async fn gc_desired_keeper(&self, id: i32) -> anyhow::Result<ControllerToTeam> {
+    self.comm.gc.desired_keeper(id).await
+  }
+
+  pub async fn gc_advantage_choice(
+    &self,
+    choice: AdvantageChoice,
+  ) -> anyhow::Result<ControllerToTeam> {
+    self.comm.gc.advantage_choice(choice).await
+  }
+
+  pub async fn gc_substitute_bot(&self, requested: bool) -> anyhow::Result<ControllerToTeam> {
+    self.comm.gc.substitute_bot(requested).await
+  }
+
+  pub async fn gc_ping(&self) -> anyhow::Result<ControllerToTeam> {
+    self.comm.gc.ping().await
+  }
 }
 
 impl<C: Default, A: Ai + Default> CrashPilot<C, A> {
@@ -332,6 +363,7 @@ impl<C, A: Ai> CrashPilot<C, A> {
           .insert(robot_command.robot_id, robot_command.command);
       }
       self.packet_buffer.interface_command = packet.interface_command;
+      self.state.new_goalie = Some(self.packet_buffer.interface_command.game.goalkeeper_id as u8);
 
       if self.packet_buffer.interface_command.game.team_color {
         self.team = 2;
@@ -392,42 +424,9 @@ impl<C, A: Ai> CrashPilot<C, A> {
     self.update_ai_data();
   }
 
-  pub fn update_logic(&mut self) {
-    // Actual game logic is going to happen here
-    // First checks, on game state, and coordinating robots for that
-    // Checks if one of multiple predetermine strategies apply
-    //  - Goalie has Ball -> Chips automatically to the furthest own robot -> This robot should get the receive command
-    game_logic(self)
-  }
-
-  pub fn update(&mut self) {
-    self.update_data();
-    self.update_logic();
-  }
-
-  pub fn step_with_data(
-    &mut self,
-    events: Events,
-  ) -> (CpInterfaceWrapper, HashMap<u32, RobotData>) {
-    self.interpret(events);
-    self.update();
-
-    let robot_data = self.robots.clone();
-
-    (self.interface_packet(), robot_data)
-  }
-
   pub fn interpret_and_update(&mut self, events: Events) {
     self.interpret(events);
     self.update_data();
-  }
-
-  pub fn step_logic(&mut self) -> (CpInterfaceWrapper, HashMap<u32, RobotData>) {
-    self.update_logic();
-
-    let robot_data = self.robots.clone();
-
-    (self.interface_packet(), robot_data)
   }
 
   pub fn interface_packet(&self) -> CpInterfaceWrapper {
@@ -482,6 +481,41 @@ impl<C, A: Ai> CrashPilot<C, A> {
       .kicked_ball
       .end_time
       .unwrap_or(Instant::now().elapsed().as_millis() as f32);
+  }
+}
+
+impl<A: Ai + Send> CrashPilot<CommunicationChannels, A> {
+  pub fn update_logic(&mut self) {
+    // Actual game logic is going to happen here
+    // First checks, on game state, and coordinating robots for that
+    // Checks if one of multiple predetermine strategies apply
+    //  - Goalie has Ball -> Chips automatically to the furthest own robot -> This robot should get the receive command
+    game_logic(self)
+  }
+
+  pub fn update(&mut self) {
+    self.update_data();
+    self.update_logic();
+  }
+
+  pub fn step_with_data(
+    &mut self,
+    events: Events,
+  ) -> (CpInterfaceWrapper, HashMap<u32, RobotData>) {
+    self.interpret(events);
+    self.update();
+
+    let robot_data = self.robots.clone();
+
+    (self.interface_packet(), robot_data)
+  }
+
+  pub fn step_logic(&mut self) -> (CpInterfaceWrapper, HashMap<u32, RobotData>) {
+    self.update_logic();
+
+    let robot_data = self.robots.clone();
+
+    (self.interface_packet(), robot_data)
   }
 }
 

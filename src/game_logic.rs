@@ -27,7 +27,7 @@ use core_dump::proto::CpMode;
 /// Also translates AI commands to robot commands (AI commands are more specific, so the AI
 /// has an easier time to understand them and apply them
 #[inline]
-pub fn game_logic<C, A: Ai>(cp: &mut CrashPilot<C, A>) {
+pub fn game_logic<A: Ai + Send>(cp: &mut CrashPilot<CommunicationChannels, A>) {
   // Check, which mode is enabled:
   //  - Manual: Use the interface commands to control the robots
   //  - Game: Use the AI and hardcoded game logic

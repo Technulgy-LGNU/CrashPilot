@@ -63,6 +63,8 @@ pub struct SslConfig {
   pub ssl_vision_tracked_port: u16,
   pub ssl_gc_ip: Ipv4Addr,
   pub ssl_gc_port: u16,
+  pub ssl_gc_msg_port: u16,
+  pub ssl_gc_msg_ip: Ipv4Addr,
 }
 impl Default for SslConfig {
   fn default() -> Self {
@@ -73,6 +75,8 @@ impl Default for SslConfig {
       ssl_vision_tracked_port: 10010,
       ssl_gc_ip: Ipv4Addr::new(224, 5, 23, 2),
       ssl_gc_port: 10003,
+      ssl_gc_msg_ip: Ipv4Addr::new(127, 0, 0, 1),
+      ssl_gc_msg_port: 10008,
     }
   }
 }

@@ -5,6 +5,10 @@ ssl_vision_tracked_ip = "224.5.23.2"
 ssl_vision_tracked_port = 10010
 ssl_gc_ip = "224.5.23.1"
 ssl_gc_port = 10003
+# TCP team protocol endpoint for requests to the GameController.
+ssl_gc_msg_port = 10008
+ssl_gc_msg_ip = "127.0.0.1"
+ssl_gc_team_name = "Robocup Junior SSL Team"
 
 [logging]
 prometheus_host = "0.0.0.0"
@@ -21,12 +25,11 @@ websocket_host = "0.0.0.0"
 websocket_port = 4096
 
 [robots]
-0 = { ip = "192.168.178.43", substitution_pos = { x = 400, y = 0 } } # Infinity
-1 = { ip = "192.168.178.42", substitution_pos = { x = 800, y = 0 } }
-#2 = { ip = "10.0.64.102", substitution_pos = { x = 1200, y = 0 } }
-#3 = { ip = "10.0.64.103", substitution_pos = { x = 1600, y = 0 } }
-4 = { ip = "192.168.178.44", substitution_pos = { x = 2000, y = 0 } } # Old Robot
-#5 = { ip = "10.0.64.105", substitution_pos = { x = 2400, y = 0 } } # Old Robot
-#7 = { ip = "10.0.64.121", substitution_pos = { x = 3000, y = 600 } } # LNX
-#8 = { ip = "10.0.64.122", substitution_pos = { x = 3400, y = 600 } } # LNX
-
+0 = { ip = "10.0.64.100", substitution_pos = { x = 400, y = 0 } } # Infinity
+1 = { ip = "10.0.64.101", substitution_pos = { x = 800, y = 0 } }
+2 = { ip = "10.0.64.102", substitution_pos = { x = 1200, y = 0 } }
+3 = { ip = "10.0.64.103", substitution_pos = { x = 1600, y = 0 } }
+4 = { ip = "10.0.64.104", substitution_pos = { x = 2000, y = 0 } } # Old Robot
+5 = { ip = "10.0.64.105", substitution_pos = { x = 2400, y = 0 } } # Old Robot
+7 = { ip = "10.0.64.121", substitution_pos = { x = 3000, y = 600 } } # LNX
+8 = { ip = "10.0.64.122", substitution_pos = { x = 3400, y = 600 } } # LNX
