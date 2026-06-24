@@ -23,8 +23,8 @@ use tokio::time::{interval, Duration, MissedTickBehavior};
 
 pub use crate::utils::RobotData;
 
-mod communication;
-mod config;
+pub mod communication;
+pub mod config;
 mod game_logic;
 mod helpers;
 
