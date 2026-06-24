@@ -110,8 +110,6 @@ name = "artificial_incompetence"
 version = "0.1.0"
 dependencies = [
  "core_dump",
- "serde",
- "serde_json",
  "simhark",
  "tch",
 ]
@@ -290,6 +288,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "artificial_incompetence",
+ "bytes",
  "core_dump",
  "futures-util",
  "http-body-util",
@@ -2032,10 +2031,6 @@ dependencies = [
  "serde",
  "serde_json",
 ]
-
-[[package]]
-name = "simhark_integration"
-version = "0.1.0"
 
 [[package]]
 name = "slab"
