@@ -4,6 +4,7 @@ use crate::communication::loki::LokiPublisher;
 #[cfg(feature = "loki")]
 use crate::communication::loki::spawn_loki_publisher;
 use crate::communication::robot_sender::{NetworkSender, RobotSender};
+pub use crate::communication::ssl_gc_handler::SslGameController;
 use crate::communication::{EventShare, WebsocketOut, communication_receiver};
 pub use crate::config::Config;
 use crate::game_logic::game_logic;
@@ -12,7 +13,7 @@ use crate::helpers::robot_data::create_robot_data;
 #[cfg(feature = "prometheus")]
 use crate::metrics::PrometheusMetrics;
 use crate::utils::{FieldSetup, PacketBuffer, spawn_robot_socket};
-use core_dump::proto::{CpCommand, CpInterfaceWrapper, CpRobot};
+use core_dump::proto::{AdvantageChoice, ControllerToTeam, CpCommand, CpInterfaceWrapper, CpRobot};
 use std::collections::HashMap;
 use std::time::Instant;
 use tokio::net::UdpSocket;
@@ -35,6 +36,8 @@ use artificial_incompetence::{Ai, ArtificialIncompetence};
 pub use core_dump;
 use core_dump::vec::types::Vec2;
 
+const TEAM_NAME: &str = "Robocup Junior SSL Team";
+
 pub struct CrashPilot<C = CommunicationChannels, A: Ai = ArtificialIncompetence> {
   config: Config,
   #[cfg(feature = "prometheus")]
@@ -56,6 +59,7 @@ pub struct CrashPilot<C = CommunicationChannels, A: Ai = ArtificialIncompetence>
 pub struct CommunicationChannels {
   robot_socket: UdpSocket,
   rx: EventShare,
+  gc: SslGameController,
   ws_out: WebsocketOut,
 }
 
@@ -69,6 +73,7 @@ impl CrashPilot {
       Ok(config) => config,
       Err(e) => panic!("{}", e),
     };
+
 
     // Prometheus metrics endpoint and shared per-robot registry.
     #[cfg(feature = "prometheus")]
@@ -86,8 +91,8 @@ impl CrashPilot {
     let loki = spawn_loki_publisher(&config);
 
     // Receiver for the communication
-    let (rx, ws_out) = match communication_receiver(&config) {
-      Ok(comm) => (comm.events, comm.ws_out),
+    let (rx, gc, ws_out) = match communication_receiver(&config) {
+      Ok(comm) => (comm.events, comm.gc, comm.ws_out),
       Err(e) => panic!("{}", e),
     };
 
@@ -97,6 +102,7 @@ impl CrashPilot {
     let comm = CommunicationChannels {
       robot_socket,
       rx,
+      gc,
       ws_out,
     };
 
@@ -205,6 +211,29 @@ impl CrashPilot {
     let ws_packet = self.interface_packet();
 
     self.comm.ws_out.publish(ws_packet).await; // Publish the packet to the WebSocketOut channel
+  }
+
+  pub fn game_controller(&self) -> &SslGameController {
+    &self.comm.gc
+  }
+
+  pub async fn gc_desired_keeper(&self, id: i32) -> anyhow::Result<ControllerToTeam> {
+    self.comm.gc.desired_keeper(id).await
+  }
+
+  pub async fn gc_advantage_choice(
+    &self,
+    choice: AdvantageChoice,
+  ) -> anyhow::Result<ControllerToTeam> {
+    self.comm.gc.advantage_choice(choice).await
+  }
+
+  pub async fn gc_substitute_bot(&self, requested: bool) -> anyhow::Result<ControllerToTeam> {
+    self.comm.gc.substitute_bot(requested).await
+  }
+
+  pub async fn gc_ping(&self) -> anyhow::Result<ControllerToTeam> {
+    self.comm.gc.ping().await
   }
 }
 

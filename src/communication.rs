@@ -1,7 +1,6 @@
 // Combines the SSL, Robot and Websocket communication into one stream
 
 mod create_multicast_socket;
-mod gc_sender;
 pub mod interface;
 #[cfg(feature = "loki")]
 pub mod loki;
@@ -9,18 +8,21 @@ mod prometheus;
 mod robot_receiver;
 pub mod robot_sender;
 mod ssl_communication;
+pub mod ssl_gc_handler;
 mod udp_listener;
 
 use crate::communication::interface::spawn_websocket;
 use crate::communication::robot_receiver::robot_receiver;
 use crate::communication::ssl_communication::get_ssl_data;
+use crate::communication::ssl_gc_handler::SslGameController;
 use crate::config;
 use core_dump::proto::{
-  CpInterfaceWrapper, InterfaceWrapperCp, Referee, RobotCp, SslWrapperPacket, TrackerWrapperPacket,
+  ControllerToTeam, CpInterfaceWrapper, InterfaceWrapperCp, Referee, RobotCp, SslWrapperPacket,
+  TrackerWrapperPacket,
 };
 use std::sync::Arc;
-use tokio::sync::RwLock;
 use tokio::sync::Notify;
+use tokio::sync::RwLock;
 
 #[derive(Debug, Clone, Default)]
 pub struct Events {
@@ -28,6 +30,7 @@ pub struct Events {
   pub tracked: Option<TrackerWrapperPacket>,
   pub ws: Option<InterfaceWrapperCp>,
   pub gc: Option<Referee>,
+  pub gc_team_messages: Vec<ControllerToTeam>,
   pub rf: Option<RobotCp>,
 }
 
@@ -38,6 +41,7 @@ impl Events {
       tracked: None,
       ws: None,
       gc: None,
+      gc_team_messages: Vec::new(),
       rf: None,
     }
   }
@@ -48,6 +52,7 @@ impl Events {
       tracked: self.tracked.take(),
       ws: self.ws.take(),
       gc: self.gc.take(),
+      gc_team_messages: std::mem::take(&mut self.gc_team_messages),
       rf: self.rf.take(),
     }
   }
@@ -114,10 +119,12 @@ impl WebsocketOut {
 /// Handles returned by [`communication_receiver`].
 ///
 /// - `events`: the latest inbound packets from SSL-Vision / GC / WebSocket (interface -> CP)
+/// - `gc`: request handle for the SSL GameController team TCP protocol
 /// - `ws_out`: broadcast channel for outbound WebSocket packets (CP -> interface)
 #[derive(Clone)]
 pub struct CommunicationHandles {
   pub events: EventShare,
+  pub gc: SslGameController,
   pub ws_out: WebsocketOut,
 }
 
@@ -127,11 +134,13 @@ pub fn communication_receiver(cfg: &config::Config) -> anyhow::Result<Communicat
 
   get_ssl_data(cfg, events.clone());
 
+  let gc = SslGameController::spawn(cfg, events.clone());
+
   spawn_websocket(cfg, events.clone(), ws_out.clone());
 
   robot_receiver(cfg, events.clone(), |event, mut lock| {
     lock.rf = Some(event);
   });
 
-  Ok(CommunicationHandles { events, ws_out })
+  Ok(CommunicationHandles { events, gc, ws_out })
 }
