@@ -4,7 +4,6 @@ use crate::communication::loki::spawn_loki_publisher;
 use crate::communication::loki::LokiPublisher;
 use crate::communication::robot_sender::{NetworkSender, RobotSender};
 pub use crate::communication::ssl_gc_handler::SslGameController;
-use crate::communication::{EventShare, WebsocketOut, communication_receiver};
 pub use crate::communication::Events;
 use crate::communication::{communication_receiver, EventShare, WebsocketOut};
 pub use crate::config::Config;
@@ -13,10 +12,8 @@ use crate::game_logic::types::{BallData, Robot, WorldState};
 use crate::helpers::robot_data::create_robot_data;
 #[cfg(feature = "prometheus")]
 use crate::metrics::PrometheusMetrics;
-use crate::utils::{FieldSetup, PacketBuffer, spawn_robot_socket};
-use core_dump::proto::{AdvantageChoice, ControllerToTeam, CpCommand, CpInterfaceWrapper, CpRobot};
 use crate::utils::{spawn_robot_socket, FieldSetup, PacketBuffer};
-use core_dump::proto::{CpCommand, CpInterfaceWrapper, CpRobot};
+use core_dump::proto::{AdvantageChoice, ControllerToTeam, CpCommand, CpInterfaceWrapper, CpRobot};
 use std::collections::HashMap;
 use std::sync::atomic::AtomicU64;
 use std::sync::Arc;
@@ -102,7 +99,7 @@ impl CrashPilot {
     let loki = spawn_loki_publisher(&config);
 
     // Receiver for the communication
-    let (rx, gc, ws_out) = match communication_receiver(&config) {
+    let (rx, gc, ws_out) = match communication_receiver(&config, &robot_heartbeats, process_start) {
       Ok(comm) => (comm.events, comm.gc, comm.ws_out),
       Err(e) => panic!("{}", e),
     };

@@ -305,7 +305,7 @@ impl Default for WorldState {
 /// Everything is in:
 ///   - mm && mm/s
 ///   - degree && degree/s
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct Robot {
   pub robot_id: u8,
 
@@ -317,11 +317,11 @@ pub struct Robot {
 
   // Distances to each robot
   pub distance_team: HashMap<u8, f32>,
-  pub distance_opponent: HashMap<u8, f32>,
+  pub _distance_opponent: HashMap<u8, f32>,
 
   // Distance to the ball & goal mid point
   pub distance_ball: Option<f32>,
-  pub distance_goal: Option<f32>,
+  pub _distance_goal: Option<f32>,
 
   /// Distance to each wall in the following order:
   ///  - 0: X+ Wall
@@ -330,7 +330,7 @@ pub struct Robot {
   ///  - 3: Y- Wall
   ///
   /// This corresponds to the angle in each direction
-  pub distance_wall: Option<Vec<f32>>,
+  pub _distance_wall: Option<Vec<f32>>,
 }
 
 impl Robot {
@@ -387,10 +387,10 @@ impl Robot {
           orientation: robot.orientation.to_degrees(),
           angular_vel: robot.vel_angular.unwrap_or_default().to_degrees(),
           distance_team: dist_team,
-          distance_opponent: dist_opponent,
+          _distance_opponent: dist_opponent,
           distance_ball: Some(Vec2::new(robot.pos.x, robot.pos.y).dot(&ball.pos).sqrt()),
-          distance_goal: Some(Vec2::new(robot.pos.x, robot.pos.y).dot(&goal_point).sqrt()),
-          distance_wall: Option::from(create_wall_points(
+          _distance_goal: Some(Vec2::new(robot.pos.x, robot.pos.y).dot(&goal_point).sqrt()),
+          _distance_wall: Option::from(create_wall_points(
             &Vec2::new_from_cp(robot.pos),
             field_setup,
           )),
@@ -403,10 +403,10 @@ impl Robot {
           orientation: robot.orientation.to_degrees(),
           angular_vel: robot.vel_angular.unwrap_or_default().to_degrees(),
           distance_team: dist_team,
-          distance_opponent: dist_opponent,
+          _distance_opponent: dist_opponent,
           distance_ball: Some(Vec2::new(robot.pos.x, robot.pos.y).dot(&ball.pos).sqrt()),
-          distance_goal: Some(Vec2::new(robot.pos.x, robot.pos.y).dot(&goal_point).sqrt()),
-          distance_wall: Option::from(create_wall_points(
+          _distance_goal: Some(Vec2::new(robot.pos.x, robot.pos.y).dot(&goal_point).sqrt()),
+          _distance_wall: Option::from(create_wall_points(
             &Vec2::new_from_cp(robot.pos),
             field_setup,
           )),
@@ -449,8 +449,8 @@ pub struct Ball {
 
 #[derive(Debug, Default)]
 pub struct KickedBall {
-  pub pos: Vec2<f32>,
-  pub vel: Vec2<f32>,
+  pub _pos: Vec2<f32>,
+  pub _vel: Vec2<f32>,
 
   pub end_point: Option<Vec2<f32>>,
   pub end_time: Option<f32>,
@@ -476,8 +476,8 @@ impl BallData {
     }
 
     let kicked_ball = KickedBall {
-      pos: Vec2::new_from_cp(frame.kicked_ball.unwrap_or_default().pos),
-      vel: Vec2::new(
+      _pos: Vec2::new_from_cp(frame.kicked_ball.unwrap_or_default().pos),
+      _vel: Vec2::new(
         frame.kicked_ball.unwrap_or_default().vel.x,
         frame.kicked_ball.unwrap_or_default().vel.y,
       ),

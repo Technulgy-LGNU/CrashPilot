@@ -11,7 +11,7 @@ use crate::game_logic::mode_game::mode_game;
 use crate::game_logic::mode_manual::mode_manual;
 use crate::game_logic::mode_test::mode_test;
 use crate::game_logic::types::WorldState;
-use crate::CrashPilot;
+use crate::{CommunicationChannels, CrashPilot};
 use artificial_incompetence::types::Ai;
 use core_dump::proto::CpMode;
 

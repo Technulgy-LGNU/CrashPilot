@@ -34,7 +34,7 @@ impl RootData {
     }
 
     pub fn set_from(&mut self, data: &[Commands]) {
-        unsafe { (&mut *self.inner.get()) }.copy_from_slice(data);
+        unsafe { &mut *self.inner.get() }.copy_from_slice(data);
     }
 
     pub fn get(&self, idx: usize) -> Commands {

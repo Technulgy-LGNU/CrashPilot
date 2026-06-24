@@ -23,6 +23,9 @@ use std::sync::atomic::AtomicU64;
 use std::sync::Arc;
 use tokio::sync::Notify;
 use tokio::sync::RwLock;
+use tokio::time::Instant;
+
+pub type RobotHeartbeat = Arc<Vec<AtomicU64>>;
 
 #[derive(Debug, Clone, Default)]
 pub struct Events {

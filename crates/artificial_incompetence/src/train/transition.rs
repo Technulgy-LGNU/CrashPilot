@@ -1,6 +1,5 @@
-use simhark::WorldState;
-use tch::Tensor;
 use crate::GameState;
+use tch::Tensor;
 
 #[derive(Debug)]
 pub struct Transition {

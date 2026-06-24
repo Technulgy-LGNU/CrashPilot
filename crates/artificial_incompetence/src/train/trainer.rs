@@ -4,7 +4,7 @@ use tch::{Device, Kind, Tensor};
 use tch::nn::{Optimizer, OptimizerConfig, VarStore};
 use crate::ai_types::SampledRobotAction;
 use crate::config::MAX_ROBOTS_PER_TEAM;
-use crate::GameState;
+use crate::{types, GameState};
 use crate::grid::GridSpec;
 use crate::modules::coach::Coach;
 use crate::train::data::{empty_world_state, Data, RootData};
@@ -208,7 +208,7 @@ pub struct ArtificialTrainer {
 }
 
 impl Ai for ArtificialTrainer {
-  fn predict(&mut self, _state: &crate::types::GameState, _dt: f32) -> Commands {
+  fn predict(&mut self, _state: &types::GameState, _dt: f32) -> Commands {
     // state is already submitted in the first step during training!
     self.data.get(self.id)
   }
