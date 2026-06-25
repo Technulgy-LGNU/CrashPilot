@@ -873,14 +873,14 @@ fn nearest_robot(ball: Point, robots: &[Option<crate::RobotState>; 16]) -> (Opti
 
 fn defensive_danger(ball: Point, scale: FieldScale) -> f64 {
   let defensive_depth = (-ball.x * OWN_ATTACK_SIGN / scale.half_x).clamp(0.0, 1.0);
-  let centrality = (-((ball.y.abs() / (scale.goal_half_width * 2.6)).powi(2))).exp();
+  let centrality = (-(ball.y.abs() / (scale.goal_half_width * 2.6)).powi(2)).exp();
 
   defensive_depth.powi(2) * (0.45 + 0.55 * centrality)
 }
 
 fn shot_lane_quality(ball: Point, scale: FieldScale) -> f64 {
   let goal_progress = (ball.x * OWN_ATTACK_SIGN / scale.half_x).clamp(-1.0, 1.0);
-  let centrality = (-((ball.y.abs() / (scale.goal_half_width * 2.2)).powi(2))).exp();
+  let centrality = (-(ball.y.abs() / (scale.goal_half_width * 2.2)).powi(2)).exp();
 
   0.5 * (goal_progress + 1.0) * centrality
 }

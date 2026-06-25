@@ -13,9 +13,12 @@ pub fn ai_handler<C, A: Ai>(all_robots: &Vec<Robot>, cp: &mut CrashPilot<C, A>) 
   // AI does it thing
   let commands = cp.ai.predict(&cp.ai_data, 1f32);
   // Convert the commands to robot commands
-  if commands.len() > 0 {
+  if !commands.is_empty() {
     for (id, command) in commands.iter().enumerate() {
-      if command.is_some() {
+      if let Some(command) = command
+        && let Some(goalie) = cp.state.goalie
+        && goalie != id as u8
+      {
         // Get the robot
         let mut robot = cp.robots.get(&(id as u32)).cloned().unwrap_or_default();
         let robot_self = match cp.state.robots_self.iter().find(|r| r.robot_id == id as u8) {
@@ -27,11 +30,11 @@ pub fn ai_handler<C, A: Ai>(all_robots: &Vec<Robot>, cp: &mut CrashPilot<C, A>) 
 
         if robot != Default::default() {
           robot.msg.cmd.state = StateFree as i32;
-          match command.unwrap_or_default() {
+          match command {
             RobotCommand::Pos(pos) => {
               robot.msg.cmd.task = TaskPos as i32;
               robot.msg.cmd.pos = Option::from(
-                (pos * Vec2::new(cp.field_setup.width as f32, cp.field_setup.height as f32))
+                (*pos * Vec2::new(cp.field_setup.width as f32, cp.field_setup.height as f32))
                   .to_cp_vec2(),
               );
               robot.msg.cmd.speed = Option::from(4000);
@@ -56,7 +59,7 @@ pub fn ai_handler<C, A: Ai>(all_robots: &Vec<Robot>, cp: &mut CrashPilot<C, A>) 
             RobotCommand::Dribble(pos) => {
               robot.msg.cmd.task = TaskDribble as i32;
               robot.msg.cmd.pos = Option::from(
-                (pos * Vec2::new(cp.field_setup.width as f32, cp.field_setup.height as f32))
+                (*pos * Vec2::new(cp.field_setup.width as f32, cp.field_setup.height as f32))
                   .to_cp_vec2(),
               );
               robot.msg.cmd.speed = Option::from(2000);
@@ -64,7 +67,7 @@ pub fn ai_handler<C, A: Ai>(all_robots: &Vec<Robot>, cp: &mut CrashPilot<C, A>) 
             RobotCommand::PosBall(pos) => {
               robot.msg.cmd.task = TaskPosBall as i32;
               robot.msg.cmd.pos = Option::from(
-                (pos * Vec2::new(cp.field_setup.width as f32, cp.field_setup.height as f32))
+                (*pos * Vec2::new(cp.field_setup.width as f32, cp.field_setup.height as f32))
                   .to_cp_vec2(),
               );
               robot.msg.cmd.speed = Option::from(2000);
@@ -73,17 +76,16 @@ pub fn ai_handler<C, A: Ai>(all_robots: &Vec<Robot>, cp: &mut CrashPilot<C, A>) 
             RobotCommand::FreeKick(_) => {}
             RobotCommand::KickGoal => {
               // Calculate the angle to the goal with no opponents in the way and the minimum distance from all robots
-              shoot_to_goal(&mut robot, robot_self, &all_robots, cp)
+              shoot_to_goal(&mut robot, robot_self, all_robots, cp)
             }
             RobotCommand::PassTo(r_id) => {
               robot.msg.cmd.task = TaskKick as i32;
 
-              let to_robot = match cp.state.robots_self.iter().find(|r| r.robot_id == r_id) {
+              let to_robot = match cp.state.robots_self.iter().find(|r| r.robot_id == *r_id) {
                 Some(r) => r,
                 None => {
                   // Shoot to goal
-                  shoot_to_goal(&mut robot, robot_self, &all_robots, cp);
-
+                  shoot_to_goal(&mut robot, robot_self, all_robots, cp);
                   return;
                 }
               };
