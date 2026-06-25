@@ -14,7 +14,7 @@ use tch::nn::VarStore;
 use crate::loader::{CheckpointMetadata, ModelLoader};
 use crate::train::reward::RewardMode;
 use crate::train::trainer::Trainer;
-use crate::{BallState, Commands, GameState, RobotCommand, RobotState};
+use crate::{BallState, Commands, GameState, RobotCommand, RobotState, UpdateResult};
 
 pub type TrainResult<T> = Result<T, Box<dyn Error + Send + Sync>>;
 
@@ -28,6 +28,16 @@ pub enum TrainingStage {
   ScriptedScrimmage,
   SumatraOpponent,
 }
+
+pub const TRAINING_STAGES_IN_ORDER: [TrainingStage; 7] = [
+  TrainingStage::TouchBall,
+  TrainingStage::DribbleToGoal,
+  TrainingStage::ShootGoal,
+  TrainingStage::PassReceive,
+  TrainingStage::OneVsOne,
+  TrainingStage::ScriptedScrimmage,
+  TrainingStage::SumatraOpponent,
+];
 
 impl TrainingStage {
   pub fn name(self) -> &'static str {
@@ -168,6 +178,36 @@ pub fn train_sumatra_opponent(opts: TrainOptions) -> TrainResult<TrainingReport>
   train_stage(TrainingStage::SumatraOpponent, opts)
 }
 
+pub fn train_all_stages(opts: TrainOptions) -> TrainResult<Vec<TrainingReport>> {
+  let mut reports = Vec::with_capacity(TRAINING_STAGES_IN_ORDER.len());
+  let mut stage_opts = opts.clone();
+
+  for (stage_index, stage) in TRAINING_STAGES_IN_ORDER.iter().copied().enumerate() {
+    if let Some(run_name) = opts.run_name.as_ref() {
+      stage_opts.run_name = Some(format!("{run_name}/{}", stage.name()));
+    }
+
+    eprintln!(
+      "training stage {}/{}: {}",
+      stage_index + 1,
+      TRAINING_STAGES_IN_ORDER.len(),
+      stage.name()
+    );
+
+    let report = train_stage(stage, stage_opts.clone())?;
+    if let Some(checkpoint) = report.last_checkpoint.as_ref() {
+      stage_opts.model_path = Some(checkpoint.join("model.safetensors"));
+    }
+    reports.push(report);
+  }
+
+  Ok(reports)
+}
+
+pub fn train_single_stage(stage: TrainingStage, opts: TrainOptions) -> TrainResult<TrainingReport> {
+  train_stage(stage, opts)
+}
+
 pub fn evaluate_latest_checkpoint(
   stage: TrainingStage,
   opts: EvaluationOptions,
@@ -191,7 +231,9 @@ pub fn evaluate_latest_checkpoint(
     let commands = plans
       .iter()
       .enumerate()
-      .map(|(world, ai_commands)| world_command_from_ai(metadata.stage, &sim_states[world], *ai_commands))
+      .map(|(world, ai_commands)| {
+        world_command_from_ai(metadata.stage, &sim_states[world], *ai_commands)
+      })
       .collect::<Vec<_>>();
 
     sim_states = engine.step_with_commands(&commands);
@@ -209,11 +251,8 @@ pub fn evaluate_latest_checkpoint(
   }
 
   let contact_worlds = touched.iter().filter(|&&value| value).count();
-  let avg_final_ball_distance = sim_states
-    .iter()
-    .map(final_ball_distance)
-    .sum::<f64>()
-    / metadata.worlds.max(1) as f64;
+  let avg_final_ball_distance =
+    sim_states.iter().map(final_ball_distance).sum::<f64>() / metadata.worlds.max(1) as f64;
   let avg_final_ball_x = average_ball_x(&sim_states);
   let blue_goals = sim_states.iter().filter(|state| state.goal_blue).count();
   let yellow_goals = sim_states.iter().filter(|state| state.goal_yellow).count();

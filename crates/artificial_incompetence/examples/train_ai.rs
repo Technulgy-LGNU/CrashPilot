@@ -1,27 +1,30 @@
 use artificial_incompetence::{
-  EvaluationOptions, TrainOptions, TrainingStage, evaluate_latest_checkpoint,
-  train_dribble_to_goal, train_one_vs_one, train_pass_receive, train_scripted_scrimmage,
-  train_shoot_goal, train_sumatra_opponent, train_touch_ball,
+  evaluate_latest_checkpoint, train_all_stages, train_single_stage, EvaluationOptions,
+  TrainOptions, TrainingStage,
 };
 use std::path::PathBuf;
 use tch::Device;
 
 fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-  let mut stage = TrainingStage::TouchBall;
+  let mut stage = None;
   let mut opts = TrainOptions::default();
   let mut eval_steps = 120usize;
 
   let mut args = std::env::args().skip(1);
   while let Some(arg) = args.next() {
     match arg.as_str() {
-      "--stage" => stage = parse_stage(&next_value(&mut args, "--stage")?)?,
+      "--stage" => stage = Some(parse_stage(&next_value(&mut args, "--stage")?)?),
       "--updates" => opts.updates = next_value(&mut args, "--updates")?.parse()?,
       "--worlds" => opts.worlds = next_value(&mut args, "--worlds")?.parse()?,
-      "--rollout-steps" => opts.rollout_steps = next_value(&mut args, "--rollout-steps")?.parse()?,
+      "--rollout-steps" => {
+        opts.rollout_steps = next_value(&mut args, "--rollout-steps")?.parse()?
+      }
       "--checkpoint-every" => {
         opts.checkpoint_every = next_value(&mut args, "--checkpoint-every")?.parse()?
       }
-      "--checkpoint-dir" => opts.checkpoint_dir = PathBuf::from(next_value(&mut args, "--checkpoint-dir")?),
+      "--checkpoint-dir" => {
+        opts.checkpoint_dir = PathBuf::from(next_value(&mut args, "--checkpoint-dir")?)
+      }
       "--run-name" => opts.run_name = Some(next_value(&mut args, "--run-name")?),
       "--model" => opts.model_path = Some(PathBuf::from(next_value(&mut args, "--model")?)),
       "--lr" => opts.learning_rate = next_value(&mut args, "--lr")?.parse()?,
@@ -31,24 +34,29 @@ fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     }
   }
 
-  let report = match stage {
-    TrainingStage::TouchBall => train_touch_ball(opts.clone())?,
-    TrainingStage::DribbleToGoal => train_dribble_to_goal(opts.clone())?,
-    TrainingStage::ShootGoal => train_shoot_goal(opts.clone())?,
-    TrainingStage::PassReceive => train_pass_receive(opts.clone())?,
-    TrainingStage::OneVsOne => train_one_vs_one(opts.clone())?,
-    TrainingStage::ScriptedScrimmage => train_scripted_scrimmage(opts.clone())?,
-    TrainingStage::SumatraOpponent => train_sumatra_opponent(opts.clone())?,
+  let reports = if let Some(stage) = stage {
+    vec![train_single_stage(stage, opts.clone())?]
+  } else {
+    train_all_stages(opts.clone())?
   };
 
-  println!("training_report={report:#?}");
+  println!("training_reports={reports:#?}");
 
-  if stage != TrainingStage::SumatraOpponent {
+  for report in reports {
+    if report.stage == TrainingStage::SumatraOpponent {
+      continue;
+    }
     let eval = evaluate_latest_checkpoint(
-      stage,
+      report.stage,
       EvaluationOptions {
-        checkpoint_dir: opts.checkpoint_dir,
-        run_name: opts.run_name,
+        checkpoint_dir: opts.checkpoint_dir.clone(),
+        run_name: opts.run_name.as_ref().map(|run_name| {
+          if stage.is_some() {
+            run_name.clone()
+          } else {
+            format!("{run_name}/{}", report.stage.name())
+          }
+        }),
         device: opts.device,
         steps: eval_steps,
       },
@@ -63,7 +71,8 @@ fn next_value(
   args: &mut impl Iterator<Item = String>,
   name: &str,
 ) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
-  args.next()
+  args
+    .next()
     .ok_or_else(|| format!("{name} requires a value").into())
 }
 
