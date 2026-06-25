@@ -3,13 +3,14 @@ use std::f64::consts::PI;
 use std::path::PathBuf;
 
 use core_dump::vec::types::Vec2;
+use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 use serde::{Deserialize, Serialize};
 use simhark::{
   MoveCommand, SimulationEngine, SumatraSimNetConfig, SumatraSimNetServer, TeamColor, TeleportBall,
   TeleportRobot, WorldCommand, WorldConfig, WorldState,
 };
-use tch::Device;
 use tch::nn::VarStore;
+use tch::Device;
 
 use crate::loader::{CheckpointMetadata, ModelLoader};
 use crate::train::reward::RewardMode;
@@ -291,9 +292,12 @@ fn train_stage(stage: TrainingStage, opts: TrainOptions) -> TrainResult<Training
 
   let mut last_stats = None;
   let mut last_checkpoint = None;
+  let progress = TrainingProgress::new(stage, &opts)?;
 
   for update in 0..opts.updates {
-    for _ in 0..opts.rollout_steps {
+    progress.start_update(update);
+
+    for rollout_step in 0..opts.rollout_steps {
       trainer.step(&states, dt);
 
       let commands = (0..opts.worlds)
@@ -314,6 +318,7 @@ fn train_stage(stage: TrainingStage, opts: TrainOptions) -> TrainResult<Training
         .map(|state| game_state_from_sim(stage, state))
         .collect();
       trainer.finish_step(sim_states.clone(), states.clone());
+      progress.finish_rollout_step(rollout_step + 1);
     }
 
     let stats = trainer.finish_rollout(&states);
@@ -324,6 +329,7 @@ fn train_stage(stage: TrainingStage, opts: TrainOptions) -> TrainResult<Training
         CheckpointMetadata::from_training(stage, update + 1, &opts, &trainer, Some(stats));
       last_checkpoint = Some(loader.save_checkpoint(&trainer, &metadata)?);
     }
+    progress.finish_update(update + 1, stats, last_checkpoint.as_ref());
 
     let reset_seed = update + 1;
     let reset = reset_stage_worlds(&mut engine, stage, reset_seed);
@@ -337,8 +343,11 @@ fn train_stage(stage: TrainingStage, opts: TrainOptions) -> TrainResult<Training
       let metadata =
         CheckpointMetadata::from_training(stage, opts.updates, &opts, &trainer, Some(stats));
       last_checkpoint = Some(loader.save_checkpoint(&trainer, &metadata)?);
+      progress.saved_final_checkpoint(last_checkpoint.as_ref());
     }
   }
+
+  progress.finish_stage(last_stats);
 
   let stats = last_stats;
   Ok(TrainingReport {
@@ -352,6 +361,114 @@ fn train_stage(stage: TrainingStage, opts: TrainOptions) -> TrainResult<Training
     last_value_loss: stats.map(|s| s.value_loss),
     last_entropy: stats.map(|s| s.entropy),
   })
+}
+
+struct TrainingProgress {
+  _multi: MultiProgress,
+  updates: ProgressBar,
+  rollout: ProgressBar,
+  total_updates: usize,
+  total_rollout_steps: usize,
+}
+
+impl TrainingProgress {
+  fn new(stage: TrainingStage, opts: &TrainOptions) -> TrainResult<Self> {
+    let multi = MultiProgress::new();
+    let updates = multi.add(ProgressBar::new(opts.updates as u64));
+    let rollout = multi.add(ProgressBar::new(opts.rollout_steps as u64));
+
+    let update_style =
+      ProgressStyle::with_template("{prefix:.bold} {bar:40.green/black} {pos:>4}/{len:<4} {msg}")?
+        .progress_chars("=> ");
+    let rollout_style =
+      ProgressStyle::with_template("{prefix:.bold} {bar:40.cyan/black} {pos:>4}/{len:<4} {msg}")?
+        .progress_chars("=> ");
+
+    updates.set_style(update_style);
+    updates.set_prefix(format!("stage {}", stage.name()));
+    updates.set_message(format!(
+      "{} worlds, {} rollout steps/update",
+      opts.worlds, opts.rollout_steps
+    ));
+
+    rollout.set_style(rollout_style);
+    rollout.set_prefix("rollout");
+    rollout.set_message("waiting for first update");
+
+    Ok(Self {
+      _multi: multi,
+      updates,
+      rollout,
+      total_updates: opts.updates,
+      total_rollout_steps: opts.rollout_steps,
+    })
+  }
+
+  fn start_update(&self, update: usize) {
+    self.updates.set_position(update as u64);
+    self
+      .updates
+      .set_message(format!("update {}/{}", update + 1, self.total_updates));
+    self.rollout.reset();
+    self.rollout.set_message(format!(
+      "collecting rollout for update {}/{}",
+      update + 1,
+      self.total_updates
+    ));
+  }
+
+  fn finish_rollout_step(&self, step: usize) {
+    self.rollout.set_position(step as u64);
+    self
+      .rollout
+      .set_message(format!("step {}/{}", step, self.total_rollout_steps));
+  }
+
+  fn finish_update(&self, update: usize, stats: UpdateResult, checkpoint: Option<&PathBuf>) {
+    self.rollout.set_position(self.total_rollout_steps as u64);
+    self
+      .rollout
+      .set_message("rollout complete; PPO update complete");
+    self.updates.set_position(update as u64);
+
+    let checkpoint_msg = checkpoint
+      .and_then(|path| path.file_name())
+      .and_then(|name| name.to_str())
+      .map(|name| format!(", checkpoint {name}"))
+      .unwrap_or_default();
+
+    self.updates.set_message(format!(
+      "update {}/{} loss {:.4} policy {:.4} value {:.4} entropy {:.4}{}",
+      update,
+      self.total_updates,
+      stats.loss,
+      stats.policy_loss,
+      stats.value_loss,
+      stats.entropy,
+      checkpoint_msg
+    ));
+  }
+
+  fn saved_final_checkpoint(&self, checkpoint: Option<&PathBuf>) {
+    if let Some(checkpoint) = checkpoint {
+      self
+        .updates
+        .set_message(format!("saved final checkpoint {}", checkpoint.display()));
+    }
+  }
+
+  fn finish_stage(&self, stats: Option<UpdateResult>) {
+    self.rollout.finish_and_clear();
+
+    if let Some(stats) = stats {
+      self.updates.finish_with_message(format!(
+        "done loss {:.4} policy {:.4} value {:.4} entropy {:.4}",
+        stats.loss, stats.policy_loss, stats.value_loss, stats.entropy
+      ));
+    } else {
+      self.updates.finish_with_message("done without updates");
+    }
+  }
 }
 
 fn build_trainer(stage: TrainingStage, opts: &TrainOptions) -> TrainResult<Trainer> {
