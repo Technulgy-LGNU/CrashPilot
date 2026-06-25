@@ -13,7 +13,7 @@ impl Default for ArtificialIncompetence {
 }
 
 impl Ai for ArtificialIncompetence {
-  fn predict(&mut self, state: &GameState, dt: f32) -> Commands {
+  fn predict(&mut self, _state: &GameState, _dt: f32) -> Commands {
     todo!()
   }
 }

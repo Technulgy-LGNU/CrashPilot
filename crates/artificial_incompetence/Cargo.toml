@@ -6,10 +6,15 @@ edition = "2024"
 [dependencies]
 core_dump = { git = "https://github.com/Technulgy-LGNU/core-dump" }
 serde = { version = "1.0.228", features = ["derive"] }
-serde_json = "1.0.145"
-indicatif = "0.18.3"
-tch = { version = "0.24.0", features = ["download-libtorch"] }
+serde_json = { version = "1.0.145", optional = true }
+indicatif = { version = "0.18.3", optional = true }
+tch = { version = "0.24.0", features = ["download-libtorch"], optional = true }
 simhark = { git = "https://github.com/Technulgy-LGNU/simhark", optional = true }
+
 [features]
-default = ["train"]
-train = ["dep:simhark"]
+default = []
+train = ["dep:indicatif", "dep:serde_json", "dep:simhark", "dep:tch"]
+
+[[example]]
+name = "train_ai"
+required-features = ["train"]
