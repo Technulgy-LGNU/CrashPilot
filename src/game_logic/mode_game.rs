@@ -201,7 +201,13 @@ fn execute_penalty<A: Ai + Send>(
   };
 
   robot_msg.msg.cmd.state = StateFree as i32;
-  shoot_to_goal(&mut robot_msg, robot_state, all_robots, cp);
+  shoot_to_goal(
+    &mut robot_msg,
+    robot_state,
+    all_robots,
+    &cp.state,
+    &cp.field_setup,
+  );
   cp.robots.insert(actor_id as u32, robot_msg);
 }
 

@@ -76,7 +76,7 @@ pub fn ai_handler<C, A: Ai>(all_robots: &[Robot], cp: &mut CrashPilot<C, A>) {
             RobotCommand::FreeKick(_) => {}
             RobotCommand::KickGoal => {
               // Calculate the angle to the goal with no opponents in the way and the minimum distance from all robots
-              shoot_to_goal(&mut robot, robot_self, all_robots, cp)
+              shoot_to_goal(&mut robot, robot_self, all_robots, &cp.state, &cp.field_setup)
             }
             RobotCommand::PassTo(r_id) => {
               robot.msg.cmd.task = TaskKick as i32;
@@ -85,7 +85,7 @@ pub fn ai_handler<C, A: Ai>(all_robots: &[Robot], cp: &mut CrashPilot<C, A>) {
                 Some(r) => r,
                 None => {
                   // Shoot to goal
-                  shoot_to_goal(&mut robot, robot_self, all_robots, cp);
+                  shoot_to_goal(&mut robot, robot_self, all_robots, &cp.state, &cp.field_setup);
                   return;
                 }
               };

@@ -1,32 +1,33 @@
-use crate::game_logic::types::Robot;
-use crate::{CrashPilot, RobotData};
-use artificial_incompetence::Ai;
+use crate::game_logic::types::{Robot, WorldState};
+use crate::utils::FieldSetup;
+use crate::RobotData;
 use core_dump::proto::CpTask::TaskKick;
 use core_dump::vec::types::Vec2;
 
 #[inline]
-pub fn shoot_to_goal<C, A: Ai>(
+pub fn shoot_to_goal(
   robot: &mut RobotData,
   robot_self: &Robot,
   all_robots: &[Robot],
-  cp: &CrashPilot<C, A>,
+  state: &WorldState,
+  field_setup: &FieldSetup,
 ) {
   match best_shot_angle(
     robot_self.pos.unwrap_or_default(),
     all_robots,
     Vec2::new(
-      cp.field_setup.width as f32 * 0.5 * cp.state.site,
-      cp.field_setup.goal_width as f32 * 0.5 * cp.state.site,
+      field_setup.width as f32 * 0.5 * state.site,
+      field_setup.goal_width as f32 * 0.5 * state.site,
     ),
     Vec2::new(
-      cp.field_setup.width as f32 * 0.5 * cp.state.site,
-      -(cp.field_setup.goal_width as f32) * 0.5 * cp.state.site,
+      field_setup.width as f32 * 0.5 * state.site,
+      -(field_setup.goal_width as f32) * 0.5 * state.site,
     ),
   ) {
     None => {
       // Try to shoot to the center
       let angle = (robot_self.pos.unwrap_or_default()
-        + Vec2::new(cp.field_setup.width as f32 * cp.state.site, 0f32))
+        + Vec2::new(field_setup.width as f32 * state.site, 0f32))
       .angle_in_u16();
 
       robot.msg.cmd.task = TaskKick as i32;
