@@ -1,25 +1,26 @@
-#[cfg(feature = "loki")]
-use crate::communication::loki::spawn_loki_publisher;
+pub use crate::communication::Events;
 #[cfg(feature = "loki")]
 use crate::communication::loki::LokiPublisher;
+#[cfg(feature = "loki")]
+use crate::communication::loki::spawn_loki_publisher;
 use crate::communication::robot_sender::{NetworkSender, RobotSender};
 pub use crate::communication::ssl_gc_handler::SslGameController;
-pub use crate::communication::Events;
-use crate::communication::{communication_receiver, EventShare, WebsocketOut};
+use crate::communication::{EventShare, WebsocketOut, communication_receiver};
 pub use crate::config::Config;
 use crate::game_logic::game_logic;
 use crate::game_logic::types::{BallData, Robot, WorldState};
 use crate::helpers::robot_data::create_robot_data;
 #[cfg(feature = "prometheus")]
 use crate::metrics::PrometheusMetrics;
-use crate::utils::{spawn_robot_socket, FieldSetup, PacketBuffer};
+use crate::utils::{FieldSetup, PacketBuffer, spawn_robot_socket};
 use core_dump::proto::{AdvantageChoice, ControllerToTeam, CpCommand, CpInterfaceWrapper, CpRobot};
 use std::collections::HashMap;
-use std::sync::atomic::AtomicU64;
+use std::path::Path;
 use std::sync::Arc;
+use std::sync::atomic::AtomicU64;
 use std::time::Instant;
 use tokio::net::UdpSocket;
-use tokio::time::{interval, Duration, MissedTickBehavior};
+use tokio::time::{Duration, MissedTickBehavior, interval};
 
 pub use crate::utils::RobotData;
 
@@ -70,6 +71,18 @@ pub struct CommunicationChannels {
 
 impl CrashPilot {
   pub async fn default() -> Self {
+    Self::with_ai(ArtificialIncompetence::default()).await
+  }
+
+  pub async fn with_ai_checkpoint<P: AsRef<Path>>(path: P) -> Self {
+    let ai = ArtificialIncompetence::load_auto(path).unwrap_or_else(|err| {
+      panic!("failed to load AI checkpoint: {err}");
+    });
+
+    Self::with_ai(ai).await
+  }
+
+  pub async fn with_ai(ai: ArtificialIncompetence) -> Self {
     let process_start = tokio::time::Instant::now();
     // Interface as feature
     #[cfg(feature = "interface")]
@@ -117,7 +130,7 @@ impl CrashPilot {
     Self::from_parts(
       config,
       comm,
-      ArtificialIncompetence::default(),
+      ai,
       #[cfg(feature = "loki")]
       loki,
       #[cfg(feature = "prometheus")]
