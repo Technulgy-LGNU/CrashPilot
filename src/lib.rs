@@ -42,6 +42,7 @@ use crate::communication::RobotHeartbeat;
 use artificial_incompetence::{Ai, ArtificialIncompetence};
 pub use core_dump;
 use core_dump::vec::types::Vec2;
+use game_logic::types::Team;
 
 #[cfg(feature = "ssl_game_controller")]
 const TEAM_NAME: &str = "Robocup Junior SSL Team";
@@ -448,12 +449,14 @@ impl<C, A: Ai> CrashPilot<C, A> {
       self.site,
     );
 
+    let state_team = Team::from_cp_team(self.team).unwrap_or(self.state.team);
     self.state.update(
       robots_self,
       robots_opp,
       ball_data,
       self.packet_buffer.referee.clone(),
       self.packet_buffer.interface_command.clone(),
+      state_team,
       self.site,
     );
 

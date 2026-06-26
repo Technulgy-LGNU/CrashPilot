@@ -26,10 +26,14 @@ pub struct WorldState {
   #[cfg(feature = "ssl_game_controller")]
   pub last_requested_goalie: Option<u8>,
   pub defenders: Vec<u8>,
+  pub acting_robot: Option<u8>,
+  pub has_acted: bool,
 
   // States
   pub ref_machine: RefMachine,
   pub phase: GamePhase,
+  pub prep_phase: PrepPhase,
+  pub prep_task: Option<PrepTask>,
 }
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
@@ -40,6 +44,16 @@ pub enum GamePhase {
   Halted,
   Stopped,
 
+  Running,
+  Timeout,
+  BallPlacement,
+}
+
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
+pub enum PrepPhase {
+  #[default]
+  Unknown,
+
   OffensiveKickoff,
   DefensiveKickoff,
 
@@ -48,93 +62,103 @@ pub enum GamePhase {
 
   OffensiveFreeKick,
   DefensiveFreeKick,
+}
 
-  Running,
-  Timeout,
-  BallPlacement,
+impl PrepPhase {
+  #[inline]
+  pub fn is_offensive(self) -> bool {
+    matches!(
+      self,
+      PrepPhase::OffensiveKickoff | PrepPhase::OffensivePenalty | PrepPhase::OffensiveFreeKick
+    )
+  }
+}
+
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
+pub enum PrepTaskStatus {
+  #[default]
+  Preparing,
+  Ready,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct PrepTask {
+  pub phase: PrepPhase,
+  pub status: PrepTaskStatus,
+  pub command_counter: u32,
+  pub command_timestamp: u64,
+  pub ball_pos: Vec2<f32>,
+  pub acting_robot: Option<u8>,
+  pub has_acted: bool,
 }
 
 #[derive(Debug, Default, Clone)]
 pub struct RefMachine {
   pub state: RefState,
+  last_command: Option<Command>,
+  last_command_counter: Option<u32>,
+  last_command_timestamp: Option<u64>,
 }
 
 impl RefMachine {
-  pub fn apply(&mut self, cmd: Command) {
-    match cmd {
-      Command::Halt => {
-        self.state = RefState::Halt;
-      }
+  pub fn apply(&mut self, referee: &Referee) -> bool {
+    let cmd = referee.command();
+    let is_new_command = self.last_command != Some(cmd)
+      || self.last_command_counter != Some(referee.command_counter)
+      || self.last_command_timestamp != Some(referee.command_timestamp);
 
-      Command::Stop => {
-        self.state = RefState::Stop;
-      }
-
-      Command::PrepareKickoffBlue => {
-        self.state = RefState::PrepareKickoff {
-          attacking: Team::Blue,
-        };
-      }
-
-      Command::PrepareKickoffYellow => {
-        self.state = RefState::PrepareKickoff {
-          attacking: Team::Yellow,
-        };
-      }
-
-      Command::NormalStart => {
-        self.state = RefState::Running;
-      }
-
-      Command::ForceStart => {
-        self.state = RefState::Running;
-      }
-
-      Command::PreparePenaltyYellow => {
-        self.state = RefState::PreparePenalty {
-          attacking: Team::Yellow,
-        }
-      }
-      Command::PreparePenaltyBlue => {
-        self.state = RefState::PreparePenalty {
-          attacking: Team::Blue,
-        }
-      }
-      Command::DirectFreeYellow => {
-        self.state = RefState::DirectFree {
-          attacking: Team::Yellow,
-        }
-      }
-      Command::DirectFreeBlue => {
-        self.state = RefState::DirectFree {
-          attacking: Team::Blue,
-        }
-      }
-      Command::IndirectFreeYellow => {
-        self.state = RefState::IndirectFree {
-          attacking: Team::Yellow,
-        }
-      }
-      Command::IndirectFreeBlue => {
-        self.state = RefState::IndirectFree {
-          attacking: Team::Blue,
-        }
-      }
-      Command::TimeoutYellow => {
-        self.state = RefState::Timeout;
-      }
-      Command::TimeoutBlue => {
-        self.state = RefState::Timeout;
-      }
-      Command::GoalYellow => {
-        self.state = RefState::Halt;
-      }
-      Command::GoalBlue => {
-        self.state = RefState::Halt;
-      }
-      Command::BallPlacementYellow => self.state = RefState::BallPlacement { team: Team::Yellow },
-      Command::BallPlacementBlue => self.state = RefState::BallPlacement { team: Team::Blue },
+    if !is_new_command {
+      return false;
     }
+
+    self.last_command = Some(cmd);
+    self.last_command_counter = Some(referee.command_counter);
+    self.last_command_timestamp = Some(referee.command_timestamp);
+
+    self.state = match cmd {
+      Command::Halt => RefState::Halt,
+
+      Command::Stop => RefState::Stop,
+
+      Command::PrepareKickoffBlue => RefState::PrepareKickoff {
+        attacking: Team::Blue,
+      },
+
+      Command::PrepareKickoffYellow => RefState::PrepareKickoff {
+        attacking: Team::Yellow,
+      },
+
+      Command::NormalStart => RefState::Running,
+
+      Command::ForceStart => RefState::Running,
+
+      Command::PreparePenaltyYellow => RefState::PreparePenalty {
+        attacking: Team::Yellow,
+      },
+      Command::PreparePenaltyBlue => RefState::PreparePenalty {
+        attacking: Team::Blue,
+      },
+      Command::DirectFreeYellow => RefState::DirectFree {
+        attacking: Team::Yellow,
+      },
+      Command::DirectFreeBlue => RefState::DirectFree {
+        attacking: Team::Blue,
+      },
+      Command::IndirectFreeYellow => RefState::IndirectFree {
+        attacking: Team::Yellow,
+      },
+      Command::IndirectFreeBlue => RefState::IndirectFree {
+        attacking: Team::Blue,
+      },
+      Command::TimeoutYellow => RefState::Timeout,
+      Command::TimeoutBlue => RefState::Timeout,
+      Command::GoalYellow => RefState::Halt,
+      Command::GoalBlue => RefState::Halt,
+      Command::BallPlacementYellow => RefState::BallPlacement { team: Team::Yellow },
+      Command::BallPlacementBlue => RefState::BallPlacement { team: Team::Blue },
+    };
+
+    true
   }
 }
 
@@ -143,6 +167,17 @@ pub enum Team {
   // Dont differentiate between colors, so there need to be less checks
   Blue,
   Yellow,
+}
+
+impl Team {
+  #[inline]
+  pub fn from_cp_team(team: i32) -> Option<Self> {
+    match team {
+      1 => Some(Team::Yellow),
+      2 => Some(Team::Blue),
+      _ => None,
+    }
+  }
 }
 
 #[derive(Debug, Copy, Default, Clone, Eq, PartialEq)]
@@ -184,13 +219,15 @@ impl WorldState {
     ball: BallData,
     referee: Referee,
     iface_cmd: InterfaceCommandCp,
-    site: f32
+    team: Team,
+    site: f32,
   ) {
     self.robots_self = robots_self;
     self.robots_opp = robots_opp;
     self.ball = ball;
     self.referee = referee;
     self.iface_cmd = iface_cmd;
+    self.team = team;
     self.site = site;
 
     self.update_states();
@@ -199,7 +236,10 @@ impl WorldState {
   #[inline]
   fn update_states(&mut self) {
     // Update RefMachine
-    self.ref_machine.apply(self.referee.command());
+    let is_new_ref_command = self.ref_machine.apply(&self.referee);
+    if is_new_ref_command {
+      self.update_prep_task();
+    }
 
     // Apply goalie update
     #[cfg(feature = "ssl_game_controller")]
@@ -214,58 +254,137 @@ impl WorldState {
     }
 
     // Apply those to GamePhase
-    match self.ref_machine.state {
-      RefState::Halt => {
-        self.phase = GamePhase::Halted;
-      }
-      RefState::Stop => {
-        self.phase = GamePhase::Stopped;
-      }
-      RefState::PrepareKickoff { attacking: team } => {
-        if team == self.team {
-          self.phase = GamePhase::OffensiveKickoff;
-        } else {
-          self.phase = GamePhase::DefensiveKickoff;
-        }
-      }
-      RefState::PreparePenalty { attacking } => {
-        if attacking == self.team {
-          self.phase = GamePhase::OffensivePenalty;
-        } else {
-          self.phase = GamePhase::DefensivePenalty;
-        }
-      }
+    self.phase = match self.ref_machine.state {
+      RefState::Halt => GamePhase::Halted,
+      RefState::Stop => GamePhase::Stopped,
+      RefState::PrepareKickoff { .. } => GamePhase::Stopped,
+      RefState::PreparePenalty { .. } => GamePhase::Stopped,
       RefState::BallPlacement { team } => {
         if team == self.team {
-          self.phase = GamePhase::BallPlacement;
+          GamePhase::BallPlacement
         } else {
-          self.phase = GamePhase::Halted;
+          GamePhase::Halted
         }
       }
-      RefState::DirectFree { attacking } => {
-        if attacking == self.team {
-          self.phase = GamePhase::OffensiveFreeKick;
-        } else {
-          self.phase = GamePhase::DefensiveFreeKick;
-        }
+      RefState::DirectFree { .. } => GamePhase::Stopped,
+      RefState::IndirectFree { .. } => GamePhase::Stopped,
+      RefState::Running => GamePhase::Running,
+      RefState::Timeout => GamePhase::Timeout,
+    };
+
+    self.clear_finished_prep_task();
+  }
+
+  #[inline]
+  fn update_prep_task(&mut self) {
+    match self.ref_machine.state {
+      RefState::PrepareKickoff { attacking } => {
+        self.start_prep_task(
+          self.prep_phase_for(attacking, RestartKind::Kickoff),
+          PrepTaskStatus::Preparing,
+        );
       }
-      RefState::IndirectFree { attacking } => {
-        if attacking == self.team {
-          self.phase = GamePhase::OffensiveFreeKick;
-        } else {
-          self.phase = GamePhase::DefensiveFreeKick;
-        }
+      RefState::PreparePenalty { attacking } => {
+        self.start_prep_task(
+          self.prep_phase_for(attacking, RestartKind::Penalty),
+          PrepTaskStatus::Preparing,
+        );
+      }
+      RefState::DirectFree { attacking } | RefState::IndirectFree { attacking } => {
+        self.start_prep_task(
+          self.prep_phase_for(attacking, RestartKind::FreeKick),
+          PrepTaskStatus::Ready,
+        );
       }
       RefState::Running => {
-        self.phase = GamePhase::Running;
+        if let Some(task) = self.prep_task.as_mut()
+          && task.status == PrepTaskStatus::Preparing
+        {
+          task.status = PrepTaskStatus::Ready;
+        }
       }
-      RefState::Timeout => {
-        self.phase = GamePhase::Timeout;
+      RefState::Halt | RefState::Stop | RefState::BallPlacement { .. } | RefState::Timeout => {
+        self.clear_prep_task();
       }
     }
-    // For testing, just set always to running
-    self.phase = GamePhase::Running;
   }
+
+  #[inline]
+  fn start_prep_task(&mut self, phase: PrepPhase, status: PrepTaskStatus) {
+    self.prep_phase = phase;
+    self.acting_robot = None;
+    self.has_acted = false;
+    self.prep_task = Some(PrepTask {
+      phase,
+      status,
+      command_counter: self.referee.command_counter,
+      command_timestamp: self.referee.command_timestamp,
+      ball_pos: self.ball.ball.pos,
+      acting_robot: None,
+      has_acted: false,
+    });
+  }
+
+  #[inline]
+  pub fn mark_prep_actor(&mut self, robot_id: u8) {
+    self.acting_robot = Some(robot_id);
+    if let Some(task) = self.prep_task.as_mut() {
+      task.acting_robot = Some(robot_id);
+    }
+  }
+
+  #[inline]
+  pub fn mark_prep_acted(&mut self) {
+    self.has_acted = true;
+    if let Some(task) = self.prep_task.as_mut() {
+      task.has_acted = true;
+    }
+  }
+
+  #[inline]
+  pub fn clear_prep_task(&mut self) {
+    self.prep_phase = PrepPhase::Unknown;
+    self.prep_task = None;
+    self.acting_robot = None;
+    self.has_acted = false;
+  }
+
+  #[inline]
+  fn clear_finished_prep_task(&mut self) {
+    const BALL_MOVED_DISTANCE_MM: f32 = 50.0;
+
+    let Some(task) = self.prep_task else {
+      return;
+    };
+
+    if task.status != PrepTaskStatus::Ready {
+      return;
+    }
+
+    let ball_delta = self.ball.ball.pos - task.ball_pos;
+    if ball_delta.norm_squared() >= BALL_MOVED_DISTANCE_MM * BALL_MOVED_DISTANCE_MM {
+      self.clear_prep_task();
+    }
+  }
+
+  #[inline]
+  fn prep_phase_for(&self, attacking: Team, kind: RestartKind) -> PrepPhase {
+    match (attacking == self.team, kind) {
+      (true, RestartKind::Kickoff) => PrepPhase::OffensiveKickoff,
+      (false, RestartKind::Kickoff) => PrepPhase::DefensiveKickoff,
+      (true, RestartKind::Penalty) => PrepPhase::OffensivePenalty,
+      (false, RestartKind::Penalty) => PrepPhase::DefensivePenalty,
+      (true, RestartKind::FreeKick) => PrepPhase::OffensiveFreeKick,
+      (false, RestartKind::FreeKick) => PrepPhase::DefensiveFreeKick,
+    }
+  }
+}
+
+#[derive(Clone, Copy)]
+enum RestartKind {
+  Kickoff,
+  Penalty,
+  FreeKick,
 }
 
 impl Default for WorldState {
@@ -285,6 +404,10 @@ impl Default for WorldState {
       defenders: vec![],
       ref_machine: Default::default(),
       phase: Default::default(),
+      prep_phase: Default::default(),
+      prep_task: None,
+      acting_robot: None,
+      has_acted: false,
     }
   }
 }
@@ -335,7 +458,7 @@ impl Robot {
     ball: &Ball,
     team: i32,
     field_setup: &FieldSetup,
-    site: f32
+    site: f32,
   ) -> (Vec<Robot>, Vec<Robot>) {
     let robots_tracked = vis_tracked.tracked_frame.clone().unwrap_or_default().robots;
     if robots_tracked.is_empty() {
@@ -490,5 +613,100 @@ impl BallData {
     };
 
     Self { ball, kicked_ball }
+  }
+}
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  fn referee(command: Command, counter: u32) -> Referee {
+    Referee {
+      command: command as i32,
+      command_counter: counter,
+      command_timestamp: counter as u64,
+      ..Default::default()
+    }
+  }
+
+  fn apply_referee(state: &mut WorldState, command: Command, counter: u32) {
+    state.referee = referee(command, counter);
+    state.update_states();
+  }
+
+  #[test]
+  fn kickoff_prep_survives_normal_start_as_ready_task() {
+    let mut state = WorldState {
+      team: Team::Yellow,
+      ..Default::default()
+    };
+    state.ball.ball.pos = Vec2::new(0.0, 0.0);
+
+    apply_referee(&mut state, Command::PrepareKickoffYellow, 1);
+
+    assert_eq!(state.phase, GamePhase::Stopped);
+    let task = state.prep_task.expect("kickoff prep should be latched");
+    assert_eq!(task.phase, PrepPhase::OffensiveKickoff);
+    assert_eq!(task.status, PrepTaskStatus::Preparing);
+
+    apply_referee(&mut state, Command::NormalStart, 2);
+
+    assert_eq!(state.phase, GamePhase::Running);
+    let task = state
+      .prep_task
+      .expect("normal start should not drop the kickoff task");
+    assert_eq!(task.phase, PrepPhase::OffensiveKickoff);
+    assert_eq!(task.status, PrepTaskStatus::Ready);
+  }
+
+  #[test]
+  fn ready_prep_task_clears_after_ball_moves() {
+    let mut state = WorldState {
+      team: Team::Yellow,
+      ..Default::default()
+    };
+    state.ball.ball.pos = Vec2::new(0.0, 0.0);
+
+    apply_referee(&mut state, Command::PrepareKickoffYellow, 1);
+    apply_referee(&mut state, Command::NormalStart, 2);
+
+    state.ball.ball.pos = Vec2::new(60.0, 0.0);
+    apply_referee(&mut state, Command::NormalStart, 2);
+
+    assert_eq!(state.prep_phase, PrepPhase::Unknown);
+    assert!(state.prep_task.is_none());
+  }
+
+  #[test]
+  fn reset_command_clears_latched_prep_task() {
+    let mut state = WorldState {
+      team: Team::Yellow,
+      ..Default::default()
+    };
+
+    apply_referee(&mut state, Command::PreparePenaltyYellow, 1);
+    apply_referee(&mut state, Command::ForceStart, 2);
+    assert!(state.prep_task.is_some());
+
+    apply_referee(&mut state, Command::Stop, 3);
+
+    assert_eq!(state.phase, GamePhase::Stopped);
+    assert_eq!(state.prep_phase, PrepPhase::Unknown);
+    assert!(state.prep_task.is_none());
+  }
+
+  #[test]
+  fn direct_free_is_ready_immediately_and_uses_team_perspective() {
+    let mut state = WorldState {
+      team: Team::Blue,
+      ..Default::default()
+    };
+
+    apply_referee(&mut state, Command::DirectFreeYellow, 1);
+
+    let task = state.prep_task.expect("direct free should be latched");
+    assert_eq!(state.phase, GamePhase::Stopped);
+    assert_eq!(task.phase, PrepPhase::DefensiveFreeKick);
+    assert_eq!(task.status, PrepTaskStatus::Ready);
   }
 }
