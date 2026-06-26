@@ -1,12 +1,12 @@
 use crate::ai_types::{MultiBatch, NUM_COMMANDS};
 use crate::config::{BALL_FEATURES, NEG_INF, NUM_POWER_BINS, ROBOT_FEATURES};
 use crate::grid::GridSpec;
-use crate::mask::{build_action_masks, Masks};
+use crate::mask::{Masks, build_action_masks};
 use crate::modules::grid::GridZoneEncoder;
 use crate::modules::mlp::MLP;
 use crate::modules::nn::{CategoricalHead, CrossAttentionBlock, PointerHead};
 use tch::nn::Module;
-use tch::{nn, Kind, Tensor};
+use tch::{Kind, Tensor, nn};
 
 pub struct Actor {
   own_encoder: MLP,

@@ -1,19 +1,19 @@
-#[cfg(feature = "loki")]
-use crate::communication::loki::spawn_loki_publisher;
+pub use crate::communication::Events;
 #[cfg(feature = "loki")]
 use crate::communication::loki::LokiPublisher;
+#[cfg(feature = "loki")]
+use crate::communication::loki::spawn_loki_publisher;
 use crate::communication::robot_sender::{NetworkSender, RobotSender};
 #[cfg(feature = "ssl_game_controller")]
 pub use crate::communication::ssl_gc_handler::SslGameController;
-pub use crate::communication::Events;
-use crate::communication::{communication_receiver, EventShare, WebsocketOut};
+use crate::communication::{EventShare, WebsocketOut, communication_receiver};
 pub use crate::config::Config;
 use crate::game_logic::game_logic;
 use crate::game_logic::types::{BallData, Robot, WorldState};
 use crate::helpers::robot_data::create_robot_data;
 #[cfg(feature = "prometheus")]
 use crate::metrics::PrometheusMetrics;
-use crate::utils::{spawn_robot_socket, FieldSetup, PacketBuffer};
+use crate::utils::{FieldSetup, PacketBuffer, spawn_robot_socket};
 #[cfg(feature = "ssl_game_controller")]
 use core_dump::proto::{AdvantageChoice, ControllerToTeam};
 use core_dump::proto::{CpCommand, CpInterfaceWrapper, CpRobot};
@@ -58,12 +58,12 @@ pub struct CrashPilot<C = CommunicationChannels, A: Ai = ArtificialIncompetence>
   ai_data: artificial_incompetence::types::GameState,
   ai: A,
   team: i32,
-  site: i32,
   field_setup: FieldSetup,
   packet_buffer: PacketBuffer,
   comm: C,
   heartbeat: RobotHeartbeat,
   process_start: tokio::time::Instant,
+  site: f32,
 }
 
 pub struct CommunicationChannels {
@@ -343,7 +343,6 @@ impl<C, A: Ai> CrashPilot<C, A> {
     //  - 1: Yellow
     //  - 2: Blue
     let team: i32 = 0;
-    let site: i32 = 1;
     // Field config
     let field_setup = FieldSetup::default();
 
@@ -359,12 +358,12 @@ impl<C, A: Ai> CrashPilot<C, A> {
       ai_data: Default::default(),
       ai,
       team,
-      site,
       field_setup,
       packet_buffer: PacketBuffer::default(),
       comm,
       heartbeat: heartbeats,
       process_start,
+      site: 0.0,
     }
   }
 
@@ -397,12 +396,6 @@ impl<C, A: Ai> CrashPilot<C, A> {
       } else {
         self.team = 1;
       }
-
-      if self.packet_buffer.interface_command.game.side {
-        self.site = -1;
-      } else {
-        self.site = 1;
-      }
     }
 
     if let Some(packet) = events.gc {
@@ -420,14 +413,39 @@ impl<C, A: Ai> CrashPilot<C, A> {
   }
 
   pub fn update_data(&mut self) {
+    // Update site dependent on referee data
+    if self
+      .packet_buffer
+      .referee
+      .blue_team_on_positive_half
+      .is_some()
+    {
+      if self
+        .packet_buffer
+        .referee
+        .blue_team_on_positive_half
+        .unwrap()
+      {
+        self.site = -1f32
+      } else {
+        self.site = 1f32
+      }
+    } else {
+      if self.packet_buffer.interface_command.game.side {
+        self.site = 1f32
+      } else {
+        self.site = -1f32
+      }
+    }
+
     // Create state
     let ball_data = BallData::new(&self.packet_buffer.vis_tracked);
     let (robots_self, robots_opp) = Robot::new_from_tracked(
       &self.packet_buffer.vis_tracked,
       &ball_data.ball,
       self.team,
-      self.site as f32,
       &self.field_setup,
+      self.site,
     );
 
     self.state.update(
@@ -436,6 +454,7 @@ impl<C, A: Ai> CrashPilot<C, A> {
       ball_data,
       self.packet_buffer.referee.clone(),
       self.packet_buffer.interface_command.clone(),
+      self.site,
     );
 
     create_robot_data(

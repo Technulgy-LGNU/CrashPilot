@@ -18,7 +18,6 @@ pub struct RobotState {
   pub is_goalie: bool,
 }
 
-
 pub type Robots = [Option<RobotState>; 16];
 
 #[derive(Debug, Copy, Clone, Default)]
@@ -49,8 +48,6 @@ pub enum RobotCommand {
 }
 
 pub type Commands = [Option<RobotCommand>; 16];
-
-
 
 pub trait Ai {
   fn predict(&mut self, state: &GameState, dt: f32) -> Commands;

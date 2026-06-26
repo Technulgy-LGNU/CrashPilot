@@ -9,8 +9,8 @@ use simhark::{
   MoveCommand, SimulationEngine, SumatraSimNetConfig, SumatraSimNetServer, TeamColor, TeleportBall,
   TeleportRobot, WorldCommand, WorldConfig, WorldState,
 };
-use tch::nn::VarStore;
 use tch::Device;
+use tch::nn::VarStore;
 
 use crate::loader::{CheckpointMetadata, ModelLoader};
 use crate::train::reward::RewardMode;

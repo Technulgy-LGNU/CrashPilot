@@ -1,14 +1,14 @@
+use crate::GameState;
 use crate::ai_types::SampledRobotAction;
 use crate::config::MAX_ROBOTS_PER_TEAM;
 use crate::grid::GridSpec;
 use crate::modules::coach::Coach;
-use crate::train::data::{empty_world_state, Data, RootData};
+use crate::train::data::{Data, RootData, empty_world_state};
 use crate::train::gae::compute_gae;
 use crate::train::ppo::UpdateResult;
-use crate::train::reward::{compute_reward_for, RewardMode};
+use crate::train::reward::{RewardMode, compute_reward_for};
 use crate::train::transition::Transition;
 use crate::types::{Ai, Commands};
-use crate::GameState;
 use simhark::WorldState;
 use std::mem;
 use tch::nn::{Optimizer, OptimizerConfig, VarStore};

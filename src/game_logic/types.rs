@@ -184,27 +184,14 @@ impl WorldState {
     ball: BallData,
     referee: Referee,
     iface_cmd: InterfaceCommandCp,
+    site: f32
   ) {
     self.robots_self = robots_self;
     self.robots_opp = robots_opp;
     self.ball = ball;
     self.referee = referee;
     self.iface_cmd = iface_cmd;
-
-    // Update team and site dependent on referee data
-    if self.referee.blue_team_on_positive_half.is_some() {
-      if self.referee.blue_team_on_positive_half.unwrap() {
-        self.site = -1f32
-      } else {
-        self.site = 1f32
-      }
-    } else {
-      if self.iface_cmd.game.side {
-        self.site = 1f32
-      } else {
-        self.site = -1f32
-      }
-    }
+    self.site = site;
 
     self.update_states();
   }
@@ -347,8 +334,8 @@ impl Robot {
     vis_tracked: &TrackerWrapperPacket,
     ball: &Ball,
     team: i32,
-    site: f32,
     field_setup: &FieldSetup,
+    site: f32
   ) -> (Vec<Robot>, Vec<Robot>) {
     let robots_tracked = vis_tracked.tracked_frame.clone().unwrap_or_default().robots;
     if robots_tracked.is_empty() {

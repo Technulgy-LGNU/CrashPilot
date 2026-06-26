@@ -1,5 +1,5 @@
-use crate::ai_types::{MultiBatch, SampledRobotAction};
 use crate::Trainer;
+use crate::ai_types::{MultiBatch, SampledRobotAction};
 use tch::{Kind, Tensor};
 
 #[derive(Debug, Clone, Copy)]

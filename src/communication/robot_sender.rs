@@ -1,9 +1,9 @@
+use crate::RobotData;
+use crate::communication::RobotHeartbeat;
 #[cfg(feature = "loki")]
 pub(crate) use crate::communication::loki::LokiPublisher;
-use crate::communication::RobotHeartbeat;
 use crate::config::Config;
-use crate::RobotData;
-use anyhow::{anyhow, Error};
+use anyhow::{Error, anyhow};
 use prost::Message;
 use std::collections::HashMap;
 use std::net::{SocketAddr, SocketAddrV4};
@@ -37,7 +37,10 @@ pub struct RobotSendFailure {
 
 impl SendReport {
   fn push_failure(&mut self, robot_id: u32, error: Error) {
-    self.failed.push(RobotSendFailure { _robot_id: robot_id, _error: error });
+    self.failed.push(RobotSendFailure {
+      _robot_id: robot_id,
+      _error: error,
+    });
   }
 }
 

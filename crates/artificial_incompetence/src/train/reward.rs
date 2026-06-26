@@ -973,9 +973,5 @@ fn point<X: Into<f64>, Y: Into<f64>>(x: X, y: Y) -> Point {
 }
 
 fn finite(v: f64) -> f64 {
-  if v.is_finite() {
-    v
-  } else {
-    0.0
-  }
+  if v.is_finite() { v } else { 0.0 }
 }

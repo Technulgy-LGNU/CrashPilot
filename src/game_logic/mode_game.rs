@@ -1,4 +1,5 @@
 use crate::game_logic::ai_handler::ai_handler;
+use crate::game_logic::defend::goalie_wall;
 use crate::game_logic::types::{GamePhase, Robot};
 use crate::helpers::best_angle_to_goal::shoot_to_goal;
 use crate::{CommunicationChannels, CrashPilot, RobotData};
@@ -169,6 +170,7 @@ pub fn mode_game<A: Ai + Send>(cp: &mut CrashPilot<CommunicationChannels, A>) {
       }
 
       // Do goalie wall math
+      goalie_wall(cp);
     }
     GamePhase::Timeout => {
       // Place all the robots in a line, defined in the config file

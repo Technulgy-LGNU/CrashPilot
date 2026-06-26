@@ -1,9 +1,9 @@
 use std::path::{Path, PathBuf};
 
 #[cfg(feature = "train")]
-use std::fs;
-#[cfg(feature = "train")]
 use serde::{Deserialize, Serialize};
+#[cfg(feature = "train")]
+use std::fs;
 #[cfg(feature = "train")]
 use tch::Device;
 #[cfg(feature = "train")]

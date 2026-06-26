@@ -1,6 +1,6 @@
+use crate::CrashPilot;
 use crate::game_logic::types::Robot;
 use crate::helpers::best_angle_to_goal::shoot_to_goal;
-use crate::CrashPilot;
 use artificial_incompetence::{Ai, RobotCommand};
 use core_dump::proto::CpState::StateFree;
 use core_dump::proto::CpTask::{
@@ -9,7 +9,7 @@ use core_dump::proto::CpTask::{
 use core_dump::vec::types::Vec2;
 
 #[inline]
-pub fn ai_handler<C, A: Ai>(all_robots: &Vec<Robot>, cp: &mut CrashPilot<C, A>) {
+pub fn ai_handler<C, A: Ai>(all_robots: &[Robot], cp: &mut CrashPilot<C, A>) {
   // AI does it thing
   let commands = cp.ai.predict(&cp.ai_data, 1f32);
   // Convert the commands to robot commands

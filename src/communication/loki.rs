@@ -1,11 +1,11 @@
 use crate::config::Config;
 use core_dump::proto::{CpBall, CpCommand, CpRobot, CpTrackedRobot, CpVector2};
 use http_body_util::Full;
+use hyper::Request;
 use hyper::body::Bytes;
 use hyper::header::CONTENT_TYPE;
-use hyper::Request;
-use hyper_util::client::legacy::connect::HttpConnector;
 use hyper_util::client::legacy::Client;
+use hyper_util::client::legacy::connect::HttpConnector;
 use hyper_util::rt::TokioExecutor;
 use prost_types::Timestamp;
 use serde::Serialize;

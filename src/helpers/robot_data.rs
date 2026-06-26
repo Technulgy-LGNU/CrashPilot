@@ -1,7 +1,7 @@
-use crate::helpers::as_cp_vec2;
-use crate::helpers::ball_helper::{convert_ball, VisionBalls};
-use crate::utils::FieldSetup;
 use crate::RobotData;
+use crate::helpers::as_cp_vec2;
+use crate::helpers::ball_helper::{VisionBalls, convert_ball};
+use crate::utils::FieldSetup;
 use core_dump::proto::{
   CpInfos, CpTrackedRobot, InterfaceCommandCp, SslDetectionBall, SslWrapperPacket,
   TrackerWrapperPacket,

@@ -220,7 +220,6 @@ fn categorical_entropy(logits: &Tensor) -> Tensor {
   -(p * logp).sum_dim_intlist([-1].as_ref(), false, Kind::Float)
 }
 
-
 fn sample_categorical_from_logits(logits: &Tensor, deterministic: bool) -> Tensor {
   if deterministic {
     logits.argmax(-1, false)
@@ -238,6 +237,7 @@ fn sample_categorical_from_logits(logits: &Tensor, deterministic: bool) -> Tenso
 
 fn categorical_log_prob(logits: &Tensor, actions: &Tensor) -> Tensor {
   let logp = logits.log_softmax(-1, Kind::Float);
-  logp.gather(-1, &actions.unsqueeze(-1), false)
-      .squeeze_dim(-1)
+  logp
+    .gather(-1, &actions.unsqueeze(-1), false)
+    .squeeze_dim(-1)
 }

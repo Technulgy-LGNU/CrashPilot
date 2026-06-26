@@ -1,7 +1,7 @@
+use crate::grid::GridSpec;
 use crate::modules::mlp::MLP;
 use tch::nn::Module;
 use tch::{Device, Kind, Tensor, nn};
-use crate::grid::GridSpec;
 
 pub struct GridZoneEncoder {
   zone_embed: nn::Embedding,

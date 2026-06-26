@@ -1,17 +1,17 @@
+use crate::TEAM_NAME;
 use crate::communication::EventShare;
 use crate::config::Config;
-use crate::TEAM_NAME;
-use anyhow::{bail, Context};
+use anyhow::{Context, bail};
 use core_dump::proto::{
-    controller_reply, controller_to_team, team_to_controller, AdvantageChoice, ControllerReply, ControllerToTeam,
-    Team, TeamRegistration, TeamToController,
+  AdvantageChoice, ControllerReply, ControllerToTeam, Team, TeamRegistration, TeamToController,
+  controller_reply, controller_to_team, team_to_controller,
 };
 use prost::Message;
 use std::net::SocketAddr;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::TcpStream;
 use tokio::sync::{mpsc, oneshot};
-use tokio::time::{sleep, Duration};
+use tokio::time::{Duration, sleep};
 
 const MAX_FRAME_LEN: usize = 1024 * 1024;
 const RECONNECT_DELAY: Duration = Duration::from_secs(5);

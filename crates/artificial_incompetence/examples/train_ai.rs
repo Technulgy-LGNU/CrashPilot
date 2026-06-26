@@ -1,6 +1,6 @@
 use artificial_incompetence::{
-  evaluate_latest_checkpoint, train_all_stages, train_single_stage, EvaluationOptions,
-  TrainOptions, TrainingStage,
+  EvaluationOptions, TrainOptions, TrainingStage, evaluate_latest_checkpoint, train_all_stages,
+  train_single_stage,
 };
 use std::path::PathBuf;
 use tch::Device;

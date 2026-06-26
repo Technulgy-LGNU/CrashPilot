@@ -168,5 +168,10 @@ pub fn communication_receiver(
     process_start,
   );
 
-  Ok(CommunicationHandles { events, #[cfg(feature = "ssl_game_controller")] gc, ws_out })
+  Ok(CommunicationHandles {
+    events,
+    #[cfg(feature = "ssl_game_controller")]
+    gc,
+    ws_out,
+  })
 }
