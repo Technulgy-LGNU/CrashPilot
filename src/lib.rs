@@ -211,7 +211,7 @@ impl CrashPilot {
     // Sending should not depend on receiving new packets: when vision/GC packets pause,
     // we still want to keep sending the latest known command/state to the robots.
     // Also, waiting on an interval prevents busy-spinning on `rx.lock()`.
-    let mut tick = interval(Duration::from_millis(8)); // ~500 Hz
+    let mut tick = interval(Duration::from_millis(4)); // ~500 Hz
     tick.set_missed_tick_behavior(MissedTickBehavior::Skip);
 
     loop {

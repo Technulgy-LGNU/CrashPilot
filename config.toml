@@ -8,7 +8,6 @@ ssl_gc_port = 10003
 # TCP team protocol endpoint for requests to the GameController.
 ssl_gc_msg_port = 10008
 ssl_gc_msg_ip = "127.0.0.1"
-ssl_gc_team_name = "Robocup Junior SSL Team"
 
 [logging]
 prometheus_host = "0.0.0.0"

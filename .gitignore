@@ -5,3 +5,5 @@ cmake-build-debug/
 rust_to_cpp.sock
 tmp/
 cp_interface
+.agents/
+.codex/
