@@ -20,7 +20,9 @@ pub fn ai_handler<C, A: Ai>(all_robots: &[Robot], cp: &mut CrashPilot<C, A>) {
         && goalie != id as u8
       {
         // Get the robot
-        let mut robot = cp.robots.get(&(id as u32)).cloned().unwrap_or_default();
+        let Some(robot) = cp.robots.get_mut(&(id as u32)) else {
+          continue;
+        };
         let robot_self = match cp.state.robots_self.iter().find(|r| r.robot_id == id as u8) {
           None => {
             return;
@@ -28,7 +30,7 @@ pub fn ai_handler<C, A: Ai>(all_robots: &[Robot], cp: &mut CrashPilot<C, A>) {
           Some(robot) => robot,
         };
 
-        if robot != Default::default() {
+        if *robot != crate::RobotData::default() {
           robot.msg.cmd.state = StateFree as i32;
           match command {
             RobotCommand::Pos(pos) => {
@@ -76,24 +78,21 @@ pub fn ai_handler<C, A: Ai>(all_robots: &[Robot], cp: &mut CrashPilot<C, A>) {
             RobotCommand::FreeKick(_) => {}
             RobotCommand::KickGoal => {
               // Calculate the angle to the goal with no opponents in the way and the minimum distance from all robots
-              shoot_to_goal(&mut robot, robot_self, all_robots, &cp.state, &cp.field_setup)
+              shoot_to_goal(robot, robot_self, all_robots, &cp.state, &cp.field_setup)
             }
             RobotCommand::PassTo(r_id) => {
               robot.msg.cmd.task = TaskKick as i32;
 
-              let to_robot = match cp.state.robots_self.iter().find(|r| r.robot_id == *r_id) {
-                Some(r) => r,
-                None => {
-                  // Shoot to goal
-                  shoot_to_goal(&mut robot, robot_self, all_robots, &cp.state, &cp.field_setup);
-                  return;
-                }
-              };
-              // Get the direction to that robot
-              robot.msg.cmd.kick_orient = Option::from(
-                (to_robot.pos.unwrap_or_default() + robot_self.pos.unwrap_or_default())
-                  .angle_in_u16() as u32,
-              )
+              if let Some(to_robot) = cp.state.robots_self.iter().find(|r| r.robot_id == *r_id) {
+                // Get the direction to that robot
+                robot.msg.cmd.kick_orient = Option::from(
+                  (to_robot.pos.unwrap_or_default() + robot_self.pos.unwrap_or_default())
+                    .angle_in_u16() as u32,
+                )
+              } else {
+                // Shoot to goal
+                shoot_to_goal(robot, robot_self, all_robots, &cp.state, &cp.field_setup);
+              }
             }
             RobotCommand::RecPass => {
               robot.msg.cmd.task = TaskRecKick as i32;
@@ -111,7 +110,6 @@ pub fn ai_handler<C, A: Ai>(all_robots: &[Robot], cp: &mut CrashPilot<C, A>) {
               robot.msg.cmd.speed = Option::from(0);
             }
           }
-          cp.robots.insert(id as u32, robot);
         }
       }
     }

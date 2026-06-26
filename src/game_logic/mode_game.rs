@@ -2,7 +2,7 @@ use crate::game_logic::ai_handler::ai_handler;
 use crate::game_logic::defend::goalie_wall;
 use crate::game_logic::types::{GamePhase, PrepPhase, PrepTask, PrepTaskStatus, Robot};
 use crate::helpers::best_angle_to_goal::shoot_to_goal;
-use crate::{CommunicationChannels, CrashPilot, RobotData};
+use crate::{CommunicationChannels, CrashPilot};
 use artificial_incompetence::types::Ai;
 use core_dump::proto::CpState::{StateFree, StateGoalie, StateHalt, StateStop};
 use core_dump::proto::CpTask::{StateFreekick, StateKickoff, TaskKick, TaskPos, TaskPosBall};
@@ -79,20 +79,15 @@ pub fn mode_game<A: Ai + Send>(cp: &mut CrashPilot<CommunicationChannels, A>) {
         Some(robot) => robot,
       };
 
-      let mut robot_msg: RobotData = match cp
-        .robots
-        .get(&(robot_closest_ball.robot_id as u32))
-        .cloned()
-      {
-        None => return,
-        Some(r) => r,
-      };
-
       let ball_pos = match cp.packet_buffer.referee.designated_position {
         None => {
           return;
         }
         Some(pos) => pos,
+      };
+
+      let Some(robot_msg) = cp.robots.get_mut(&(robot_closest_ball.robot_id as u32)) else {
+        return;
       };
 
       robot_msg.msg.cmd.task = TaskPosBall as i32;
@@ -196,19 +191,18 @@ fn execute_penalty<A: Ai + Send>(
     return;
   };
 
-  let Some(mut robot_msg) = cp.robots.get(&(actor_id as u32)).cloned() else {
+  let Some(robot_msg) = cp.robots.get_mut(&(actor_id as u32)) else {
     return;
   };
 
   robot_msg.msg.cmd.state = StateFree as i32;
   shoot_to_goal(
-    &mut robot_msg,
+    robot_msg,
     robot_state,
     all_robots,
     &cp.state,
     &cp.field_setup,
   );
-  cp.robots.insert(actor_id as u32, robot_msg);
 }
 
 fn execute_kick_restart<A: Ai + Send>(

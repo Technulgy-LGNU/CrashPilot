@@ -1,8 +1,8 @@
-use crate::game_logic::types::Robot;
+use crate::RobotData;
 use crate::game_logic::WorldState;
+use crate::game_logic::types::Robot;
 use crate::helpers::best_angle_to_goal::shoot_to_goal;
 use crate::utils::FieldSetup;
-use crate::RobotData;
 use core_dump::proto::CpState::{StateFree, StateGoalie, StateHalt};
 use core_dump::proto::CpTask::{TaskDribble, TaskKick, TaskPos, TaskPosBall, TaskRecKick};
 use core_dump::proto::{CpCommand, CpTests, CpVector2};
@@ -91,17 +91,14 @@ pub fn mode_test(robot_data: &mut HashMap<u32, RobotData>, state: &mut WorldStat
     }
     CpTests::ModeGoalShoot => {
       // The selected robot should shoot towards the goal
-      if !state.iface_cmd.test.robot_ids.is_empty() || state.iface_cmd.test.robot_ids.len() <= 1 {
+      if let Some(&robot_id) = state.iface_cmd.test.robot_ids.first() {
         let robot_self = state
           .robots_self
           .iter()
-          .find(|r| r.robot_id == state.iface_cmd.test.robot_ids[0] as u8);
-        if let (Some(robot_self), Some(mut robot_data)) = (
-          robot_self,
-          robot_data.get(&state.iface_cmd.test.robot_ids[0]).cloned(),
-        ) {
+          .find(|r| r.robot_id == robot_id as u8);
+        if let (Some(robot_self), Some(robot_data)) = (robot_self, robot_data.get_mut(&robot_id)) {
           shoot_to_goal(
-            &mut robot_data,
+            robot_data,
             robot_self,
             &all_robots,
             state,
@@ -112,8 +109,8 @@ pub fn mode_test(robot_data: &mut HashMap<u32, RobotData>, state: &mut WorldStat
     }
     CpTests::ModeGoalie => {
       // Put the selected robot into goalie mode
-      if (!state.iface_cmd.test.robot_ids.is_empty() || state.iface_cmd.test.robot_ids.len() <= 1)
-        && let Some(mut robot_data) = robot_data.get(&state.iface_cmd.test.robot_ids[0]).cloned()
+      if let Some(&robot_id) = state.iface_cmd.test.robot_ids.first()
+        && let Some(robot_data) = robot_data.get_mut(&robot_id)
       {
         robot_data.msg.cmd.state = StateGoalie as i32;
       }
@@ -121,22 +118,23 @@ pub fn mode_test(robot_data: &mut HashMap<u32, RobotData>, state: &mut WorldStat
     CpTests::ModeGoalieAndShoot => {
       // One robot gets goalie, the other shoots, into the goal, if it gets the ball
       // Put the selected robot into goalie mode
-      if (!state.iface_cmd.test.robot_ids.is_empty() || state.iface_cmd.test.robot_ids.len() == 2)
-        && let Some(mut robot_golie_data) =
-          robot_data.get(&state.iface_cmd.test.robot_ids[0]).cloned()
-      {
-        robot_golie_data.msg.cmd.state = StateGoalie as i32;
+      if state.iface_cmd.test.robot_ids.len() >= 2 {
+        let goalie_id = state.iface_cmd.test.robot_ids[0];
+        let shooter_id = state.iface_cmd.test.robot_ids[1];
+
+        if let Some(robot_goalie_data) = robot_data.get_mut(&goalie_id) {
+          robot_goalie_data.msg.cmd.state = StateGoalie as i32;
+        }
 
         let robot_self = state
           .robots_self
           .iter()
-          .find(|r| r.robot_id == state.iface_cmd.test.robot_ids[1] as u8);
-        if let (Some(robot_self), Some(mut robot_shooter_data)) = (
-          robot_self,
-          robot_data.get(&state.iface_cmd.test.robot_ids[1]).cloned(),
-        ) {
+          .find(|r| r.robot_id == shooter_id as u8);
+        if let (Some(robot_self), Some(robot_shooter_data)) =
+          (robot_self, robot_data.get_mut(&shooter_id))
+        {
           shoot_to_goal(
-            &mut robot_shooter_data,
+            robot_shooter_data,
             robot_self,
             &all_robots,
             state,
