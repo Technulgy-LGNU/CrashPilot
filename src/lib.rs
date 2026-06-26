@@ -14,7 +14,9 @@ use crate::helpers::robot_data::create_robot_data;
 #[cfg(feature = "prometheus")]
 use crate::metrics::PrometheusMetrics;
 use crate::utils::{spawn_robot_socket, FieldSetup, PacketBuffer};
-use core_dump::proto::{AdvantageChoice, ControllerToTeam, CpCommand, CpInterfaceWrapper, CpRobot};
+#[cfg(feature = "ssl_game_controller")]
+use core_dump::proto::{AdvantageChoice, ControllerToTeam};
+use core_dump::proto::{CpCommand, CpInterfaceWrapper, CpRobot};
 use std::collections::HashMap;
 use std::path::Path;
 use std::sync::Arc;
@@ -41,6 +43,7 @@ use artificial_incompetence::{Ai, ArtificialIncompetence};
 pub use core_dump;
 use core_dump::vec::types::Vec2;
 
+#[cfg(feature = "ssl_game_controller")]
 const TEAM_NAME: &str = "Robocup Junior SSL Team";
 
 pub struct CrashPilot<C = CommunicationChannels, A: Ai = ArtificialIncompetence> {
@@ -139,7 +142,7 @@ impl CrashPilot {
     Self::from_parts(
       config,
       comm,
-      ArtificialIncompetence::default(),
+      ai,
       #[cfg(feature = "loki")]
       loki,
       #[cfg(feature = "prometheus")]
