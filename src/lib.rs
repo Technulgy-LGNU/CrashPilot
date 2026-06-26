@@ -3,6 +3,7 @@ use crate::communication::loki::spawn_loki_publisher;
 #[cfg(feature = "loki")]
 use crate::communication::loki::LokiPublisher;
 use crate::communication::robot_sender::{NetworkSender, RobotSender};
+#[cfg(feature = "ssl_game_controller")]
 pub use crate::communication::ssl_gc_handler::SslGameController;
 pub use crate::communication::Events;
 use crate::communication::{communication_receiver, EventShare, WebsocketOut};
@@ -13,7 +14,9 @@ use crate::helpers::robot_data::create_robot_data;
 #[cfg(feature = "prometheus")]
 use crate::metrics::PrometheusMetrics;
 use crate::utils::{spawn_robot_socket, FieldSetup, PacketBuffer};
-use core_dump::proto::{AdvantageChoice, ControllerToTeam, CpCommand, CpInterfaceWrapper, CpRobot};
+#[cfg(feature = "ssl_game_controller")]
+use core_dump::proto::{AdvantageChoice, ControllerToTeam};
+use core_dump::proto::{CpCommand, CpInterfaceWrapper, CpRobot};
 use std::collections::HashMap;
 use std::sync::atomic::AtomicU64;
 use std::sync::Arc;
@@ -39,6 +42,7 @@ use artificial_incompetence::{Ai, ArtificialIncompetence};
 pub use core_dump;
 use core_dump::vec::types::Vec2;
 
+#[cfg(feature = "ssl_game_controller")]
 const TEAM_NAME: &str = "Robocup Junior SSL Team";
 
 pub struct CrashPilot<C = CommunicationChannels, A: Ai = ArtificialIncompetence> {
@@ -64,6 +68,7 @@ pub struct CrashPilot<C = CommunicationChannels, A: Ai = ArtificialIncompetence>
 pub struct CommunicationChannels {
   robot_socket: UdpSocket,
   rx: EventShare,
+  #[cfg(feature = "ssl_game_controller")]
   gc: SslGameController,
   ws_out: WebsocketOut,
 }
@@ -99,8 +104,14 @@ impl CrashPilot {
     let loki = spawn_loki_publisher(&config);
 
     // Receiver for the communication
+    #[cfg(feature = "ssl_game_controller")]
     let (rx, gc, ws_out) = match communication_receiver(&config, &robot_heartbeats, process_start) {
       Ok(comm) => (comm.events, comm.gc, comm.ws_out),
+      Err(e) => panic!("{}", e),
+    };
+    #[cfg(not(feature = "ssl_game_controller"))]
+    let (rx, ws_out) = match communication_receiver(&config, &robot_heartbeats, process_start) {
+      Ok(comm) => (comm.events, comm.ws_out),
       Err(e) => panic!("{}", e),
     };
 
@@ -110,6 +121,7 @@ impl CrashPilot {
     let comm = CommunicationChannels {
       robot_socket,
       rx,
+      #[cfg(feature = "ssl_game_controller")]
       gc,
       ws_out,
     };
@@ -186,7 +198,7 @@ impl CrashPilot {
     // Sending should not depend on receiving new packets: when vision/GC packets pause,
     // we still want to keep sending the latest known command/state to the robots.
     // Also, waiting on an interval prevents busy-spinning on `rx.lock()`.
-    let mut tick = interval(Duration::from_millis(8)); // ~500 Hz
+    let mut tick = interval(Duration::from_millis(4)); // ~500 Hz
     tick.set_missed_tick_behavior(MissedTickBehavior::Skip);
 
     loop {
@@ -226,14 +238,17 @@ impl CrashPilot {
     self.comm.ws_out.publish(ws_packet).await; // Publish the packet to the WebSocketOut channel
   }
 
+  #[cfg(feature = "ssl_game_controller")]
   pub fn game_controller(&self) -> &SslGameController {
     &self.comm.gc
   }
 
+  #[cfg(feature = "ssl_game_controller")]
   pub async fn gc_desired_keeper(&self, id: i32) -> anyhow::Result<ControllerToTeam> {
     self.comm.gc.desired_keeper(id).await
   }
 
+  #[cfg(feature = "ssl_game_controller")]
   pub async fn gc_advantage_choice(
     &self,
     choice: AdvantageChoice,
@@ -241,10 +256,12 @@ impl CrashPilot {
     self.comm.gc.advantage_choice(choice).await
   }
 
+  #[cfg(feature = "ssl_game_controller")]
   pub async fn gc_substitute_bot(&self, requested: bool) -> anyhow::Result<ControllerToTeam> {
     self.comm.gc.substitute_bot(requested).await
   }
 
+  #[cfg(feature = "ssl_game_controller")]
   pub async fn gc_ping(&self) -> anyhow::Result<ControllerToTeam> {
     self.comm.gc.ping().await
   }

@@ -23,6 +23,7 @@ pub struct WorldState {
   // Thinks to keep track of
   pub goalie: Option<u8>,
   pub new_goalie: Option<u8>,
+  #[cfg(feature = "ssl_game_controller")]
   pub last_requested_goalie: Option<u8>,
   pub defenders: Vec<u8>,
 
@@ -214,10 +215,15 @@ impl WorldState {
     self.ref_machine.apply(self.referee.command());
 
     // Apply goalie update
+    #[cfg(feature = "ssl_game_controller")]
     if self.site.is_sign_positive() {
       self.goalie = Some(self.referee.yellow.goalkeeper as u8)
     } else {
       self.goalie = Some(self.referee.blue.goalkeeper as u8)
+    }
+    #[cfg(not(feature = "ssl_game_controller"))]
+    if self.goalie != self.new_goalie {
+      self.goalie = self.new_goalie;
     }
 
     // Apply those to GamePhase
@@ -287,6 +293,7 @@ impl Default for WorldState {
       site: 0f32,
       goalie: None,
       new_goalie: None,
+      #[cfg(feature = "ssl_game_controller")]
       last_requested_goalie: None,
       defenders: vec![],
       ref_machine: Default::default(),

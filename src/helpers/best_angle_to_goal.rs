@@ -8,7 +8,7 @@ use core_dump::vec::types::Vec2;
 pub fn shoot_to_goal<C, A: Ai>(
   robot: &mut RobotData,
   robot_self: &Robot,
-  all_robots: &Vec<Robot>,
+  all_robots: &[Robot],
   cp: &CrashPilot<C, A>,
 ) {
   match best_shot_angle(
@@ -31,12 +31,12 @@ pub fn shoot_to_goal<C, A: Ai>(
 
       robot.msg.cmd.task = TaskKick as i32;
       robot.msg.cmd.kick_orient = Option::from(angle as u32);
-      robot.msg.cmd.kick_speed = Option::from(255);
+      robot.msg.cmd.kick_speed = Option::from(200);
     }
     Some(angle) => {
       robot.msg.cmd.task = TaskKick as i32;
       robot.msg.cmd.kick_orient = Option::from(angle);
-      robot.msg.cmd.kick_speed = Option::from(255);
+      robot.msg.cmd.kick_speed = Option::from(200);
     }
   };
 }

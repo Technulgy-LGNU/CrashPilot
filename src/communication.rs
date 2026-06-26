@@ -7,12 +7,14 @@ pub mod loki;
 mod robot_receiver;
 pub mod robot_sender;
 mod ssl_communication;
+#[cfg(feature = "ssl_game_controller")]
 pub mod ssl_gc_handler;
 mod udp_listener;
 
 use crate::communication::interface::spawn_websocket;
 use crate::communication::robot_receiver::robot_receiver;
 use crate::communication::ssl_communication::get_ssl_data;
+#[cfg(feature = "ssl_game_controller")]
 use crate::communication::ssl_gc_handler::SslGameController;
 use crate::config;
 use core_dump::proto::{
@@ -127,6 +129,7 @@ impl WebsocketOut {
 #[derive(Clone)]
 pub struct CommunicationHandles {
   pub events: EventShare,
+  #[cfg(feature = "ssl_game_controller")]
   pub gc: SslGameController,
   pub ws_out: WebsocketOut,
 }
@@ -141,6 +144,7 @@ pub fn communication_receiver(
 
   get_ssl_data(cfg, events.clone());
 
+  #[cfg(feature = "ssl_game_controller")]
   let gc = SslGameController::spawn(cfg, events.clone());
 
   spawn_websocket(cfg, events.clone(), ws_out.clone());
@@ -155,5 +159,5 @@ pub fn communication_receiver(
     process_start,
   );
 
-  Ok(CommunicationHandles { events, gc, ws_out })
+  Ok(CommunicationHandles { events, #[cfg(feature = "ssl_game_controller")] gc, ws_out })
 }

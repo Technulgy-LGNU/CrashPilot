@@ -18,6 +18,7 @@ pub fn mode_game<A: Ai + Send>(cp: &mut CrashPilot<CommunicationChannels, A>) {
     .collect();
 
   // Give the goalie the goalie command and check if the goalie has changed
+  #[cfg(feature = "ssl_game_controller")]
   if let (Some(current_goalie), Some(new_goalie)) = (cp.state.goalie, cp.state.new_goalie) {
     // Use `unwrap_or(32)` because the max id is 15
     if current_goalie != new_goalie && new_goalie != cp.state.last_requested_goalie.unwrap_or(32) {
@@ -141,7 +142,7 @@ pub fn mode_game<A: Ai + Send>(cp: &mut CrashPilot<CommunicationChannels, A>) {
                     );
 
                     goalie_robot.msg.cmd.task = TaskChip as i32;
-                    goalie_robot.msg.cmd.kick_speed = Some(255);
+                    goalie_robot.msg.cmd.kick_speed = Some(100);
 
                     to_robot_msg.msg.cmd.task = TaskRecKick as i32;
 
