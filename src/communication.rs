@@ -21,8 +21,8 @@ use core_dump::proto::{
   ControllerToTeam, CpInterfaceWrapper, InterfaceWrapperCp, Referee, RobotCp, SslWrapperPacket,
   TrackerWrapperPacket,
 };
-use std::sync::atomic::AtomicU64;
 use std::sync::Arc;
+use std::sync::atomic::AtomicU64;
 use tokio::sync::Notify;
 use tokio::sync::RwLock;
 use tokio::time::Instant;
@@ -93,6 +93,15 @@ impl WebsocketOut {
   /// Publish a new binary payload.
   pub async fn publish(&self, payload: CpInterfaceWrapper) {
     let mut lock = self.state.write().await;
+    lock.seq = lock.seq.wrapping_add(1);
+    lock.payload = Some(payload);
+    drop(lock);
+    self.notify.notify_waiters();
+  }
+
+  /// Synchronous variant for simulator loops that are not async themselves.
+  pub fn publish_sync(&self, payload: CpInterfaceWrapper) {
+    let mut lock = self.state.blocking_write();
     lock.seq = lock.seq.wrapping_add(1);
     lock.payload = Some(payload);
     drop(lock);

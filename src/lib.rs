@@ -14,15 +14,14 @@ use crate::helpers::robot_data::create_robot_data;
 #[cfg(feature = "prometheus")]
 use crate::metrics::PrometheusMetrics;
 use crate::utils::{spawn_robot_socket, FieldSetup, PacketBuffer};
-#[cfg(feature = "ssl_game_controller")]
-use core_dump::proto::{AdvantageChoice, ControllerToTeam};
-use core_dump::proto::{CpCommand, CpInterfaceWrapper, CpRobot};
+use core_dump::proto::{AdvantageChoice, ControllerToTeam, CpCommand, CpInterfaceWrapper, CpRobot};
 use std::collections::HashMap;
-use std::sync::atomic::AtomicU64;
+use std::path::Path;
 use std::sync::Arc;
+use std::sync::atomic::AtomicU64;
 use std::time::Instant;
 use tokio::net::UdpSocket;
-use tokio::time::{interval, Duration, MissedTickBehavior};
+use tokio::time::{Duration, MissedTickBehavior, interval};
 
 pub use crate::utils::RobotData;
 
@@ -42,7 +41,6 @@ use artificial_incompetence::{Ai, ArtificialIncompetence};
 pub use core_dump;
 use core_dump::vec::types::Vec2;
 
-#[cfg(feature = "ssl_game_controller")]
 const TEAM_NAME: &str = "Robocup Junior SSL Team";
 
 pub struct CrashPilot<C = CommunicationChannels, A: Ai = ArtificialIncompetence> {
@@ -75,6 +73,18 @@ pub struct CommunicationChannels {
 
 impl CrashPilot {
   pub async fn default() -> Self {
+    Self::with_ai(ArtificialIncompetence::default()).await
+  }
+
+  pub async fn with_ai_checkpoint<P: AsRef<Path>>(path: P) -> Self {
+    let ai = ArtificialIncompetence::load_auto(path).unwrap_or_else(|err| {
+      panic!("failed to load AI checkpoint: {err}");
+    });
+
+    Self::with_ai(ai).await
+  }
+
+  pub async fn with_ai(ai: ArtificialIncompetence) -> Self {
     let process_start = tokio::time::Instant::now();
     // Interface as feature
     #[cfg(feature = "interface")]
@@ -198,7 +208,7 @@ impl CrashPilot {
     // Sending should not depend on receiving new packets: when vision/GC packets pause,
     // we still want to keep sending the latest known command/state to the robots.
     // Also, waiting on an interval prevents busy-spinning on `rx.lock()`.
-    let mut tick = interval(Duration::from_millis(4)); // ~500 Hz
+    let mut tick = interval(Duration::from_millis(8)); // ~500 Hz
     tick.set_missed_tick_behavior(MissedTickBehavior::Skip);
 
     loop {
