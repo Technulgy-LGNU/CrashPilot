@@ -91,6 +91,10 @@ impl Communication for CommunicationChannels {
   }
 }
 
+impl Communication for () {
+  fn request_desired_keeper(&self, _goalie: u8) {}
+}
+
 impl CrashPilot {
   pub async fn default() -> Self {
     Self::with_ai(ArtificialIncompetence::default()).await

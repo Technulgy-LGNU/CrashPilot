@@ -2,10 +2,10 @@ use crate::game_logic::ai_handler::ai_handler;
 use crate::game_logic::defend::goalie_wall;
 use crate::game_logic::types::{GamePhase, PrepPhase, PrepTask, PrepTaskStatus, Robot};
 use crate::helpers::best_angle_to_goal::shoot_to_goal;
-use crate::{CommunicationChannels, CrashPilot};
+use crate::{Communication, CrashPilot};
 use artificial_incompetence::types::Ai;
 use core_dump::proto::CpState::{StateFree, StateGoalie, StateHalt, StateStop};
-use core_dump::proto::CpTask::{StateFreekick, StateKickoff, TaskKick, TaskPos, TaskPosBall};
+use core_dump::proto::CpTask::{TaskKick, TaskPos, TaskPosBall};
 use core_dump::proto::CpVector2;
 use core_dump::vec::types::Vec2;
 
@@ -14,7 +14,7 @@ const RESTART_KICK_SPEED: u32 = 200;
 const KICKER_SETUP_DISTANCE_MM: f32 = 320.0;
 
 #[inline]
-pub fn mode_game<A: Ai + Send>(cp: &mut CrashPilot<CommunicationChannels, A>) {
+pub fn mode_game<C: Communication, A: Ai + Send>(cp: &mut CrashPilot<C, A>) {
   let all_robots: Vec<Robot> = cp
     .state
     .robots_self
@@ -28,12 +28,7 @@ pub fn mode_game<A: Ai + Send>(cp: &mut CrashPilot<CommunicationChannels, A>) {
   if let (Some(current_goalie), Some(new_goalie)) = (cp.state.goalie, cp.state.new_goalie) {
     // Use `unwrap_or(32)` because the max id is 15
     if current_goalie != new_goalie && new_goalie != cp.state.last_requested_goalie.unwrap_or(32) {
-      let gc = cp.comm.gc.clone();
-      tokio::spawn(async move {
-        if let Err(err) = gc.desired_keeper(new_goalie as i32).await {
-          eprintln!("Failed to request new goalie {new_goalie}: {err:#}");
-        }
-      });
+      cp.comm.request_desired_keeper(new_goalie);
       cp.state.last_requested_goalie = Some(new_goalie);
     }
   }
@@ -103,8 +98,8 @@ pub fn mode_game<A: Ai + Send>(cp: &mut CrashPilot<CommunicationChannels, A>) {
   goalie_wall(cp);
 }
 
-fn handle_prep_task<A: Ai + Send>(
-  cp: &mut CrashPilot<CommunicationChannels, A>,
+fn handle_prep_task<C: Communication, A: Ai + Send>(
+  cp: &mut CrashPilot<C, A>,
   all_robots: &[Robot],
 ) -> bool {
   let Some(task) = cp.state.prep_task else {
@@ -135,8 +130,8 @@ fn handle_prep_task<A: Ai + Send>(
   }
 }
 
-fn prepare_offensive_restart<A: Ai + Send>(
-  cp: &mut CrashPilot<CommunicationChannels, A>,
+fn prepare_offensive_restart<C: Communication, A: Ai + Send>(
+  cp: &mut CrashPilot<C, A>,
   task: PrepTask,
 ) {
   let Some(actor_id) = prep_actor_id(cp, task) else {
@@ -157,8 +152,8 @@ fn prepare_offensive_restart<A: Ai + Send>(
   }
 }
 
-fn execute_offensive_restart<A: Ai + Send>(
-  cp: &mut CrashPilot<CommunicationChannels, A>,
+fn execute_offensive_restart<C: Communication, A: Ai + Send>(
+  cp: &mut CrashPilot<C, A>,
   task: PrepTask,
   all_robots: &[Robot],
 ) {
@@ -177,8 +172,8 @@ fn execute_offensive_restart<A: Ai + Send>(
   cp.state.mark_prep_acted();
 }
 
-fn execute_penalty<A: Ai + Send>(
-  cp: &mut CrashPilot<CommunicationChannels, A>,
+fn execute_penalty<C: Communication, A: Ai + Send>(
+  cp: &mut CrashPilot<C, A>,
   actor_id: u8,
   all_robots: &[Robot],
 ) {
@@ -205,28 +200,23 @@ fn execute_penalty<A: Ai + Send>(
   );
 }
 
-fn execute_kick_restart<A: Ai + Send>(
-  cp: &mut CrashPilot<CommunicationChannels, A>,
+fn execute_kick_restart<C: Communication, A: Ai + Send>(
+  cp: &mut CrashPilot<C, A>,
   task: PrepTask,
   actor_id: u8,
 ) {
-  let kick_task = match task.phase {
-    PrepPhase::OffensiveKickoff => StateKickoff,
-    PrepPhase::OffensiveFreeKick => StateFreekick,
-    _ => TaskKick,
-  };
   let kick_orientation = kick_direction_for_restart(cp, task).angle_in_u16() as u32;
 
   if let Some(robot) = cp.robots.get_mut(&(actor_id as u32)) {
     robot.msg.cmd.state = StateFree as i32;
-    robot.msg.cmd.task = kick_task as i32;
+    robot.msg.cmd.task = TaskKick as i32;
     robot.msg.cmd.kick_orient = Some(kick_orientation);
     robot.msg.cmd.kick_speed = Some(RESTART_KICK_SPEED);
   }
 }
 
-fn prep_actor_id<A: Ai + Send>(
-  cp: &CrashPilot<CommunicationChannels, A>,
+fn prep_actor_id<C: Communication, A: Ai + Send>(
+  cp: &CrashPilot<C, A>,
   task: PrepTask,
 ) -> Option<u8> {
   task
@@ -236,8 +226,8 @@ fn prep_actor_id<A: Ai + Send>(
     .or_else(|| closest_field_robot_to_ball(cp))
 }
 
-fn closest_field_robot_to_ball<A: Ai + Send>(
-  cp: &CrashPilot<CommunicationChannels, A>,
+fn closest_field_robot_to_ball<C: Communication, A: Ai + Send>(
+  cp: &CrashPilot<C, A>,
 ) -> Option<u8> {
   cp.state
     .robots_self
@@ -251,22 +241,22 @@ fn closest_field_robot_to_ball<A: Ai + Send>(
     .map(|robot| robot.robot_id)
 }
 
-fn is_available_field_robot<A: Ai + Send>(
-  cp: &CrashPilot<CommunicationChannels, A>,
+fn is_available_field_robot<C: Communication, A: Ai + Send>(
+  cp: &CrashPilot<C, A>,
   robot_id: u8,
 ) -> bool {
   cp.robots.contains_key(&(robot_id as u32)) && cp.state.goalie != Some(robot_id)
 }
 
-fn setup_position_for_restart<A: Ai + Send>(
-  cp: &CrashPilot<CommunicationChannels, A>,
+fn setup_position_for_restart<C: Communication, A: Ai + Send>(
+  cp: &CrashPilot<C, A>,
   task: PrepTask,
 ) -> Vec2<f32> {
   task.ball_pos - kick_direction_for_restart(cp, task).normalized() * KICKER_SETUP_DISTANCE_MM
 }
 
-fn kick_direction_for_restart<A: Ai + Send>(
-  cp: &CrashPilot<CommunicationChannels, A>,
+fn kick_direction_for_restart<C: Communication, A: Ai + Send>(
+  cp: &CrashPilot<C, A>,
   task: PrepTask,
 ) -> Vec2<f32> {
   let opponent_goal = Vec2::new(cp.field_setup.width as f32 * 0.5 * cp.state.site, 0.0);
@@ -279,16 +269,13 @@ fn kick_direction_for_restart<A: Ai + Send>(
   }
 }
 
-fn set_robot_state_for_all<A: Ai + Send>(
-  cp: &mut CrashPilot<CommunicationChannels, A>,
-  state: i32,
-) {
+fn set_robot_state_for_all<C: Communication, A: Ai + Send>(cp: &mut CrashPilot<C, A>, state: i32) {
   for robot in cp.robots.values_mut() {
     robot.msg.cmd.state = state;
   }
 }
 
-fn set_goalie<A: Ai + Send>(cp: &mut CrashPilot<CommunicationChannels, A>) {
+fn set_goalie<C: Communication, A: Ai + Send>(cp: &mut CrashPilot<C, A>) {
   if let Some(goalie) = cp.state.goalie
     && let Some(robot) = cp.robots.get_mut(&(goalie as u32))
   {
