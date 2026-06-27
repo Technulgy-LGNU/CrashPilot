@@ -10,12 +10,16 @@ use std::collections::HashMap;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 const TEST_SPEED: u32 = 1500;
-const DRIBBLER_SPEED: u32 = 1000;
-const KICK_SPEED: u32 = 180;
-const TARGET_CHANGE_PERIOD_MS: u64 = 4_000;
+const DRIBBLER_SPEED: u32 = 200;
+const KICK_SPEED: u32 = 200;
+const TARGET_CHANGE_PERIOD_MS: u64 = 8_000;
 
 #[inline]
-pub fn mode_test(robot_data: &mut HashMap<u32, RobotData>, state: &mut WorldState) {
+pub fn mode_test(
+  robot_data: &mut HashMap<u32, RobotData>,
+  state: &mut WorldState,
+  field_setup: &FieldSetup,
+) {
   clear_commands(robot_data);
 
   let all_robots: Vec<Robot> = state
@@ -97,15 +101,12 @@ pub fn mode_test(robot_data: &mut HashMap<u32, RobotData>, state: &mut WorldStat
           .iter()
           .find(|r| r.robot_id == robot_id as u8);
         if let (Some(robot_self), Some(robot_data)) = (robot_self, robot_data.get_mut(&robot_id)) {
-          shoot_to_goal(
-            robot_data,
-            robot_self,
-            &all_robots,
-            state,
-            &FieldSetup::default(),
-          );
+          shoot_to_goal(robot_data, robot_self, &all_robots, state, field_setup);
           robot_data.msg.cmd.state = StateFree as i32;
           robot_data.msg.cmd.speed = Some(400);
+
+          dbg!(robot_data.msg.cmd.kick_orient);
+          dbg!(state.site);
         }
       }
     }
@@ -259,6 +260,7 @@ fn field_half_height(state: &WorldState) -> i32 {
     .clamp(1_000, 3_000)
 }
 
+#[inline]
 fn now_ms() -> u64 {
   SystemTime::now()
     .duration_since(UNIX_EPOCH)

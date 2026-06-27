@@ -422,7 +422,7 @@ impl Default for WorldState {
 /// Everything is in:
 ///   - mm && mm/s
 ///   - degree && degree/s
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Robot {
   pub robot_id: u8,
 
@@ -479,7 +479,8 @@ impl Robot {
       let mut dist_opponent: HashMap<u8, f32> = HashMap::new();
       for robot_t in robots_tracked.clone() {
         let dist = Vec2::<f32>::new_from_cp(robot.pos)
-          .dot(&Vec2::new_from_cp(robot_t.pos))
+          .scale_to(1000f32)
+          .dot(&Vec2::new_from_cp(robot_t.pos).scale_to(1000f32))
           .sqrt();
         if team == robot_t.robot_id.team.unwrap_or_default()
           && !dist_team
@@ -499,32 +500,56 @@ impl Robot {
       if robot.robot_id.team.unwrap_or_default() == team {
         robots_self.push(Robot {
           robot_id: robot.robot_id.id.unwrap_or_default() as u8,
-          pos: Some(Vec2::new(robot.pos.x, robot.pos.y)),
-          vel: robot.vel.map(|vel| Vec2::new(vel.x, vel.y)),
+          pos: Some(Vec2::new(robot.pos.x, robot.pos.y).scale_to(1000f32)),
+          vel: robot
+            .vel
+            .map(|vel| Vec2::new(vel.x, vel.y).scale_to(1000f32)),
           orientation: robot.orientation.to_degrees(),
           angular_vel: robot.vel_angular.unwrap_or_default().to_degrees(),
           distance_team: dist_team,
           _distance_opponent: dist_opponent,
-          distance_ball: Some(Vec2::new(robot.pos.x, robot.pos.y).dot(&ball.pos).sqrt()),
-          _distance_goal: Some(Vec2::new(robot.pos.x, robot.pos.y).dot(&goal_point).sqrt()),
+          distance_ball: Some(
+            Vec2::new(robot.pos.x, robot.pos.y)
+              .scale_to(1000f32)
+              .dot(&ball.pos)
+              .sqrt(),
+          ),
+          _distance_goal: Some(
+            Vec2::new(robot.pos.x, robot.pos.y)
+              .scale_to(1000f32)
+              .dot(&goal_point)
+              .sqrt(),
+          ),
           _distance_wall: Option::from(create_wall_points(
-            &Vec2::new_from_cp(robot.pos),
+            &Vec2::new_from_cp(robot.pos).scale_to(1000f32),
             field_setup,
           )),
         });
       } else {
         robots_opp.push(Robot {
           robot_id: robot.robot_id.id.unwrap_or_default() as u8,
-          pos: Some(Vec2::new(robot.pos.x, robot.pos.y)),
-          vel: robot.vel.map(|vel| Vec2::new(vel.x, vel.y)),
+          pos: Some(Vec2::new(robot.pos.x, robot.pos.y).scale_to(1000f32)),
+          vel: robot
+            .vel
+            .map(|vel| Vec2::new(vel.x, vel.y).scale_to(1000f32)),
           orientation: robot.orientation.to_degrees(),
           angular_vel: robot.vel_angular.unwrap_or_default().to_degrees(),
           distance_team: dist_team,
           _distance_opponent: dist_opponent,
-          distance_ball: Some(Vec2::new(robot.pos.x, robot.pos.y).dot(&ball.pos).sqrt()),
-          _distance_goal: Some(Vec2::new(robot.pos.x, robot.pos.y).dot(&goal_point).sqrt()),
+          distance_ball: Some(
+            Vec2::new(robot.pos.x, robot.pos.y)
+              .scale_to(1000f32)
+              .dot(&ball.pos)
+              .sqrt(),
+          ),
+          _distance_goal: Some(
+            Vec2::new(robot.pos.x, robot.pos.y)
+              .scale_to(1000f32)
+              .dot(&goal_point)
+              .sqrt(),
+          ),
           _distance_wall: Option::from(create_wall_points(
-            &Vec2::new_from_cp(robot.pos),
+            &Vec2::new_from_cp(robot.pos).scale_to(1000f32),
             field_setup,
           )),
         });
@@ -584,25 +609,26 @@ impl BallData {
     if !frame.balls.is_empty() {
       // Always uses the first Ball found in the TrackerFrame
       ball = Ball {
-        pos: Vec2::new(frame.balls[0].pos.x, frame.balls[0].pos.y),
+        pos: Vec2::new(frame.balls[0].pos.x, frame.balls[0].pos.y).scale_to(1000f32),
         vel: frame.balls[0]
           .vel
-          .map(|vel| Vec2::new(vel.x, vel.y))
+          .map(|vel| Vec2::new(vel.x, vel.y).scale_to(1000f32))
           .unwrap_or_default(),
       };
     }
 
     let kicked_ball = KickedBall {
-      _pos: Vec2::new_from_cp(frame.kicked_ball.unwrap_or_default().pos),
+      _pos: Vec2::new_from_cp(frame.kicked_ball.unwrap_or_default().pos).scale_to(1000f32),
       _vel: Vec2::new(
         frame.kicked_ball.unwrap_or_default().vel.x,
         frame.kicked_ball.unwrap_or_default().vel.y,
-      ),
+      )
+      .scale_to(1000f32),
       end_point: frame
         .kicked_ball
         .unwrap_or_default()
         .stop_pos
-        .map(|ep| Vec2::new(ep.x, ep.y)),
+        .map(|ep| Vec2::new(ep.x, ep.y).scale_to(1000f32)),
       end_time: Option::from(
         frame
           .kicked_ball
