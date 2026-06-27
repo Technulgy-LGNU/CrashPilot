@@ -104,9 +104,6 @@ pub fn mode_test(
           shoot_to_goal(robot_data, robot_self, &all_robots, state, field_setup);
           robot_data.msg.cmd.state = StateFree as i32;
           robot_data.msg.cmd.speed = Some(400);
-
-          dbg!(robot_data.msg.cmd.kick_orient);
-          dbg!(state.site);
         }
       }
     }
