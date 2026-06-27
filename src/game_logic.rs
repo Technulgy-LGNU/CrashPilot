@@ -11,7 +11,7 @@ use crate::game_logic::mode_game::mode_game;
 use crate::game_logic::mode_manual::mode_manual;
 use crate::game_logic::mode_test::mode_test;
 use crate::game_logic::types::WorldState;
-use crate::{CommunicationChannels, CrashPilot};
+use crate::{Communication, CrashPilot};
 use artificial_incompetence::types::Ai;
 use core_dump::proto::CpMode;
 
@@ -27,7 +27,7 @@ use core_dump::proto::CpMode;
 /// Also translates AI commands to robot commands (AI commands are more specific, so the AI
 /// has an easier time to understand them and apply them
 #[inline]
-pub fn game_logic<A: Ai + Send>(cp: &mut CrashPilot<CommunicationChannels, A>) {
+pub fn game_logic<C: Communication, A: Ai + Send>(cp: &mut CrashPilot<C, A>) {
   // Check, which mode is enabled:
   //  - Manual: Use the interface commands to control the robots
   //  - Game: Use the AI and hardcoded game logic

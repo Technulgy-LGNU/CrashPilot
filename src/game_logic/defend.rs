@@ -1,4 +1,4 @@
-use crate::{CommunicationChannels, CrashPilot};
+use crate::{Communication, CrashPilot};
 use artificial_incompetence::Ai;
 use core_dump::proto::CpState::StateFree;
 use core_dump::proto::CpTask::TaskPos;
@@ -10,7 +10,7 @@ const FIELD_MARGIN_MM: f32 = 150.0;
 const WALL_SPEED_MM_S: u32 = 3000;
 
 // Places AI-selected defenders in a compact wall between the ball and our goal.
-pub fn goalie_wall<A: Ai + Send>(cp: &mut CrashPilot<CommunicationChannels, A>) {
+pub fn goalie_wall<C: Communication, A: Ai + Send>(cp: &mut CrashPilot<C, A>) {
   let mut defender_ids = std::mem::take(&mut cp.state.defenders);
   if defender_ids.is_empty() {
     return;

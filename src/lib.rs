@@ -75,6 +75,22 @@ pub struct CommunicationChannels {
   ws_out: WebsocketOut,
 }
 
+pub trait Communication {
+  fn request_desired_keeper(&self, _goalie: u8) {}
+}
+
+impl Communication for CommunicationChannels {
+  #[cfg(feature = "ssl_game_controller")]
+  fn request_desired_keeper(&self, goalie: u8) {
+    let gc = self.gc.clone();
+    tokio::spawn(async move {
+      if let Err(err) = gc.desired_keeper(goalie as i32).await {
+        eprintln!("Failed to request new goalie {goalie}: {err:#}");
+      }
+    });
+  }
+}
+
 impl CrashPilot {
   pub async fn default() -> Self {
     Self::with_ai(ArtificialIncompetence::default()).await
@@ -533,7 +549,7 @@ impl<C, A: Ai> CrashPilot<C, A> {
   }
 }
 
-impl<A: Ai + Send> CrashPilot<CommunicationChannels, A> {
+impl<C: Communication, A: Ai + Send> CrashPilot<C, A> {
   pub fn update_logic(&mut self) {
     // Actual game logic is going to happen here
     // First checks, on game state, and coordinating robots for that

@@ -104,6 +104,8 @@ pub fn mode_test(robot_data: &mut HashMap<u32, RobotData>, state: &mut WorldStat
             state,
             &FieldSetup::default(),
           );
+          robot_data.msg.cmd.state = StateFree as i32;
+          robot_data.msg.cmd.speed = Some(400);
         }
       }
     }
@@ -140,6 +142,7 @@ pub fn mode_test(robot_data: &mut HashMap<u32, RobotData>, state: &mut WorldStat
             state,
             &FieldSetup::default(),
           );
+          robot_shooter_data.msg.cmd.state = StateFree as i32;
         }
       }
     }
