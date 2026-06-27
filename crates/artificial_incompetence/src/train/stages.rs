@@ -416,7 +416,7 @@ fn train_stage_inner(
     }
     trainer.sync_states(sim_states.clone(), states.clone());
     if let Some(runtime) = sumatra_runtime.as_mut() {
-      runtime.reset_tracking();
+      runtime.restart(&opts)?;
     }
   }
 
@@ -750,9 +750,44 @@ impl SumatraOpponentRuntime {
     Ok(engine.get_all_states())
   }
 
-  fn reset_tracking(&mut self) {
-    for server in &mut self.servers {
-      server.reset_tracking();
+  fn restart(&mut self, opts: &TrainOptions) -> TrainResult<()> {
+    self.stop_clients()?;
+    self.clients.clear();
+    self.servers.clear();
+
+    let restarted = Self::spawn(opts)?;
+    *self = restarted;
+    Ok(())
+  }
+
+  fn stop_clients(&mut self) -> TrainResult<()> {
+    for client in &mut self.clients {
+      client.kill()?;
+    }
+
+    let timeout = std::time::Duration::from_secs(10);
+    let start = std::time::Instant::now();
+    loop {
+      let mut running = 0;
+      for client in &mut self.clients {
+        if client.try_wait()?.is_none() {
+          running += 1;
+        }
+      }
+      if running == 0 {
+        return Ok(());
+      }
+      if start.elapsed() >= timeout {
+        return Err(
+          format!(
+            "timed out waiting for {running} Sumatra client(s) to stop after {}s",
+            timeout.as_secs()
+          )
+          .into(),
+        );
+      }
+
+      std::thread::sleep(std::time::Duration::from_millis(20));
     }
   }
 }
@@ -786,7 +821,9 @@ impl SumatraOpponentRuntime {
     Err("sumatra_opponent runtime was not started".into())
   }
 
-  fn reset_tracking(&mut self) {}
+  fn restart(&mut self, _opts: &TrainOptions) -> TrainResult<()> {
+    Err("sumatra_opponent runtime was not started".into())
+  }
 }
 
 fn reset_stage_worlds(
