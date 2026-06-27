@@ -1,6 +1,6 @@
+use crate::RobotData;
 use crate::game_logic::types::{Robot, WorldState};
 use crate::utils::FieldSetup;
-use crate::RobotData;
 use core_dump::proto::CpTask::TaskKick;
 use core_dump::vec::types::Vec2;
 

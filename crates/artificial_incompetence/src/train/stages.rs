@@ -32,18 +32,23 @@ pub enum TrainingStage {
   PassReceive,
   OneVsOne,
   ScriptedScrimmage,
+  SelfPlay,
   SumatraOpponent,
 }
 
-pub const TRAINING_STAGES_IN_ORDER: [TrainingStage; 7] = [
+pub const TRAINING_STAGES_IN_ORDER: [TrainingStage; 8] = [
   TrainingStage::TouchBall,
   TrainingStage::DribbleToGoal,
   TrainingStage::ShootGoal,
   TrainingStage::PassReceive,
   TrainingStage::OneVsOne,
   TrainingStage::ScriptedScrimmage,
+  TrainingStage::SelfPlay,
   TrainingStage::SumatraOpponent,
 ];
+
+const SELF_PLAY_OPPONENT_SWITCH_UPDATES: usize = 1;
+const SELF_PLAY_PAST_REFRESH_UPDATES: usize = 8;
 
 impl TrainingStage {
   pub fn name(self) -> &'static str {
@@ -54,6 +59,7 @@ impl TrainingStage {
       Self::PassReceive => "pass_receive",
       Self::OneVsOne => "one_vs_one",
       Self::ScriptedScrimmage => "scripted_scrimmage",
+      Self::SelfPlay => "self_play",
       Self::SumatraOpponent => "sumatra_opponent",
     }
   }
@@ -64,7 +70,9 @@ impl TrainingStage {
       Self::DribbleToGoal => RewardMode::DribbleToGoal,
       Self::ShootGoal => RewardMode::ShootGoal,
       Self::PassReceive => RewardMode::PassReceive,
-      Self::OneVsOne | Self::ScriptedScrimmage | Self::SumatraOpponent => RewardMode::Full,
+      Self::OneVsOne | Self::ScriptedScrimmage | Self::SelfPlay | Self::SumatraOpponent => {
+        RewardMode::Full
+      }
     }
   }
 
@@ -73,6 +81,7 @@ impl TrainingStage {
       Self::TouchBall | Self::DribbleToGoal | Self::ShootGoal | Self::OneVsOne => 1,
       Self::PassReceive => 2,
       Self::ScriptedScrimmage => 3,
+      Self::SelfPlay => 6,
       Self::SumatraOpponent => 6,
     }
   }
@@ -186,6 +195,10 @@ pub fn train_scripted_scrimmage(opts: TrainOptions) -> TrainResult<TrainingRepor
   train_stage(TrainingStage::ScriptedScrimmage, opts)
 }
 
+pub fn train_self_play(opts: TrainOptions) -> TrainResult<TrainingReport> {
+  train_stage(TrainingStage::SelfPlay, opts)
+}
+
 pub fn train_sumatra_opponent(opts: TrainOptions) -> TrainResult<TrainingReport> {
   train_stage(TrainingStage::SumatraOpponent, opts)
 }
@@ -241,11 +254,25 @@ pub fn evaluate_latest_checkpoint(
   for _ in 0..opts.steps {
     let batch = GameState::encode_multiple(&states, trainer.dev);
     let (_, _, _, plans) = tch::no_grad(|| trainer.policy.act(&batch, true));
+    let self_play_yellow_commands = if metadata.stage == TrainingStage::SelfPlay {
+      Some(self_play_yellow_commands(&trainer, &sim_states, true))
+    } else {
+      None
+    };
     let commands = plans
       .iter()
       .enumerate()
       .map(|(world, ai_commands)| {
-        world_command_from_ai(metadata.stage, &sim_states[world], *ai_commands)
+        if let Some(yellow_commands) = self_play_yellow_commands.as_ref() {
+          self_play_world_command_from_ai(
+            metadata.stage,
+            &sim_states[world],
+            *ai_commands,
+            yellow_commands[world],
+          )
+        } else {
+          world_command_from_ai(metadata.stage, &sim_states[world], *ai_commands)
+        }
       })
       .collect::<Vec<_>>();
 
@@ -307,6 +334,11 @@ fn train_stage_inner(
   } else {
     None
   };
+  let mut self_play_opponent = if stage == TrainingStage::SelfPlay {
+    Some(SelfPlayOpponent::new(&opts, &trainer)?)
+  } else {
+    None
+  };
 
   let (mut sim_states, mut states) = reset_stage_worlds(&mut engine, stage, 0);
   if let Some(viewer) = viewer {
@@ -323,11 +355,25 @@ fn train_stage_inner(
 
     for rollout_step in 0..opts.rollout_steps {
       trainer.step(&states, dt);
+      let self_play_yellow_commands = if let Some(opponent) = self_play_opponent.as_ref() {
+        Some(opponent.commands_for_worlds(&trainer, &sim_states, update))
+      } else {
+        None
+      };
 
       let commands = (0..opts.worlds)
         .map(|world| {
           let ai_commands = trainer.commands_for_world(world);
-          world_command_from_ai(stage, &sim_states[world], ai_commands)
+          if let Some(yellow_commands) = self_play_yellow_commands.as_ref() {
+            self_play_world_command_from_ai(
+              stage,
+              &sim_states[world],
+              ai_commands,
+              yellow_commands[world],
+            )
+          } else {
+            world_command_from_ai(stage, &sim_states[world], ai_commands)
+          }
         })
         .collect::<Vec<_>>();
 
@@ -357,6 +403,9 @@ fn train_stage_inner(
       last_checkpoint = Some(loader.save_checkpoint(&trainer, &metadata)?);
     }
     progress.finish_update(update + 1, stats, last_checkpoint.as_ref());
+    if let Some(opponent) = self_play_opponent.as_mut() {
+      opponent.maybe_refresh(update + 1, &trainer)?;
+    }
 
     let reset_seed = update + 1;
     let reset = reset_stage_worlds(&mut engine, stage, reset_seed);
@@ -541,6 +590,57 @@ fn build_trainer(stage: TrainingStage, opts: &TrainOptions) -> TrainResult<Train
   }
 
   Ok(trainer)
+}
+
+struct SelfPlayOpponent {
+  past: Trainer,
+}
+
+impl SelfPlayOpponent {
+  fn new(opts: &TrainOptions, source: &Trainer) -> TrainResult<Self> {
+    Ok(Self {
+      past: clone_trainer_snapshot(TrainingStage::SelfPlay, opts, source)?,
+    })
+  }
+
+  fn commands_for_worlds(
+    &self,
+    current: &Trainer,
+    sim_states: &[WorldState],
+    update: usize,
+  ) -> Vec<Commands> {
+    let opponent = if self_play_uses_past(update) {
+      &self.past
+    } else {
+      current
+    };
+
+    self_play_yellow_commands(opponent, sim_states, false)
+  }
+
+  fn maybe_refresh(&mut self, completed_updates: usize, source: &Trainer) -> TrainResult<()> {
+    if completed_updates % SELF_PLAY_PAST_REFRESH_UPDATES == 0 {
+      self.past.vs.copy(&source.vs)?;
+    }
+
+    Ok(())
+  }
+}
+
+fn clone_trainer_snapshot(
+  stage: TrainingStage,
+  opts: &TrainOptions,
+  source: &Trainer,
+) -> TrainResult<Trainer> {
+  let vs = VarStore::new(opts.device);
+  let mut snapshot =
+    Trainer::new_with_reward(vs, opts.worlds, opts.learning_rate, stage.reward_mode());
+  snapshot.vs.copy(&source.vs)?;
+  Ok(snapshot)
+}
+
+fn self_play_uses_past(update: usize) -> bool {
+  (update / SELF_PLAY_OPPONENT_SWITCH_UPDATES) % 2 == 1
 }
 
 fn should_checkpoint(update: usize, opts: &TrainOptions) -> bool {
@@ -784,7 +884,7 @@ fn stage_reset_command(stage: TrainingStage, world: usize, reset_seed: usize) ->
         true,
       ));
     }
-    TrainingStage::ScriptedScrimmage | TrainingStage::SumatraOpponent => {
+    TrainingStage::ScriptedScrimmage | TrainingStage::SelfPlay | TrainingStage::SumatraOpponent => {
       command.teleport_ball = Some(ball_at(-1.0 + offset.0, offset.1));
       for id in 0..stage.robots_per_team() {
         let lane = id as f64 - (stage.robots_per_team() as f64 - 1.0) * 0.5;
@@ -802,7 +902,7 @@ fn stage_reset_command(stage: TrainingStage, world: usize, reset_seed: usize) ->
           1.2 + (id % 2) as f64 * 0.8,
           -lane * 0.7,
           PI,
-          stage == TrainingStage::SumatraOpponent || id < 3,
+          stage == TrainingStage::SelfPlay || stage == TrainingStage::SumatraOpponent || id < 3,
         ));
       }
     }
@@ -850,45 +950,90 @@ fn robot_at(
 }
 
 fn game_state_from_sim(stage: TrainingStage, state: &WorldState) -> GameState {
+  game_state_from_sim_for_team(stage, state, TeamColor::Blue)
+}
+
+fn game_state_from_sim_for_team(
+  stage: TrainingStage,
+  state: &WorldState,
+  team: TeamColor,
+) -> GameState {
   let mut own_robots = [None; 16];
   let mut opp_robots = [None; 16];
   let has_goalie = matches!(
     stage,
-    TrainingStage::ScriptedScrimmage | TrainingStage::SumatraOpponent
+    TrainingStage::ScriptedScrimmage | TrainingStage::SelfPlay | TrainingStage::SumatraOpponent
   );
 
-  for robot in &state.blue_robots {
+  let (own_sim, opp_sim) = match team {
+    TeamColor::Blue => (&state.blue_robots, &state.yellow_robots),
+    TeamColor::Yellow => (&state.yellow_robots, &state.blue_robots),
+  };
+
+  for robot in own_sim {
     if robot.id < own_robots.len() && robot.is_on {
-      own_robots[robot.id] = Some(robot_state_from_sim(robot, has_goalie && robot.id == 0));
+      own_robots[robot.id] = Some(robot_state_from_sim_for_team(
+        robot,
+        has_goalie && robot.id == 0,
+        team,
+      ));
     }
   }
 
-  for robot in &state.yellow_robots {
+  for robot in opp_sim {
     if robot.id < opp_robots.len() && robot.is_on {
-      opp_robots[robot.id] = Some(robot_state_from_sim(robot, has_goalie && robot.id == 0));
+      opp_robots[robot.id] = Some(robot_state_from_sim_for_team(
+        robot,
+        has_goalie && robot.id == 0,
+        team,
+      ));
     }
   }
 
-  GameState {
-    own_robots,
-    opp_robots,
-    ball: BallState {
+  let ball = match team {
+    TeamColor::Blue => BallState {
       pos: Vec2::new(state.ball.x as f32, state.ball.y as f32),
       vel: Vec2::new(state.ball.vx as f32, state.ball.vy as f32),
       stop_pos: Vec2::new(state.ball.x as f32, state.ball.y as f32),
       stop_time: 0.0,
     },
+    TeamColor::Yellow => BallState {
+      pos: Vec2::new(-state.ball.x as f32, -state.ball.y as f32),
+      vel: Vec2::new(-state.ball.vx as f32, -state.ball.vy as f32),
+      stop_pos: Vec2::new(-state.ball.x as f32, -state.ball.y as f32),
+      stop_time: 0.0,
+    },
+  };
+
+  GameState {
+    own_robots,
+    opp_robots,
+    ball,
   }
 }
 
-fn robot_state_from_sim(robot: &simhark::RobotState, is_goalie: bool) -> RobotState {
-  RobotState {
-    id: robot.id as u8,
-    pos: Vec2::new(robot.x as f32, robot.y as f32),
-    vel: Vec2::new(robot.vx as f32, robot.vy as f32),
-    heading: robot.orientation as f32,
-    angular_vel: robot.v_angular as f32,
-    is_goalie,
+fn robot_state_from_sim_for_team(
+  robot: &simhark::RobotState,
+  is_goalie: bool,
+  team: TeamColor,
+) -> RobotState {
+  match team {
+    TeamColor::Blue => RobotState {
+      id: robot.id as u8,
+      pos: Vec2::new(robot.x as f32, robot.y as f32),
+      vel: Vec2::new(robot.vx as f32, robot.vy as f32),
+      heading: robot.orientation as f32,
+      angular_vel: robot.v_angular as f32,
+      is_goalie,
+    },
+    TeamColor::Yellow => RobotState {
+      id: robot.id as u8,
+      pos: Vec2::new(-robot.x as f32, -robot.y as f32),
+      vel: Vec2::new(-robot.vx as f32, -robot.vy as f32),
+      heading: wrap_angle(robot.orientation + PI) as f32,
+      angular_vel: robot.v_angular as f32,
+      is_goalie,
+    },
   }
 }
 
@@ -897,19 +1042,7 @@ fn world_command_from_ai(
   state: &WorldState,
   commands: Commands,
 ) -> WorldCommand {
-  let mut blue = Vec::new();
-  for robot in &state.blue_robots {
-    if !robot.is_on {
-      continue;
-    }
-
-    let command = commands
-      .get(robot.id)
-      .copied()
-      .flatten()
-      .unwrap_or(RobotCommand::Hold);
-    blue.push(sim_robot_command(stage, state, robot, command));
-  }
+  let blue = team_commands_from_ai(stage, state, TeamColor::Blue, commands);
 
   let yellow = if stage == TrainingStage::OneVsOne || stage == TrainingStage::ScriptedScrimmage {
     scripted_opponent_commands(stage, state)
@@ -925,9 +1058,89 @@ fn world_command_from_ai(
   }
 }
 
-fn sim_robot_command(
+fn self_play_world_command_from_ai(
   stage: TrainingStage,
   state: &WorldState,
+  blue_commands: Commands,
+  yellow_commands: Commands,
+) -> WorldCommand {
+  WorldCommand {
+    blue: team_commands_from_ai(stage, state, TeamColor::Blue, blue_commands),
+    yellow: team_commands_from_ai(stage, state, TeamColor::Yellow, yellow_commands),
+    teleport_ball: None,
+    teleport_robots: Vec::new(),
+  }
+}
+
+fn team_commands_from_ai(
+  stage: TrainingStage,
+  state: &WorldState,
+  team: TeamColor,
+  commands: Commands,
+) -> Vec<simhark::RobotCommand> {
+  let robots = match team {
+    TeamColor::Blue => &state.blue_robots,
+    TeamColor::Yellow => &state.yellow_robots,
+  };
+
+  let mut team_commands = Vec::new();
+  for robot in robots {
+    if !robot.is_on {
+      continue;
+    }
+
+    let command = commands
+      .get(robot.id)
+      .copied()
+      .flatten()
+      .unwrap_or(RobotCommand::Hold);
+    team_commands.push(sim_robot_command_for_team(
+      stage, state, team, robot, command,
+    ));
+  }
+
+  team_commands
+}
+
+fn self_play_yellow_commands(
+  trainer: &Trainer,
+  sim_states: &[WorldState],
+  deterministic: bool,
+) -> Vec<Commands> {
+  let states = sim_states
+    .iter()
+    .map(|state| game_state_from_sim_for_team(TrainingStage::SelfPlay, state, TeamColor::Yellow))
+    .collect::<Vec<_>>();
+  let batch = GameState::encode_multiple(&states, trainer.dev);
+  let (_, _, _, plans) = tch::no_grad(|| trainer.policy.act(&batch, deterministic));
+
+  plans
+    .into_iter()
+    .map(|commands| commands_from_policy_perspective(commands, TeamColor::Yellow))
+    .collect()
+}
+
+fn commands_from_policy_perspective(commands: Commands, team: TeamColor) -> Commands {
+  commands.map(|command| command.map(|command| command_from_policy_perspective(command, team)))
+}
+
+fn command_from_policy_perspective(command: RobotCommand, team: TeamColor) -> RobotCommand {
+  match (team, command) {
+    (TeamColor::Yellow, RobotCommand::Pos(pos)) => RobotCommand::Pos(mirror_position(pos)),
+    (TeamColor::Yellow, RobotCommand::Dribble(pos)) => RobotCommand::Dribble(mirror_position(pos)),
+    (TeamColor::Yellow, RobotCommand::PosBall(pos)) => RobotCommand::PosBall(mirror_position(pos)),
+    (_, command) => command,
+  }
+}
+
+fn mirror_position(pos: Vec2<f32>) -> Vec2<f32> {
+  Vec2::new(-pos.x, -pos.y)
+}
+
+fn sim_robot_command_for_team(
+  stage: TrainingStage,
+  state: &WorldState,
+  team: TeamColor,
   robot: &simhark::RobotState,
   command: RobotCommand,
 ) -> simhark::RobotCommand {
@@ -935,6 +1148,10 @@ fn sim_robot_command(
   let mut dribbler_on = false;
   let mut kick_speed = 0.0;
   let mut kick_angle = 0.0;
+  let attack_sign = match team {
+    TeamColor::Blue => 1.0,
+    TeamColor::Yellow => -1.0,
+  };
 
   match command {
     RobotCommand::Pos(pos) => target = Some((pos.x as f64, pos.y as f64)),
@@ -960,19 +1177,20 @@ fn sim_robot_command(
     }
     RobotCommand::KickGoal => {
       kick_speed = 6.0;
-      target = Some((4.5, 0.0));
+      target = Some((attack_sign * 4.5, 0.0));
     }
     RobotCommand::PassTo(id) => {
       kick_speed = 4.0;
-      target = state
-        .blue_robots
+      target = team_robots(state, team)
         .iter()
         .find(|r| r.id == id as usize && r.is_on)
         .map(|r| (r.x, r.y))
-        .or(Some((4.5, 0.0)));
+        .or(Some((attack_sign * 4.5, 0.0)));
     }
-    RobotCommand::GoalWall => target = Some((-3.8, state.ball.y.clamp(-0.8, 0.8))),
-    RobotCommand::GoalieGuard => target = Some((-4.0, state.ball.y.clamp(-0.45, 0.45))),
+    RobotCommand::GoalWall => target = Some((-attack_sign * 3.8, state.ball.y.clamp(-0.8, 0.8))),
+    RobotCommand::GoalieGuard => {
+      target = Some((-attack_sign * 4.0, state.ball.y.clamp(-0.45, 0.45)))
+    }
     RobotCommand::Hold => {}
   }
 
@@ -992,6 +1210,13 @@ fn sim_robot_command(
     kick_speed,
     kick_angle,
     dribbler_on,
+  }
+}
+
+fn team_robots(state: &WorldState, team: TeamColor) -> &[simhark::RobotState] {
+  match team {
+    TeamColor::Blue => &state.blue_robots,
+    TeamColor::Yellow => &state.yellow_robots,
   }
 }
 

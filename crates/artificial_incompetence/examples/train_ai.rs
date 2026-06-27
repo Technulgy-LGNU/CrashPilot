@@ -94,6 +94,7 @@ fn parse_stage(stage: &str) -> Result<TrainingStage, Box<dyn std::error::Error +
     "pass_receive" => Ok(TrainingStage::PassReceive),
     "one_vs_one" => Ok(TrainingStage::OneVsOne),
     "scripted_scrimmage" => Ok(TrainingStage::ScriptedScrimmage),
+    "self_play" => Ok(TrainingStage::SelfPlay),
     "sumatra_opponent" => Ok(TrainingStage::SumatraOpponent),
     other => Err(format!("unknown stage {other}").into()),
   }

@@ -5,12 +5,9 @@ cmake-build-debug/
 rust_to_cpp.sock
 tmp/
 cp_interface
-<<<<<<< Updated upstream
 .agents/
 .codex/
-=======
 /checkpoints/*
 /research/
 aicode.py
 yeet.rs
->>>>>>> Stashed changes
