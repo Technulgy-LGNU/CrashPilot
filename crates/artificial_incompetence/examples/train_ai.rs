@@ -35,6 +35,7 @@ fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
       "--sumatra-repo" => {
         opts.sumatra_repo_root = Some(PathBuf::from(next_value(&mut args, "--sumatra-repo")?))
       }
+      "--fast-sumatra" => opts.fast_sumatra = true,
       "--viewer" => opts.viewer = true,
       "--viewer_port" | "--viewer-port" => {
         opts.viewer_port = Some(next_value(&mut args, "--viewer_port")?.parse()?)

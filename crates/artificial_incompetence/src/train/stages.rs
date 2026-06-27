@@ -100,6 +100,7 @@ pub struct TrainOptions {
   pub device: Device,
   pub sumatra_base_port: u16,
   pub sumatra_repo_root: Option<PathBuf>,
+  pub fast_sumatra: bool,
   pub viewer: bool,
   pub viewer_port: Option<u16>,
 }
@@ -118,6 +119,7 @@ impl Default for TrainOptions {
       device: Device::Cpu,
       sumatra_base_port: 14242,
       sumatra_repo_root: Some("../Sumatra".into()),
+      fast_sumatra: false,
       viewer: false,
       viewer_port: None,
     }
@@ -415,7 +417,9 @@ fn train_stage_inner(
       viewer.publish(&sim_states);
     }
     trainer.sync_states(sim_states.clone(), states.clone());
-    if let Some(runtime) = sumatra_runtime.as_mut() {
+    if let Some(runtime) = sumatra_runtime.as_mut()
+      && update + 1 < opts.updates
+    {
       runtime.restart(&opts)?;
     }
   }
@@ -663,18 +667,78 @@ fn evaluation_checkpoint_dir(stage: TrainingStage, opts: &EvaluationOptions) -> 
 
 #[cfg(feature = "sumatra-opponent")]
 struct SumatraOpponentRuntime {
+  active: SumatraRuntimePool,
+  standby: Option<std::thread::JoinHandle<TrainResult<SumatraRuntimePool>>>,
+}
+
+#[cfg(feature = "sumatra-opponent")]
+struct SumatraRuntimePool {
   servers: Vec<SumatraSimNetServer>,
   clients: Vec<SumatraInstance>,
+  base_port: u16,
 }
 
 #[cfg(feature = "sumatra-opponent")]
 impl SumatraOpponentRuntime {
   fn spawn(opts: &TrainOptions) -> TrainResult<Self> {
+    let active = SumatraRuntimePool::spawn(opts, opts.sumatra_base_port)?;
+    let standby = if opts.fast_sumatra {
+      let standby_base_port = sumatra_pool_base_port(opts.sumatra_base_port, opts.worlds, 1)?;
+      Some(spawn_sumatra_pool(opts.clone(), standby_base_port))
+    } else {
+      None
+    };
+
+    Ok(Self { active, standby })
+  }
+
+  fn step(
+    &mut self,
+    engine: &mut SimulationEngine,
+    local_commands: &[WorldCommand],
+  ) -> TrainResult<Vec<WorldState>> {
+    self.active.step(engine, local_commands)
+  }
+
+  fn restart(&mut self, opts: &TrainOptions) -> TrainResult<()> {
+    if self.standby.is_some() {
+      let mut standby = self.wait_for_standby()?;
+      std::mem::swap(&mut self.active, &mut standby);
+      self.standby = Some(restart_sumatra_pool(standby, opts.clone()));
+    } else {
+      self.active.restart(opts)?;
+    }
+    Ok(())
+  }
+
+  fn wait_for_standby(&mut self) -> TrainResult<SumatraRuntimePool> {
+    let handle = self
+      .standby
+      .take()
+      .ok_or_else(|| "Sumatra standby runtime was not started".to_string())?;
+    handle
+      .join()
+      .map_err(|_| "Sumatra standby runtime thread panicked".to_string())?
+  }
+}
+
+#[cfg(feature = "sumatra-opponent")]
+impl Drop for SumatraOpponentRuntime {
+  fn drop(&mut self) {
+    if let Some(handle) = self.standby.take() {
+      let _ = handle.join();
+    }
+  }
+}
+
+#[cfg(feature = "sumatra-opponent")]
+impl SumatraRuntimePool {
+  fn spawn(opts: &TrainOptions, base_port: u16) -> TrainResult<Self> {
     let mut servers = Vec::with_capacity(opts.worlds);
     let mut clients = Vec::with_capacity(opts.worlds);
 
     for world in 0..opts.worlds {
-      let port = sumatra_port(opts.sumatra_base_port, world)?;
+      let port = sumatra_port(base_port, world)?;
       let server = SumatraSimNetServer::bind_for_world(
         SumatraSimNetConfig {
           bind_addr: format!("127.0.0.1:{port}").parse()?,
@@ -695,7 +759,11 @@ impl SumatraOpponentRuntime {
       clients.push(client);
     }
 
-    let mut runtime = Self { servers, clients };
+    let mut runtime = Self {
+      servers,
+      clients,
+      base_port,
+    };
     runtime.wait_for_clients()?;
     Ok(runtime)
   }
@@ -755,7 +823,7 @@ impl SumatraOpponentRuntime {
     self.clients.clear();
     self.servers.clear();
 
-    let restarted = Self::spawn(opts)?;
+    let restarted = Self::spawn(opts, self.base_port)?;
     *self = restarted;
     Ok(())
   }
@@ -790,6 +858,37 @@ impl SumatraOpponentRuntime {
       std::thread::sleep(std::time::Duration::from_millis(20));
     }
   }
+}
+
+#[cfg(feature = "sumatra-opponent")]
+fn spawn_sumatra_pool(
+  opts: TrainOptions,
+  base_port: u16,
+) -> std::thread::JoinHandle<TrainResult<SumatraRuntimePool>> {
+  std::thread::spawn(move || SumatraRuntimePool::spawn(&opts, base_port))
+}
+
+#[cfg(feature = "sumatra-opponent")]
+fn restart_sumatra_pool(
+  mut pool: SumatraRuntimePool,
+  opts: TrainOptions,
+) -> std::thread::JoinHandle<TrainResult<SumatraRuntimePool>> {
+  std::thread::spawn(move || {
+    pool.restart(&opts)?;
+    Ok(pool)
+  })
+}
+
+#[cfg(feature = "sumatra-opponent")]
+fn sumatra_pool_base_port(base_port: u16, worlds: usize, pool: usize) -> TrainResult<u16> {
+  let offset = worlds
+    .checked_mul(pool)
+    .ok_or_else(|| format!("sumatra port offset overflows usize for pool {pool}"))?;
+  let offset = u16::try_from(offset)
+    .map_err(|_| format!("sumatra port offset {offset} does not fit in a u16"))?;
+  base_port
+    .checked_add(offset)
+    .ok_or_else(|| format!("sumatra base port range overflows u16 for pool {pool}").into())
 }
 
 #[cfg(feature = "sumatra-opponent")]
