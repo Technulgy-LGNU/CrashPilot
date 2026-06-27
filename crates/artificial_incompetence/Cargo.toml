@@ -20,6 +20,7 @@ train = [
   "dep:indicatif",
   "dep:serde_json",
   "dep:simhark",
+  "simhark/viewer",
 ]
 sumatra-opponent = ["train", "simhark/sumatra", "dep:simhark-sumatra"]
 

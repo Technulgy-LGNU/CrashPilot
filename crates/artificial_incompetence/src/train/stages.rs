@@ -5,6 +5,7 @@ use std::path::PathBuf;
 use core_dump::vec::types::Vec2;
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 use serde::{Deserialize, Serialize};
+use simhark::viewer::{ViewerConfig, ViewerServer};
 use simhark::{
   MoveCommand, SimulationEngine, TeamColor, TeleportBall, TeleportRobot, WorldCommand, WorldConfig,
   WorldState,
@@ -90,6 +91,8 @@ pub struct TrainOptions {
   pub device: Device,
   pub sumatra_base_port: u16,
   pub sumatra_repo_root: Option<PathBuf>,
+  pub viewer: bool,
+  pub viewer_port: Option<u16>,
 }
 
 impl Default for TrainOptions {
@@ -106,6 +109,8 @@ impl Default for TrainOptions {
       device: Device::Cpu,
       sumatra_base_port: 14242,
       sumatra_repo_root: Some("../Sumatra".into()),
+      viewer: false,
+      viewer_port: None,
     }
   }
 }
@@ -188,6 +193,7 @@ pub fn train_sumatra_opponent(opts: TrainOptions) -> TrainResult<TrainingReport>
 pub fn train_all_stages(opts: TrainOptions) -> TrainResult<Vec<TrainingReport>> {
   let mut reports = Vec::with_capacity(TRAINING_STAGES_IN_ORDER.len());
   let mut stage_opts = opts.clone();
+  let viewer = TrainingViewer::spawn(&opts)?;
 
   for (stage_index, stage) in TRAINING_STAGES_IN_ORDER.iter().copied().enumerate() {
     if let Some(run_name) = opts.run_name.as_ref() {
@@ -201,7 +207,7 @@ pub fn train_all_stages(opts: TrainOptions) -> TrainResult<Vec<TrainingReport>> 
       stage.name()
     );
 
-    let report = train_stage(stage, stage_opts.clone())?;
+    let report = train_stage_inner(stage, stage_opts.clone(), viewer.as_ref())?;
     if let Some(checkpoint) = report.last_checkpoint.as_ref() {
       stage_opts.model_path = Some(checkpoint.join("model.safetensors"));
     }
@@ -280,6 +286,15 @@ pub fn evaluate_latest_checkpoint(
 }
 
 fn train_stage(stage: TrainingStage, opts: TrainOptions) -> TrainResult<TrainingReport> {
+  let viewer = TrainingViewer::spawn(&opts)?;
+  train_stage_inner(stage, opts, viewer.as_ref())
+}
+
+fn train_stage_inner(
+  stage: TrainingStage,
+  opts: TrainOptions,
+  viewer: Option<&TrainingViewer>,
+) -> TrainResult<TrainingReport> {
   let mut config = WorldConfig::division_b();
   config.robots_per_team = stage.robots_per_team();
   let dt = config.physics.delta_time as f32;
@@ -294,6 +309,9 @@ fn train_stage(stage: TrainingStage, opts: TrainOptions) -> TrainResult<Training
   };
 
   let (mut sim_states, mut states) = reset_stage_worlds(&mut engine, stage, 0);
+  if let Some(viewer) = viewer {
+    viewer.publish(&sim_states);
+  }
   trainer.sync_states(sim_states.clone(), states.clone());
 
   let mut last_stats = None;
@@ -323,6 +341,9 @@ fn train_stage(stage: TrainingStage, opts: TrainOptions) -> TrainResult<Training
         .iter()
         .map(|state| game_state_from_sim(stage, state))
         .collect();
+      if let Some(viewer) = viewer {
+        viewer.publish(&sim_states);
+      }
       trainer.finish_step(sim_states.clone(), states.clone());
       progress.finish_rollout_step(rollout_step + 1);
     }
@@ -341,6 +362,9 @@ fn train_stage(stage: TrainingStage, opts: TrainOptions) -> TrainResult<Training
     let reset = reset_stage_worlds(&mut engine, stage, reset_seed);
     sim_states = reset.0;
     states = reset.1;
+    if let Some(viewer) = viewer {
+      viewer.publish(&sim_states);
+    }
     trainer.sync_states(sim_states.clone(), states.clone());
     if let Some(runtime) = sumatra_runtime.as_mut() {
       runtime.reset_tracking();
@@ -370,6 +394,33 @@ fn train_stage(stage: TrainingStage, opts: TrainOptions) -> TrainResult<Training
     last_value_loss: stats.map(|s| s.value_loss),
     last_entropy: stats.map(|s| s.entropy),
   })
+}
+
+struct TrainingViewer {
+  server: ViewerServer,
+}
+
+impl TrainingViewer {
+  fn spawn(opts: &TrainOptions) -> TrainResult<Option<Self>> {
+    if !opts.viewer {
+      return Ok(None);
+    }
+
+    let mut config = ViewerConfig::default();
+    if let Some(port) = opts.viewer_port {
+      config.http_port = port;
+    }
+
+    let world_config = WorldConfig::division_b();
+    let server = ViewerServer::bind(config, opts.worlds, &world_config)?;
+    eprintln!("viewer: {}", config.http_url());
+
+    Ok(Some(Self { server }))
+  }
+
+  fn publish(&self, states: &[WorldState]) {
+    self.server.publish_states(states);
+  }
 }
 
 struct TrainingProgress {

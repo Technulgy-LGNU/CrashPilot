@@ -35,6 +35,10 @@ fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
       "--sumatra-repo" => {
         opts.sumatra_repo_root = Some(PathBuf::from(next_value(&mut args, "--sumatra-repo")?))
       }
+      "--viewer" => opts.viewer = true,
+      "--viewer_port" | "--viewer-port" => {
+        opts.viewer_port = Some(next_value(&mut args, "--viewer_port")?.parse()?)
+      }
       "--cuda" => opts.device = Device::Cuda(0),
       other => return Err(format!("unknown argument {other}").into()),
     }
