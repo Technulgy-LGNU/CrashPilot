@@ -29,6 +29,12 @@ fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
       "--model" => opts.model_path = Some(PathBuf::from(next_value(&mut args, "--model")?)),
       "--lr" => opts.learning_rate = next_value(&mut args, "--lr")?.parse()?,
       "--eval-steps" => eval_steps = next_value(&mut args, "--eval-steps")?.parse()?,
+      "--sumatra-base-port" => {
+        opts.sumatra_base_port = next_value(&mut args, "--sumatra-base-port")?.parse()?
+      }
+      "--sumatra-repo" => {
+        opts.sumatra_repo_root = Some(PathBuf::from(next_value(&mut args, "--sumatra-repo")?))
+      }
       "--cuda" => opts.device = Device::Cuda(0),
       other => return Err(format!("unknown argument {other}").into()),
     }

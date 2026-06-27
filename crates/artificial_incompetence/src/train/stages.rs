@@ -6,9 +6,13 @@ use core_dump::vec::types::Vec2;
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 use serde::{Deserialize, Serialize};
 use simhark::{
-  MoveCommand, SimulationEngine, SumatraSimNetConfig, SumatraSimNetServer, TeamColor, TeleportBall,
-  TeleportRobot, WorldCommand, WorldConfig, WorldState,
+  MoveCommand, SimulationEngine, TeamColor, TeleportBall, TeleportRobot, WorldCommand, WorldConfig,
+  WorldState,
 };
+#[cfg(feature = "sumatra-opponent")]
+use simhark::{SumatraSimNetConfig, SumatraSimNetServer};
+#[cfg(feature = "sumatra-opponent")]
+use simhark_sumatra::{SumatraInstance, SumatraLaunchConfig};
 use tch::Device;
 use tch::nn::VarStore;
 
@@ -85,6 +89,7 @@ pub struct TrainOptions {
   pub learning_rate: f64,
   pub device: Device,
   pub sumatra_base_port: u16,
+  pub sumatra_repo_root: Option<PathBuf>,
 }
 
 impl Default for TrainOptions {
@@ -100,6 +105,7 @@ impl Default for TrainOptions {
       learning_rate: 1e-3,
       device: Device::Cpu,
       sumatra_base_port: 14242,
+      sumatra_repo_root: Some("../Sumatra".into()),
     }
   }
 }
@@ -281,8 +287,8 @@ fn train_stage(stage: TrainingStage, opts: TrainOptions) -> TrainResult<Training
   let mut engine = SimulationEngine::new(opts.worlds, config);
   let mut trainer = build_trainer(stage, &opts)?;
   let loader = ModelLoader::new(run_checkpoint_dir(stage, &opts));
-  let mut sumatra_servers = if stage == TrainingStage::SumatraOpponent {
-    Some(bind_sumatra_servers(&opts)?)
+  let mut sumatra_runtime = if stage == TrainingStage::SumatraOpponent {
+    Some(SumatraOpponentRuntime::spawn(&opts)?)
   } else {
     None
   };
@@ -307,8 +313,8 @@ fn train_stage(stage: TrainingStage, opts: TrainOptions) -> TrainResult<Training
         })
         .collect::<Vec<_>>();
 
-      sim_states = if let Some(servers) = sumatra_servers.as_mut() {
-        step_sumatra_worlds(servers, &mut engine, &commands)?
+      sim_states = if let Some(runtime) = sumatra_runtime.as_mut() {
+        runtime.step(&mut engine, &commands)?
       } else {
         engine.step_with_commands(&commands)
       };
@@ -336,6 +342,9 @@ fn train_stage(stage: TrainingStage, opts: TrainOptions) -> TrainResult<Training
     sim_states = reset.0;
     states = reset.1;
     trainer.sync_states(sim_states.clone(), states.clone());
+    if let Some(runtime) = sumatra_runtime.as_mut() {
+      runtime.reset_tracking();
+    }
   }
 
   if opts.updates > 0 && !should_checkpoint(opts.updates, &opts) {
@@ -501,33 +510,132 @@ fn evaluation_checkpoint_dir(stage: TrainingStage, opts: &EvaluationOptions) -> 
   }
 }
 
-fn bind_sumatra_servers(opts: &TrainOptions) -> TrainResult<Vec<SumatraSimNetServer>> {
-  let mut servers = Vec::with_capacity(opts.worlds);
-
-  for world in 0..opts.worlds {
-    let port = opts.sumatra_base_port + world as u16;
-    let server = SumatraSimNetServer::bind_for_world(
-      SumatraSimNetConfig {
-        bind_addr: format!("127.0.0.1:{port}").parse()?,
-      },
-      world,
-    )?;
-    servers.push(server);
-  }
-
-  Ok(servers)
+#[cfg(feature = "sumatra-opponent")]
+struct SumatraOpponentRuntime {
+  servers: Vec<SumatraSimNetServer>,
+  clients: Vec<SumatraInstance>,
 }
 
-fn step_sumatra_worlds(
-  servers: &mut [SumatraSimNetServer],
-  engine: &mut SimulationEngine,
-  local_commands: &[WorldCommand],
-) -> TrainResult<Vec<WorldState>> {
-  for server in servers {
-    server.step_with_local_commands(engine, local_commands)?;
+#[cfg(feature = "sumatra-opponent")]
+impl SumatraOpponentRuntime {
+  fn spawn(opts: &TrainOptions) -> TrainResult<Self> {
+    let mut servers = Vec::with_capacity(opts.worlds);
+    let mut clients = Vec::with_capacity(opts.worlds);
+
+    for world in 0..opts.worlds {
+      let port = sumatra_port(opts.sumatra_base_port, world)?;
+      let server = SumatraSimNetServer::bind_for_world(
+        SumatraSimNetConfig {
+          bind_addr: format!("127.0.0.1:{port}").parse()?,
+        },
+        world,
+      )?;
+      let mut launch_config = SumatraLaunchConfig {
+        remote_client: true,
+        host: Some("127.0.0.1".to_string()),
+        sim_net_port: Some(port),
+        ..SumatraLaunchConfig::default()
+      };
+      if let Some(repo_root) = opts.sumatra_repo_root.as_ref() {
+        launch_config.repo_root = repo_root.clone();
+      }
+      let client = SumatraInstance::spawn(&launch_config)?;
+      servers.push(server);
+      clients.push(client);
+    }
+
+    let mut runtime = Self { servers, clients };
+    runtime.wait_for_clients()?;
+    Ok(runtime)
   }
 
-  Ok(engine.get_all_states())
+  fn wait_for_clients(&mut self) -> TrainResult<()> {
+    let timeout = std::time::Duration::from_secs(30);
+    let start = std::time::Instant::now();
+    let mut connected = vec![false; self.servers.len()];
+
+    loop {
+      for (world, server) in self.servers.iter_mut().enumerate() {
+        if !connected[world] {
+          connected[world] = server.has_clients()?;
+        }
+        if let Some(status) = self.clients[world].try_wait()? {
+          return Err(
+            format!("Sumatra client for world {world} exited early with {status}").into(),
+          );
+        }
+      }
+
+      if connected.iter().all(|value| *value) {
+        return Ok(());
+      }
+      if start.elapsed() >= timeout {
+        let missing = connected.iter().filter(|connected| !**connected).count();
+        return Err(
+          format!(
+            "timed out waiting for {missing} Sumatra client(s) to connect after {}s",
+            timeout.as_secs()
+          )
+          .into(),
+        );
+      }
+
+      std::thread::sleep(std::time::Duration::from_millis(20));
+    }
+  }
+
+  fn step(
+    &mut self,
+    engine: &mut SimulationEngine,
+    local_commands: &[WorldCommand],
+  ) -> TrainResult<Vec<WorldState>> {
+    for (world, server) in self.servers.iter_mut().enumerate() {
+      server.step_with_local_commands(engine, local_commands)?;
+      if let Some(status) = self.clients[world].try_wait()? {
+        return Err(format!("Sumatra client for world {world} exited early with {status}").into());
+      }
+    }
+
+    Ok(engine.get_all_states())
+  }
+
+  fn reset_tracking(&mut self) {
+    for server in &mut self.servers {
+      server.reset_tracking();
+    }
+  }
+}
+
+#[cfg(feature = "sumatra-opponent")]
+fn sumatra_port(base_port: u16, world: usize) -> TrainResult<u16> {
+  let offset =
+    u16::try_from(world).map_err(|_| format!("world index {world} does not fit in a u16 port"))?;
+  base_port
+    .checked_add(offset)
+    .ok_or_else(|| format!("sumatra port range overflows u16 at world {world}").into())
+}
+
+#[cfg(not(feature = "sumatra-opponent"))]
+struct SumatraOpponentRuntime;
+
+#[cfg(not(feature = "sumatra-opponent"))]
+impl SumatraOpponentRuntime {
+  fn spawn(_opts: &TrainOptions) -> TrainResult<Self> {
+    Err(
+      "sumatra_opponent training requires the artificial_incompetence `sumatra-opponent` feature"
+        .into(),
+    )
+  }
+
+  fn step(
+    &mut self,
+    _engine: &mut SimulationEngine,
+    _local_commands: &[WorldCommand],
+  ) -> TrainResult<Vec<WorldState>> {
+    Err("sumatra_opponent runtime was not started".into())
+  }
+
+  fn reset_tracking(&mut self) {}
 }
 
 fn reset_stage_worlds(
