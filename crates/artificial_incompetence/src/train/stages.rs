@@ -1,6 +1,8 @@
 use std::error::Error;
 use std::f64::consts::PI;
 use std::path::PathBuf;
+use std::sync::mpsc::{self, SyncSender, TrySendError};
+use std::thread;
 
 use core_dump::vec::types::Vec2;
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
@@ -450,7 +452,7 @@ fn train_stage_inner(
 }
 
 struct TrainingViewer {
-  server: ViewerServer,
+  states: SyncSender<Vec<WorldState>>,
 }
 
 impl TrainingViewer {
@@ -465,14 +467,41 @@ impl TrainingViewer {
     }
 
     let world_config = WorldConfig::division_b();
-    let server = ViewerServer::bind(config, opts.worlds, &world_config)?;
-    eprintln!("viewer: {}", config.http_url());
+    let (states_tx, states_rx) = mpsc::sync_channel::<Vec<WorldState>>(1);
+    let (ready_tx, ready_rx) = mpsc::sync_channel(1);
+    let world_count = opts.worlds;
+    let viewer_url = config.http_url();
 
-    Ok(Some(Self { server }))
+    thread::Builder::new()
+      .name("ai-training-viewer".to_owned())
+      .spawn(
+        move || match ViewerServer::bind(config, world_count, &world_config) {
+          Ok(server) => {
+            let _ = ready_tx.send(Ok(()));
+            for states in states_rx {
+              server.publish_states(&states);
+            }
+          }
+          Err(err) => {
+            let _ = ready_tx.send(Err(err.to_string()));
+          }
+        },
+      )?;
+
+    match ready_rx.recv()? {
+      Ok(()) => {}
+      Err(err) => return Err(format!("failed to start viewer: {err}").into()),
+    }
+
+    eprintln!("viewer: {viewer_url}");
+
+    Ok(Some(Self { states: states_tx }))
   }
 
   fn publish(&self, states: &[WorldState]) {
-    self.server.publish_states(states);
+    match self.states.try_send(states.to_vec()) {
+      Ok(()) | Err(TrySendError::Full(_)) | Err(TrySendError::Disconnected(_)) => {}
+    }
   }
 }
 
