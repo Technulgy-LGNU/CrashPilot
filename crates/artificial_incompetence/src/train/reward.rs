@@ -89,7 +89,7 @@ pub fn compute_reward(
   );
   reward += possession_reward(old_poss, new_poss, scale);
   reward += command_reward(&old, &new, commands, old_poss, new_poss, scale, diag);
-  reward += team_shape_reward(&old, &new, old_poss, new_poss, scale, diag);
+  reward += team_shape_reward(&old, &new, commands, old_poss, new_poss, scale, diag);
   reward += sim_contact_reward(old_sim, new_sim);
 
   finite(reward).clamp(MIN_REWARD, MAX_REWARD)
@@ -406,6 +406,7 @@ fn command_reward(
 fn team_shape_reward(
   old: &GameState,
   new: &GameState,
+  commands: Commands,
   old_poss: Possession,
   new_poss: Possession,
   scale: FieldScale,
@@ -416,10 +417,11 @@ fn team_shape_reward(
   let new_ball = point(new.ball.pos.x, new.ball.pos.y);
   let danger = defensive_danger(new_ball, scale);
 
-  reward -= crowding_penalty(&new.own_robots, scale);
-  reward += field_spread_reward(&old.own_robots, &new.own_robots, scale, diag);
-  reward += movement_diversity_reward(&old.own_robots, &new.own_robots, scale);
+  reward -= crowding_penalty(&new.own_robots, commands, scale);
+  reward += field_spread_reward(&old.own_robots, &new.own_robots, commands, scale, diag);
+  reward += movement_diversity_reward(&old.own_robots, &new.own_robots, commands, scale);
   reward += defensive_shape_reward(&new.own_robots, new_ball, danger, scale);
+  reward += defensive_wall_reward(&new.own_robots, commands, new_ball, danger, scale);
   reward += goalie_reward(
     &old.own_robots,
     &new.own_robots,
@@ -445,11 +447,12 @@ fn team_shape_reward(
 fn field_spread_reward(
   old_robots: &[Option<crate::RobotState>; 16],
   new_robots: &[Option<crate::RobotState>; 16],
+  commands: Commands,
   scale: FieldScale,
   diag: f64,
 ) -> f64 {
-  let old_score = field_spread_score(old_robots, scale, diag);
-  let new_score = field_spread_score(new_robots, scale, diag);
+  let old_score = field_spread_score(old_robots, commands, scale, diag);
+  let new_score = field_spread_score(new_robots, commands, scale, diag);
   let progress = (new_score - old_score).clamp(-1.0, 1.0);
 
   0.08 * progress + 0.04 * (new_score - 0.35)
@@ -457,14 +460,16 @@ fn field_spread_reward(
 
 fn field_spread_score(
   robots: &[Option<crate::RobotState>; 16],
+  commands: Commands,
   scale: FieldScale,
   diag: f64,
 ) -> f64 {
   let points: Vec<_> = robots
     .iter()
-    .flatten()
-    .filter(|r| !r.is_goalie)
-    .map(|r| point(r.pos.x, r.pos.y))
+    .enumerate()
+    .filter_map(|(idx, robot)| robot.map(|robot| (idx, robot)))
+    .filter(|(idx, robot)| !defensive_formation_exempt(*idx, *robot, commands, scale))
+    .map(|(_, robot)| point(robot.pos.x, robot.pos.y))
     .collect();
 
   if points.len() < 2 {
@@ -505,18 +510,20 @@ fn field_spread_score(
 fn movement_diversity_reward(
   old_robots: &[Option<crate::RobotState>; 16],
   new_robots: &[Option<crate::RobotState>; 16],
+  commands: Commands,
   scale: FieldScale,
 ) -> f64 {
   let min_move = (scale.half_x * 0.002).max(1e-4);
   let movements: Vec<_> = old_robots
     .iter()
     .zip(new_robots.iter())
-    .filter_map(|(old, new)| {
+    .enumerate()
+    .filter_map(|(idx, (old, new))| {
       let (Some(old), Some(new)) = (old, new) else {
         return None;
       };
 
-      if old.is_goalie {
+      if defensive_formation_exempt(idx, *new, commands, scale) {
         return None;
       }
 
@@ -549,9 +556,47 @@ fn movement_diversity_reward(
 
   let average_similarity = similarity_sum / pair_count as f64;
   let diversity = 1.0 - average_similarity;
-  let moving_fraction = movements.len() as f64 / active_non_goalie_count(new_robots).max(1) as f64;
+  let moving_fraction =
+    movements.len() as f64 / active_spread_robot_count(new_robots, commands, scale).max(1) as f64;
 
   0.05 * diversity * moving_fraction - 0.10 * (average_similarity - 0.70).max(0.0)
+}
+
+fn defensive_formation_exempt(
+  idx: usize,
+  robot: crate::RobotState,
+  commands: Commands,
+  scale: FieldScale,
+) -> bool {
+  if robot.is_goalie {
+    return true;
+  }
+
+  if matches!(
+    commands[idx],
+    Some(crate::RobotCommand::GoalWall | crate::RobotCommand::GoalieGuard)
+  ) {
+    return true;
+  }
+
+  in_own_defense_area(point(robot.pos.x, robot.pos.y), scale)
+}
+
+fn in_own_defense_area(pos: Point, scale: FieldScale) -> bool {
+  pos.x * OWN_ATTACK_SIGN < -scale.half_x * 0.72 && pos.y.abs() < scale.half_y * 0.55
+}
+
+fn active_spread_robot_count(
+  robots: &[Option<crate::RobotState>; 16],
+  commands: Commands,
+  scale: FieldScale,
+) -> usize {
+  robots
+    .iter()
+    .enumerate()
+    .filter_map(|(idx, robot)| robot.map(|robot| (idx, robot)))
+    .filter(|(idx, robot)| !defensive_formation_exempt(*idx, *robot, commands, scale))
+    .count()
 }
 
 fn sim_contact_reward(old_sim: &WorldState, new_sim: &WorldState) -> f64 {
@@ -806,7 +851,11 @@ fn hold_reward(is_goalie: bool, defensive_need: f64) -> f64 {
   }
 }
 
-fn crowding_penalty(robots: &[Option<crate::RobotState>; 16], scale: FieldScale) -> f64 {
+fn crowding_penalty(
+  robots: &[Option<crate::RobotState>; 16],
+  commands: Commands,
+  scale: FieldScale,
+) -> f64 {
   let min_sep = scale.half_x * 0.035;
   let mut penalty = 0.0;
 
@@ -815,7 +864,17 @@ fn crowding_penalty(robots: &[Option<crate::RobotState>; 16], scale: FieldScale)
       continue;
     };
 
-    for b in robots.iter().skip(i + 1).flatten() {
+    for (j, b) in robots.iter().enumerate().skip(i + 1) {
+      let Some(b) = b else {
+        continue;
+      };
+
+      if defensive_formation_exempt(i, a, commands, scale)
+        && defensive_formation_exempt(j, *b, commands, scale)
+      {
+        continue;
+      }
+
       let dist = distance(point(a.pos.x, a.pos.y), point(b.pos.x, b.pos.y));
       if dist < min_sep {
         penalty += 0.025 * (1.0 - dist / min_sep);
@@ -846,6 +905,54 @@ fn defensive_shape_reward(
   0.13 * danger * best_block
 }
 
+fn defensive_wall_reward(
+  robots: &[Option<crate::RobotState>; 16],
+  commands: Commands,
+  ball: Point,
+  danger: f64,
+  scale: FieldScale,
+) -> f64 {
+  if danger < 0.12 {
+    return 0.0;
+  }
+
+  let wall: Vec<_> = robots
+    .iter()
+    .enumerate()
+    .filter_map(|(idx, robot)| robot.map(|robot| (idx, robot)))
+    .filter(|(idx, robot)| {
+      !robot.is_goalie
+        && matches!(commands[*idx], Some(crate::RobotCommand::GoalWall))
+        && in_own_defense_area(point(robot.pos.x, robot.pos.y), scale)
+    })
+    .map(|(_, robot)| point(robot.pos.x, robot.pos.y))
+    .collect();
+
+  if wall.is_empty() {
+    return 0.0;
+  }
+
+  let block_sum: f64 = wall
+    .iter()
+    .map(|pos| block_line_score(*pos, ball, scale))
+    .sum();
+  let block_score = (block_sum / 2.0).clamp(0.0, 1.0);
+  let y_span = wall
+    .iter()
+    .map(|pos| pos.y)
+    .fold((f64::INFINITY, f64::NEG_INFINITY), |(min_y, max_y), y| {
+      (min_y.min(y), max_y.max(y))
+    });
+  let lateral_coverage = if wall.len() >= 2 {
+    ((y_span.1 - y_span.0) / (scale.goal_half_width * 3.0).max(1e-6)).clamp(0.0, 1.0)
+  } else {
+    0.0
+  };
+  let count_score = (wall.len() as f64 / 3.0).clamp(0.0, 1.0);
+
+  danger * (0.04 * count_score + 0.08 * block_score + 0.05 * lateral_coverage)
+}
+
 fn goalie_reward(
   old_robots: &[Option<crate::RobotState>; 16],
   new_robots: &[Option<crate::RobotState>; 16],
@@ -854,14 +961,11 @@ fn goalie_reward(
   scale: FieldScale,
   diag: f64,
 ) -> f64 {
-  if danger < 0.12 {
-    return 0.0;
-  }
-
+  let urgency = danger.max(0.20);
   let old_goalie = old_robots.iter().flatten().find(|r| r.is_goalie);
   let new_goalie = new_robots.iter().flatten().find(|r| r.is_goalie);
   let Some(new_goalie) = new_goalie else {
-    return -0.04 * danger;
+    return -0.04 * urgency;
   };
 
   let target = point(
@@ -877,7 +981,7 @@ fn goalie_reward(
     })
     .unwrap_or(0.0);
 
-  danger * (0.06 * closeness + 0.08 * progress)
+  0.025 * closeness + urgency * (0.05 * closeness + 0.08 * progress)
 }
 
 fn attacking_support_reward(
@@ -915,10 +1019,6 @@ fn attacking_support_reward(
   } else {
     (supporters as f64 * 0.035).min(0.12)
   }
-}
-
-fn active_non_goalie_count(robots: &[Option<crate::RobotState>; 16]) -> usize {
-  robots.iter().flatten().filter(|r| !r.is_goalie).count()
 }
 
 fn estimate_possession(state: &GameState, scale: FieldScale) -> Possession {
