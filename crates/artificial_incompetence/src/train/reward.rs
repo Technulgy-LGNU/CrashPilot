@@ -417,6 +417,8 @@ fn team_shape_reward(
   let danger = defensive_danger(new_ball, scale);
 
   reward -= crowding_penalty(&new.own_robots, scale);
+  reward += field_spread_reward(&old.own_robots, &new.own_robots, scale, diag);
+  reward += movement_diversity_reward(&old.own_robots, &new.own_robots, scale);
   reward += defensive_shape_reward(&new.own_robots, new_ball, danger, scale);
   reward += goalie_reward(
     &old.own_robots,
@@ -438,6 +440,118 @@ fn team_shape_reward(
   }
 
   reward
+}
+
+fn field_spread_reward(
+  old_robots: &[Option<crate::RobotState>; 16],
+  new_robots: &[Option<crate::RobotState>; 16],
+  scale: FieldScale,
+  diag: f64,
+) -> f64 {
+  let old_score = field_spread_score(old_robots, scale, diag);
+  let new_score = field_spread_score(new_robots, scale, diag);
+  let progress = (new_score - old_score).clamp(-1.0, 1.0);
+
+  0.08 * progress + 0.04 * (new_score - 0.35)
+}
+
+fn field_spread_score(
+  robots: &[Option<crate::RobotState>; 16],
+  scale: FieldScale,
+  diag: f64,
+) -> f64 {
+  let points: Vec<_> = robots
+    .iter()
+    .flatten()
+    .filter(|r| !r.is_goalie)
+    .map(|r| point(r.pos.x, r.pos.y))
+    .collect();
+
+  if points.len() < 2 {
+    return 0.0;
+  }
+
+  let mut pair_dist_sum = 0.0;
+  let mut pair_count = 0usize;
+  let mut min_x = f64::INFINITY;
+  let mut max_x = f64::NEG_INFINITY;
+  let mut min_y = f64::INFINITY;
+  let mut max_y = f64::NEG_INFINITY;
+
+  for (idx, a) in points.iter().enumerate() {
+    min_x = min_x.min(a.x);
+    max_x = max_x.max(a.x);
+    min_y = min_y.min(a.y);
+    max_y = max_y.max(a.y);
+
+    for b in points.iter().skip(idx + 1) {
+      pair_dist_sum += distance(*a, *b);
+      pair_count += 1;
+    }
+  }
+
+  let average_pair_dist = if pair_count > 0 {
+    pair_dist_sum / pair_count as f64
+  } else {
+    0.0
+  };
+  let pair_coverage = (average_pair_dist / diag).clamp(0.0, 1.0);
+  let x_coverage = ((max_x - min_x) / (scale.half_x * 2.0).max(1e-6)).clamp(0.0, 1.0);
+  let y_coverage = ((max_y - min_y) / (scale.half_y * 2.0).max(1e-6)).clamp(0.0, 1.0);
+
+  0.55 * pair_coverage + 0.25 * x_coverage + 0.20 * y_coverage
+}
+
+fn movement_diversity_reward(
+  old_robots: &[Option<crate::RobotState>; 16],
+  new_robots: &[Option<crate::RobotState>; 16],
+  scale: FieldScale,
+) -> f64 {
+  let min_move = (scale.half_x * 0.002).max(1e-4);
+  let movements: Vec<_> = old_robots
+    .iter()
+    .zip(new_robots.iter())
+    .filter_map(|(old, new)| {
+      let (Some(old), Some(new)) = (old, new) else {
+        return None;
+      };
+
+      if old.is_goalie {
+        return None;
+      }
+
+      let delta = point(new.pos.x - old.pos.x, new.pos.y - old.pos.y);
+      if delta.x.hypot(delta.y) >= min_move {
+        Some(delta)
+      } else {
+        None
+      }
+    })
+    .collect();
+
+  if movements.len() < 3 {
+    return 0.0;
+  }
+
+  let mut similarity_sum = 0.0;
+  let mut pair_count = 0usize;
+
+  for (idx, a) in movements.iter().enumerate() {
+    for b in movements.iter().skip(idx + 1) {
+      similarity_sum += vector_alignment(*a, *b).max(0.0);
+      pair_count += 1;
+    }
+  }
+
+  if pair_count == 0 {
+    return 0.0;
+  }
+
+  let average_similarity = similarity_sum / pair_count as f64;
+  let diversity = 1.0 - average_similarity;
+  let moving_fraction = movements.len() as f64 / active_non_goalie_count(new_robots).max(1) as f64;
+
+  0.05 * diversity * moving_fraction - 0.10 * (average_similarity - 0.70).max(0.0)
 }
 
 fn sim_contact_reward(old_sim: &WorldState, new_sim: &WorldState) -> f64 {
@@ -797,6 +911,10 @@ fn attacking_support_reward(
   } else {
     (supporters as f64 * 0.035).min(0.12)
   }
+}
+
+fn active_non_goalie_count(robots: &[Option<crate::RobotState>; 16]) -> usize {
+  robots.iter().flatten().filter(|r| !r.is_goalie).count()
 }
 
 fn estimate_possession(state: &GameState, scale: FieldScale) -> Possession {
