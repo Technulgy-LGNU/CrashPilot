@@ -52,7 +52,7 @@ pub fn game_logic<C: Communication, A: Ai + Send>(cp: &mut CrashPilot<C, A>) {
       }
     }
     CpMode::ModeTest => {
-      mode_test(&mut cp.robots, &mut cp.state);
+      mode_test(&mut cp.robots, &mut cp.state, &cp.field_setup);
     }
   }
 }

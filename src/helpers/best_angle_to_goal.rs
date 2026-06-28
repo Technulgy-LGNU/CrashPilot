@@ -12,23 +12,24 @@ pub fn shoot_to_goal(
   state: &WorldState,
   field_setup: &FieldSetup,
 ) {
+  let shooter = robot_self.pos.unwrap_or_default();
+  let goal_center = Vec2::new(field_setup.width as f32 * 0.5 * state.site, 0f32);
+
   match best_shot_angle(
-    robot_self.pos.unwrap_or_default(),
+    shooter,
     all_robots,
     Vec2::new(
       field_setup.width as f32 * 0.5 * state.site,
-      field_setup.goal_width as f32 * 0.5 * state.site,
+      field_setup.goal_width as f32 * 0.5,
     ),
     Vec2::new(
       field_setup.width as f32 * 0.5 * state.site,
-      -(field_setup.goal_width as f32) * 0.5 * state.site,
+      -(field_setup.goal_width as f32) * 0.5,
     ),
   ) {
     None => {
       // Try to shoot to the center
-      let angle = (robot_self.pos.unwrap_or_default()
-        + Vec2::new(field_setup.width as f32 * state.site, 0f32))
-      .angle_in_u16();
+      let angle = (goal_center - shooter).angle_in_u16();
 
       robot.msg.cmd.task = TaskKick as i32;
       robot.msg.cmd.kick_orient = Option::from(angle as u32);
@@ -49,16 +50,9 @@ fn best_shot_angle(
   goal_left: Vec2<f32>,
   goal_right: Vec2<f32>,
 ) -> Option<u32> {
-  let angle_left = (goal_left.y - shooter.y)
-    .atan2(goal_left.x - shooter.x)
-    .to_degrees();
-
-  let angle_right = (goal_right.y - shooter.y)
-    .atan2(goal_right.x - shooter.x)
-    .to_degrees();
-
-  let min_angle = angle_left.min(angle_right).floor() as i32;
-  let max_angle = angle_left.max(angle_right).ceil() as i32;
+  let angle_left = angle_to_point(shooter, goal_left);
+  let angle_right = angle_to_point(shooter, goal_right);
+  let (start_angle, span) = goal_arc_start_and_span(angle_left, angle_right);
 
   const ROBOT_RADIUS_MM: f32 = 90.0;
   const BALL_RADIUS_MM: f32 = 21.5;
@@ -66,21 +60,39 @@ fn best_shot_angle(
 
   let block_radius = ROBOT_RADIUS_MM + BALL_RADIUS_MM + SAFETY_MARGIN_MM;
 
-  let mut free_angles = Vec::new();
+  let mut best_range = None;
+  let mut current_range = None;
+  let sample_count = span.ceil() as usize;
 
-  for angle_deg in min_angle..=max_angle {
-    let angle = (angle_deg as f32).to_radians();
+  for sample in 0..=sample_count {
+    let offset = (sample as f32).min(span);
+    let angle_deg = start_angle + offset;
+    let angle = angle_deg.to_radians();
 
     let dir = Vec2::new(angle.cos(), angle.sin());
+    let goal_forward = if dir.x.abs() <= f32::EPSILON {
+      f32::INFINITY
+    } else {
+      (goal_left.x - shooter.x) / dir.x
+    };
+
+    if goal_forward <= 0.0 {
+      finish_range(&mut current_range, &mut best_range);
+      continue;
+    }
 
     let mut blocked = false;
 
     for robot in opponents {
-      let rel = robot.pos.unwrap_or_default() - shooter;
+      let Some(pos) = robot.pos else {
+        continue;
+      };
+
+      let rel = pos - shooter;
 
       let forward = rel.dot(&dir);
 
-      if forward <= 0.0 {
+      if forward <= 0.0 || forward - block_radius > goal_forward {
         continue;
       }
 
@@ -93,38 +105,133 @@ fn best_shot_angle(
     }
 
     if !blocked {
-      free_angles.push(angle_deg);
-    }
-  }
-
-  if free_angles.is_empty() {
-    return None;
-  }
-
-  let mut best_start = free_angles[0];
-  let mut best_end = free_angles[0];
-
-  let mut current_start = free_angles[0];
-  let mut current_end = free_angles[0];
-
-  for &angle in free_angles.iter().skip(1) {
-    if angle == current_end + 1 {
-      current_end = angle;
-    } else {
-      if current_end - current_start > best_end - best_start {
-        best_start = current_start;
-        best_end = current_end;
+      match current_range {
+        Some((start, _)) => current_range = Some((start, sample)),
+        None => current_range = Some((sample, sample)),
       }
-
-      current_start = angle;
-      current_end = angle;
+    } else {
+      finish_range(&mut current_range, &mut best_range);
     }
   }
 
-  if current_end - current_start > best_end - best_start {
-    best_start = current_start;
-    best_end = current_end;
+  finish_range(&mut current_range, &mut best_range);
+
+  let (best_start, best_end) = best_range?;
+  let best_start = (best_start as f32).min(span);
+  let best_end = (best_end as f32).min(span);
+  let best_angle = start_angle + (best_start + best_end) * 0.5;
+
+  Some(angle_to_command_deg(best_angle))
+}
+
+#[inline]
+fn angle_to_point(from: Vec2<f32>, to: Vec2<f32>) -> f32 {
+  (to.y - from.y).atan2(to.x - from.x).to_degrees()
+}
+
+#[inline]
+fn goal_arc_start_and_span(angle_a: f32, angle_b: f32) -> (f32, f32) {
+  let angle_a = normalize_angle_deg(angle_a);
+  let angle_b = normalize_angle_deg(angle_b);
+  let ccw_span = normalize_angle_deg(angle_b - angle_a);
+
+  if ccw_span <= 180.0 {
+    (angle_a, ccw_span)
+  } else {
+    (angle_b, 360.0 - ccw_span)
+  }
+}
+
+#[inline]
+fn finish_range(
+  current_range: &mut Option<(usize, usize)>,
+  best_range: &mut Option<(usize, usize)>,
+) {
+  let Some(current) = current_range.take() else {
+    return;
+  };
+
+  if best_range
+    .map(|best| current.1 - current.0 > best.1 - best.0)
+    .unwrap_or(true)
+  {
+    *best_range = Some(current);
+  }
+}
+
+#[inline]
+fn angle_to_command_deg(angle: f32) -> u32 {
+  normalize_angle_deg(normalize_angle_deg(angle).round()) as u32
+}
+
+#[inline]
+fn normalize_angle_deg(angle: f32) -> f32 {
+  angle.rem_euclid(360.0)
+}
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  fn robot_at(x: f32, y: f32) -> Robot {
+    Robot {
+      robot_id: 0,
+      pos: Some(Vec2::new(x, y)),
+      vel: None,
+      orientation: 0.0,
+      angular_vel: 0.0,
+      distance_team: Default::default(),
+      _distance_opponent: Default::default(),
+      distance_ball: None,
+      _distance_goal: None,
+      _distance_wall: None,
+    }
   }
 
-  Some(((best_start + best_end) as f32 * 0.5) as u32)
+  #[test]
+  fn normalizes_negative_best_angle_instead_of_clamping_to_zero() {
+    let angle = best_shot_angle(
+      Vec2::new(0.0, 500.0),
+      &[],
+      Vec2::new(4_500.0, 500.0),
+      Vec2::new(4_500.0, -500.0),
+    );
+
+    assert_eq!(angle, Some(354));
+  }
+
+  #[test]
+  fn chooses_non_zero_angle_when_center_is_blocked() {
+    let angle = best_shot_angle(
+      Vec2::new(0.0, 0.0),
+      &[robot_at(2_000.0, 0.0)],
+      Vec2::new(4_500.0, 500.0),
+      Vec2::new(4_500.0, -500.0),
+    )
+    .unwrap();
+
+    assert_ne!(angle, 0);
+  }
+
+  #[test]
+  fn handles_goal_arc_crossing_angle_wrap() {
+    let angle = best_shot_angle(
+      Vec2::new(0.0, 0.0),
+      &[],
+      Vec2::new(-4_500.0, 500.0),
+      Vec2::new(-4_500.0, -500.0),
+    );
+
+    assert_eq!(angle, Some(180));
+  }
+
+  #[test]
+  fn fallback_direction_points_from_shooter_to_goal_center() {
+    let angle = angle_to_command_deg(angle_to_point(
+      Vec2::new(0.0, 500.0),
+      Vec2::new(4_500.0, 0.0),
+    ));
+
+    assert_eq!(angle, 354);
+  }
 }

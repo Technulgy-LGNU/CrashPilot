@@ -9,14 +9,17 @@ pub use crate::communication::ssl_gc_handler::SslGameController;
 use crate::communication::{EventShare, WebsocketOut, communication_receiver};
 pub use crate::config::Config;
 use crate::game_logic::game_logic;
-use crate::game_logic::types::{BallData, Robot, WorldState};
+use crate::game_logic::types::{BallData, GamePhase, PrepPhase, Robot, WorldState};
 use crate::helpers::robot_data::create_robot_data;
 #[cfg(feature = "prometheus")]
 use crate::metrics::PrometheusMetrics;
 use crate::utils::{FieldSetup, PacketBuffer, spawn_robot_socket};
+use core_dump::proto::cp_game_phase::{
+  GamePhase as InterfaceGamePhase, PrepPhase as InterfacePrepPhase,
+};
 #[cfg(feature = "ssl_game_controller")]
 use core_dump::proto::{AdvantageChoice, ControllerToTeam};
-use core_dump::proto::{CpCommand, CpInterfaceWrapper, CpRobot};
+use core_dump::proto::{CpCommand, CpGamePhase, CpInterfaceWrapper, CpRobot};
 use std::collections::HashMap;
 use std::path::Path;
 use std::sync::Arc;
@@ -512,6 +515,10 @@ impl<C, A: Ai> CrashPilot<C, A> {
         .values()
         .map(|robot| robot.msg.clone())
         .collect(),
+      cp_gamephase: Some(CpGamePhase {
+        game_phase: Some(interface_game_phase(self.state.phase) as i32),
+        prep_phase: Some(interface_prep_phase(self.state.prep_phase) as i32),
+      }),
     }
   }
 
@@ -610,4 +617,92 @@ fn self_robots_to_ai_robots(
     ai_robots[robot_id as usize] = Some(ai_robot);
   }
   ai_robots
+}
+
+fn interface_game_phase(phase: GamePhase) -> InterfaceGamePhase {
+  match phase {
+    GamePhase::Unknown => InterfaceGamePhase::UnknownGamePhase,
+    GamePhase::Halted => InterfaceGamePhase::Halted,
+    GamePhase::Stopped => InterfaceGamePhase::Stopped,
+    GamePhase::Running => InterfaceGamePhase::Running,
+    GamePhase::Timeout => InterfaceGamePhase::Timeout,
+    GamePhase::BallPlacement => InterfaceGamePhase::BallPlacement,
+  }
+}
+
+fn interface_prep_phase(phase: PrepPhase) -> InterfacePrepPhase {
+  match phase {
+    PrepPhase::Unknown => InterfacePrepPhase::UnknownPrepPhase,
+    PrepPhase::OffensiveKickoff => InterfacePrepPhase::OffensiveKickoff,
+    PrepPhase::DefensiveKickoff => InterfacePrepPhase::DefensiveKickoff,
+    PrepPhase::OffensivePenalty => InterfacePrepPhase::OffensivePenalty,
+    PrepPhase::DefensivePenalty => InterfacePrepPhase::DefensivePenalty,
+    PrepPhase::OffensiveFreeKick => InterfacePrepPhase::OffensiveFreeKick,
+    PrepPhase::DefensiveFreeKick => InterfacePrepPhase::DefensiveFreeKick,
+  }
+}
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  #[test]
+  fn maps_game_phase_to_interface_enum() {
+    assert_eq!(
+      interface_game_phase(GamePhase::Unknown),
+      InterfaceGamePhase::UnknownGamePhase
+    );
+    assert_eq!(
+      interface_game_phase(GamePhase::Halted),
+      InterfaceGamePhase::Halted
+    );
+    assert_eq!(
+      interface_game_phase(GamePhase::Stopped),
+      InterfaceGamePhase::Stopped
+    );
+    assert_eq!(
+      interface_game_phase(GamePhase::Running),
+      InterfaceGamePhase::Running
+    );
+    assert_eq!(
+      interface_game_phase(GamePhase::Timeout),
+      InterfaceGamePhase::Timeout
+    );
+    assert_eq!(
+      interface_game_phase(GamePhase::BallPlacement),
+      InterfaceGamePhase::BallPlacement
+    );
+  }
+
+  #[test]
+  fn maps_prep_phase_to_interface_enum() {
+    assert_eq!(
+      interface_prep_phase(PrepPhase::Unknown),
+      InterfacePrepPhase::UnknownPrepPhase
+    );
+    assert_eq!(
+      interface_prep_phase(PrepPhase::OffensiveKickoff),
+      InterfacePrepPhase::OffensiveKickoff
+    );
+    assert_eq!(
+      interface_prep_phase(PrepPhase::DefensiveKickoff),
+      InterfacePrepPhase::DefensiveKickoff
+    );
+    assert_eq!(
+      interface_prep_phase(PrepPhase::OffensivePenalty),
+      InterfacePrepPhase::OffensivePenalty
+    );
+    assert_eq!(
+      interface_prep_phase(PrepPhase::DefensivePenalty),
+      InterfacePrepPhase::DefensivePenalty
+    );
+    assert_eq!(
+      interface_prep_phase(PrepPhase::OffensiveFreeKick),
+      InterfacePrepPhase::OffensiveFreeKick
+    );
+    assert_eq!(
+      interface_prep_phase(PrepPhase::DefensiveFreeKick),
+      InterfacePrepPhase::DefensiveFreeKick
+    );
+  }
 }
