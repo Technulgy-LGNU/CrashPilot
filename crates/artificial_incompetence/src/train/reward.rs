@@ -420,6 +420,15 @@ fn team_shape_reward(
   reward -= crowding_penalty(&new.own_robots, commands, scale);
   reward += field_spread_reward(&old.own_robots, &new.own_robots, commands, scale, diag);
   reward += movement_diversity_reward(&old.own_robots, &new.own_robots, commands, scale);
+  reward += stale_ball_pursuit_penalty(
+    &old.own_robots,
+    &new.own_robots,
+    commands,
+    old_poss,
+    new_poss,
+    new_ball,
+    scale,
+  );
   reward += defensive_shape_reward(&new.own_robots, new_ball, danger, scale);
   reward += defensive_wall_reward(&new.own_robots, commands, new_ball, danger, scale);
   reward += goalie_reward(
@@ -597,6 +606,78 @@ fn active_spread_robot_count(
     .filter_map(|(idx, robot)| robot.map(|robot| (idx, robot)))
     .filter(|(idx, robot)| !defensive_formation_exempt(*idx, *robot, commands, scale))
     .count()
+}
+
+fn stale_ball_pursuit_penalty(
+  old_robots: &[Option<crate::RobotState>; 16],
+  new_robots: &[Option<crate::RobotState>; 16],
+  commands: Commands,
+  old_poss: Possession,
+  new_poss: Possession,
+  ball: Point,
+  scale: FieldScale,
+) -> f64 {
+  if new_poss.team == PossessionTeam::Own {
+    return 0.0;
+  }
+
+  let min_move = (scale.half_x * 0.002).max(1e-4);
+  let reaction_radius = scale.half_x * 0.70;
+  let urgency = match (old_poss.team, new_poss.team) {
+    (_, PossessionTeam::Opp) => 1.0,
+    (PossessionTeam::Own, PossessionTeam::Neutral) => 0.75,
+    (_, PossessionTeam::Neutral) => 0.55,
+    _ => 0.0,
+  };
+
+  if urgency <= 0.0 {
+    return 0.0;
+  }
+
+  let mut penalty = 0.0;
+
+  for (idx, (old, new)) in old_robots.iter().zip(new_robots.iter()).enumerate() {
+    let (Some(old), Some(new)) = (old, new) else {
+      continue;
+    };
+
+    if defensive_formation_exempt(idx, *new, commands, scale)
+      || pass_receiver_exempt(idx, commands)
+      || Some(idx) == new_poss.own_idx
+    {
+      continue;
+    }
+
+    let old_pos = point(old.pos.x, old.pos.y);
+    let new_pos = point(new.pos.x, new.pos.y);
+    let movement = point(new_pos.x - old_pos.x, new_pos.y - old_pos.y);
+    let move_len = movement.x.hypot(movement.y);
+    if move_len < min_move {
+      continue;
+    }
+
+    let to_ball = point(ball.x - new_pos.x, ball.y - new_pos.y);
+    let ball_dist = to_ball.x.hypot(to_ball.y);
+    if ball_dist > reaction_radius {
+      continue;
+    }
+
+    let alignment = vector_alignment(movement, to_ball);
+    if alignment < -0.15 {
+      let distance_weight = (1.0 - ball_dist / reaction_radius).clamp(0.0, 1.0);
+      penalty += 0.045 * urgency * distance_weight * (-alignment);
+    }
+  }
+
+  -penalty.min(0.18)
+}
+
+fn pass_receiver_exempt(idx: usize, commands: Commands) -> bool {
+  matches!(commands[idx], Some(crate::RobotCommand::RecPass))
+    || commands.iter().any(|cmd| match cmd {
+      Some(crate::RobotCommand::PassTo(dst)) => *dst as usize == idx,
+      _ => false,
+    })
 }
 
 fn sim_contact_reward(old_sim: &WorldState, new_sim: &WorldState) -> f64 {
