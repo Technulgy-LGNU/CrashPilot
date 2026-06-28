@@ -356,7 +356,7 @@ fn command_reward(
               point(target.x, target.y),
               scale,
               diag,
-            )
+            ) - dribble_control_penalty(has_ball)
           }
           crate::RobotCommand::KickGoal => {
             kick_like += 1;
@@ -670,6 +670,10 @@ fn controlled_move_reward(
   0.09 + 0.22 * ball_progress.max(0.0) + 0.08 * target_progress
 }
 
+fn dribble_control_penalty(has_ball: bool) -> f64 {
+  if has_ball { 0.055 } else { 0.0 }
+}
+
 fn direct_shot_reward(
   has_ball: bool,
   old_ball: Point,
@@ -732,11 +736,11 @@ fn pass_reward(
     })
     .unwrap_or(0.0);
 
-  0.10
-    + 0.10 * alignment
-    + 0.08 * receiver_ahead
-    + 0.08 * receiver_open
-    + 0.08 * receiver_gets_close
+  0.16
+    + 0.14 * alignment
+    + 0.10 * receiver_ahead
+    + 0.12 * receiver_open
+    + 0.10 * receiver_gets_close
 }
 
 fn receive_reward(
@@ -767,10 +771,10 @@ fn receive_reward(
     / scale.half_x)
     .clamp(-1.0, 1.0);
 
-  let mut reward = 0.02 + 0.08 * alignment + 0.08 * close_delta.max(0.0);
+  let mut reward = 0.04 + 0.12 * alignment + 0.10 * close_delta.max(0.0);
 
   if pass_targeted {
-    reward += 0.07;
+    reward += 0.10;
   } else if alignment < 0.15 {
     reward -= 0.03;
   }
