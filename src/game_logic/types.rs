@@ -1,6 +1,6 @@
 use std::cmp::PartialEq;
 use std::collections::HashMap;
-
+use std::ops::Neg;
 use crate::FieldSetup;
 use core_dump::proto::referee::Command;
 use core_dump::proto::{InterfaceCommandCp, Referee, TrackerWrapperPacket};
@@ -167,6 +167,16 @@ pub enum Team {
   // Dont differentiate between colors, so there need to be less checks
   Blue,
   Yellow,
+}
+
+impl Neg for Team {
+  type Output = Self;
+  fn neg(self) -> Self::Output {
+    match self {
+      Team::Blue => Team::Yellow,
+      Team::Yellow => Team::Blue,
+    }
+  }
 }
 
 impl Team {
@@ -431,6 +441,7 @@ pub struct Robot {
 
   pub orientation: f32,
   pub angular_vel: f32,
+  pub team: Team,
 
   // Distances to each robot
   pub distance_team: HashMap<u8, f32>,
@@ -506,6 +517,7 @@ impl Robot {
             .map(|vel| Vec2::new(vel.x, vel.y).scale_to(1000f32)),
           orientation: robot.orientation.to_degrees(),
           angular_vel: robot.vel_angular.unwrap_or_default().to_degrees(),
+          team: Team::from_cp_team(robot.robot_id.team.unwrap_or_default()).unwrap_or(Team::Yellow),
           distance_team: dist_team,
           _distance_opponent: dist_opponent,
           distance_ball: Some(
@@ -534,6 +546,7 @@ impl Robot {
             .map(|vel| Vec2::new(vel.x, vel.y).scale_to(1000f32)),
           orientation: robot.orientation.to_degrees(),
           angular_vel: robot.vel_angular.unwrap_or_default().to_degrees(),
+          team: Team::from_cp_team(robot.robot_id.team.unwrap_or_default()).unwrap_or(Team::Yellow),
           distance_team: dist_team,
           _distance_opponent: dist_opponent,
           distance_ball: Some(

@@ -1,8 +1,8 @@
 use crate::CrashPilot;
 use crate::game_logic::types::Robot;
 use crate::helpers::best_angle_to_goal::shoot_to_goal;
-use artificial_incompetence::{Ai, RobotCommand};
-use core_dump::proto::CpState::StateFree;
+use core_dump::types::{Ai, RobotCommand};
+use core_dump::proto::CpState::{StateFree, StateGoalie};
 use core_dump::proto::CpTask::{
   TaskBlock, TaskDribble, TaskKick, TaskPos, TaskPosBall, TaskRecKick, TaskSteal,
 };
@@ -44,7 +44,7 @@ pub fn ai_handler<C, A: Ai>(all_robots: &[Robot], cp: &mut CrashPilot<C, A>) {
             RobotCommand::Kick(orient) => {
               robot.msg.cmd.task = TaskKick as i32;
               robot.msg.cmd.kick_orient = Option::from((orient * 360f32) as u32);
-              robot.msg.cmd.kick_speed = Option::from(200);
+              robot.msg.cmd.kick_speed = Option::from(255);
             }
             RobotCommand::Chip(orient) => {
               robot.msg.cmd.task = TaskKick as i32;
@@ -60,19 +60,27 @@ pub fn ai_handler<C, A: Ai>(all_robots: &[Robot], cp: &mut CrashPilot<C, A>) {
             }
             RobotCommand::Dribble(pos) => {
               robot.msg.cmd.task = TaskDribble as i32;
-              robot.msg.cmd.pos = Option::from(
-                (*pos * Vec2::new(cp.field_setup.width as f32, cp.field_setup.height as f32))
-                  .to_cp_vec2(),
-              );
+              let target =
+                *pos * Vec2::new(cp.field_setup.width as f32, cp.field_setup.height as f32);
+              robot.msg.cmd.pos = Option::from(target.to_cp_vec2());
               robot.msg.cmd.speed = Option::from(2000);
+              // The firmware uses cmd.orientation as the direction to push the
+              // ball; aim it from the ball toward the dribble target.
+              robot.msg.cmd.orientation = Option::from(
+                (target - cp.state.ball.ball.pos * Vec2::new(1000f32, 1000f32)).angle_in_u16()
+                  as u32,
+              );
             }
             RobotCommand::PosBall(pos) => {
               robot.msg.cmd.task = TaskPosBall as i32;
-              robot.msg.cmd.pos = Option::from(
-                (*pos * Vec2::new(cp.field_setup.width as f32, cp.field_setup.height as f32))
-                  .to_cp_vec2(),
-              );
+              let target =
+                *pos * Vec2::new(cp.field_setup.width as f32, cp.field_setup.height as f32);
+              robot.msg.cmd.pos = Option::from(target.to_cp_vec2());
               robot.msg.cmd.speed = Option::from(2000);
+              robot.msg.cmd.orientation = Option::from(
+                (target - cp.state.ball.ball.pos * Vec2::new(1000f32, 1000f32)).angle_in_u16()
+                  as u32,
+              );
             }
             RobotCommand::Kickoff(_) => {}
             RobotCommand::FreeKick(_) => {}
@@ -84,11 +92,22 @@ pub fn ai_handler<C, A: Ai>(all_robots: &[Robot], cp: &mut CrashPilot<C, A>) {
               robot.msg.cmd.task = TaskKick as i32;
 
               if let Some(to_robot) = cp.state.robots_self.iter().find(|r| r.robot_id == *r_id) {
-                // Get the direction to that robot
-                robot.msg.cmd.kick_orient = Option::from(
-                  (to_robot.pos.unwrap_or_default() + robot_self.pos.unwrap_or_default())
-                    .angle_in_u16() as u32,
-                )
+                // Aim the kicker along the direction to the receiver. Scale kick
+                // power with pass distance so short passes do not overrun the
+                // receiver and long ones still arrive.
+                let from = robot_self.pos.unwrap_or_default();
+                let to = to_robot.pos.unwrap_or_default();
+                let base_dir = to - from;
+                let base_dist =
+                  ((base_dir.x * base_dir.x + base_dir.y * base_dir.y).sqrt()).max(1.0);
+                let receiver_vel = to_robot.vel.unwrap_or_default();
+                let lead_s = (base_dist / 4500.0).clamp(0.05, 0.22);
+                let to = to + receiver_vel * lead_s;
+                let dir = to - from;
+                robot.msg.cmd.kick_orient = Option::from(dir.angle_in_u16() as u32);
+                let dist = ((dir.x * dir.x + dir.y * dir.y).sqrt()).max(1.0);
+                let power = (dist * 0.06).clamp(70.0, 200.0) as u32;
+                robot.msg.cmd.kick_speed = Option::from(power);
               } else {
                 // Shoot to goal
                 shoot_to_goal(robot, robot_self, all_robots, &cp.state, &cp.field_setup);
@@ -102,6 +121,7 @@ pub fn ai_handler<C, A: Ai>(all_robots: &[Robot], cp: &mut CrashPilot<C, A>) {
               cp.state.defenders.push(robot.msg.robot_id as u8)
             }
             RobotCommand::GoalieGuard => {
+              robot.msg.cmd.state = StateGoalie as i32;
               robot.msg.cmd.task = TaskBlock as i32;
               robot.msg.cmd.enemy_id = None;
               robot.msg.cmd.speed = Option::from(4000);

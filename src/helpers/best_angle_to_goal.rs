@@ -14,10 +14,15 @@ pub fn shoot_to_goal(
 ) {
   let shooter = robot_self.pos.unwrap_or_default();
   let goal_center = Vec2::new(field_setup.width as f32 * 0.5 * state.site, 0f32);
+  let opponents: Vec<Robot> = all_robots
+    .iter()
+    .filter(|r| r.team != robot_self.team)
+    .cloned()
+    .collect();
 
   match best_shot_angle(
     shooter,
-    all_robots,
+    &opponents,
     Vec2::new(
       field_setup.width as f32 * 0.5 * state.site,
       field_setup.goal_width as f32 * 0.5,
@@ -171,6 +176,7 @@ fn normalize_angle_deg(angle: f32) -> f32 {
 
 #[cfg(test)]
 mod tests {
+  use crate::game_logic::types::Team;
   use super::*;
 
   fn robot_at(x: f32, y: f32) -> Robot {
@@ -180,6 +186,7 @@ mod tests {
       vel: None,
       orientation: 0.0,
       angular_vel: 0.0,
+      team: Team::Yellow,
       distance_team: Default::default(),
       _distance_opponent: Default::default(),
       distance_ball: None,

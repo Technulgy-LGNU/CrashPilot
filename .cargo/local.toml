@@ -7,7 +7,7 @@ core_dump = { path = "../core-dump" }
 loguna = { path = "../loguna/loguna" }
 
 [patch."https://github.com/Technulgy-LGNU/CrashPilot"]
-CrashPilot = { path = "../CrashPilot" }
+crashpilot = { path = "../CrashPilot" }
 
 [patch."https://github.com/Technulgy-LGNU/teamfaabs-ssl-robot-code"]
 tf_jetsoncode = { path = "../teamfaabs-ssl-robot-code/tf_jetsoncode" }

@@ -24,8 +24,8 @@ pub fn create_robot_data(
     robot.msg.packet_id = packet_id;
     robot.msg.timestamp = SystemTime::now()
       .duration_since(UNIX_EPOCH)
-      .unwrap()
-      .as_secs_f64();
+      .map(|d| d.as_secs_f64())
+      .unwrap_or_default();
 
     // Tracked frame, if not empty
     // Robot Position Data

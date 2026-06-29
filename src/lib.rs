@@ -535,22 +535,21 @@ impl<C, A: Ai> CrashPilot<C, A> {
       self.state.goalie.unwrap_or_default(),
     );
 
-    self.ai_data.ball.pos = self.state.ball.ball.pos
-      / Vec2::new(
-        self.field_setup.width as f32,
-        self.field_setup.height as f32,
-      );
-    self.ai_data.ball.vel = self.state.ball.ball.vel / Vec2::new(10000f32, 10000f32);
-    self.ai_data.ball.stop_pos = self.state.ball.kicked_ball.end_point.unwrap_or(
-      self.state.ball.ball.pos
-        / Vec2::new(
-          self.field_setup.width as f32,
-          self.field_setup.height as f32,
-        ),
-    ) / Vec2::new(
-      self.field_setup.width as f32,
-      self.field_setup.height as f32,
+    // Tracked positions are in meters; the field size is in mm, so normalize by
+    // the field size expressed in meters to land in roughly [-0.5, 0.5].
+    let field_m = Vec2::new(
+      self.field_setup.width as f32 / 1000.0,
+      self.field_setup.height as f32 / 1000.0,
     );
+    self.ai_data.ball.pos = self.state.ball.ball.pos / field_m;
+    self.ai_data.ball.vel = self.state.ball.ball.vel / Vec2::new(10000f32, 10000f32);
+    self.ai_data.ball.stop_pos = self
+      .state
+      .ball
+      .kicked_ball
+      .end_point
+      .unwrap_or(self.state.ball.ball.pos)
+      / field_m;
     self.ai_data.ball.stop_time = self
       .state
       .ball
@@ -605,10 +604,12 @@ fn self_robots_to_ai_robots(
     let robot_id = robot.robot_id;
     let is_goalie = robot_id == goalie_robot;
 
+    // Tracked positions are in meters; normalize by the field size in meters.
+    let field_m = Vec2::new(field.width as f32 / 1000.0, field.height as f32 / 1000.0);
     let ai_robot = core_dump::types::RobotState {
       id: robot_id,
-      pos: (robot.pos.unwrap_or_default()) / Vec2::new(field.width as f32, field.height as f32),
-      vel: (robot.vel.unwrap_or_default()) / Vec2::new(field.width as f32, field.height as f32),
+      pos: (robot.pos.unwrap_or_default()) / field_m,
+      vel: (robot.vel.unwrap_or_default()) / field_m,
       heading: robot.orientation / 360f32,
       angular_vel: robot.angular_vel / 3600f32,
       is_goalie,
