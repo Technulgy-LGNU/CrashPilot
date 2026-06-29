@@ -1,11 +1,27 @@
 use crate::ai_types::{Batch, MultiBatch};
 use crate::config::{MAX_ROBOTS_PER_TEAM, ROBOT_FEATURES};
-use crate::types::{BallState, GameState, RobotState};
+use core_dump::types::{BallState, GameState, RobotState};
 use std::mem;
 use tch::{Kind, Tensor};
 
-impl GameState {
-  pub fn encode(&self, dev: tch::Device) -> Batch {
+
+pub trait GameStateExt {
+  fn encode(&self, dev: tch::Device) -> Batch;
+  fn encode_multiple(states: &[GameState], dev: tch::Device) -> MultiBatch;
+}
+
+pub trait RobotStateExt {
+  fn encode(&self, team_sign: f32) -> Tensor;
+  fn encode_with_active(&self, team_sign: f32, active: bool) -> Tensor;
+  fn encode_empty(team_sign: f32) -> Tensor;
+}
+
+pub trait BallStateExt {
+  fn encode(&self) -> Tensor;
+}
+
+impl GameStateExt for GameState {
+  fn encode(&self, dev: tch::Device) -> Batch {
     let own = Tensor::zeros(
       [MAX_ROBOTS_PER_TEAM, ROBOT_FEATURES],
       (Kind::Float, tch::Device::Cpu),
@@ -84,7 +100,7 @@ impl GameState {
     }
   }
 
-  pub fn encode_multiple(states: &[GameState], dev: tch::Device) -> MultiBatch {
+  fn encode_multiple(states: &[GameState], dev: tch::Device) -> MultiBatch {
     let mut states = states
       .iter()
       .map(|state| state.encode(dev))
@@ -148,7 +164,7 @@ impl GameState {
   }
 }
 
-impl RobotState {
+impl RobotStateExt for RobotState {
   fn encode(&self, team_sign: f32) -> Tensor {
     self.encode_with_active(team_sign, true)
   }
@@ -176,7 +192,7 @@ impl RobotState {
   }
 }
 
-impl BallState {
+impl BallStateExt for BallState {
   fn encode(&self) -> Tensor {
     Tensor::from_slice(&[
       self.pos.x,

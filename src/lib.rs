@@ -59,7 +59,7 @@ pub struct CrashPilot<C = CommunicationChannels, A: Ai = ArtificialIncompetence>
   robots: HashMap<u32, RobotData>,
   robots_ws_data: HashMap<u32, CpCommand>,
   state: WorldState,
-  ai_data: artificial_incompetence::types::GameState,
+  ai_data: core_dump::types::GameState,
   ai: A,
   team: i32,
   field_setup: FieldSetup,
@@ -599,13 +599,13 @@ fn self_robots_to_ai_robots(
   robots: Vec<Robot>,
   field: FieldSetup,
   goalie_robot: u8,
-) -> artificial_incompetence::types::Robots {
-  let mut ai_robots: artificial_incompetence::types::Robots = Default::default();
+) -> core_dump::types::Robots {
+  let mut ai_robots: core_dump::types::Robots = Default::default();
   for robot in robots {
     let robot_id = robot.robot_id;
     let is_goalie = robot_id == goalie_robot;
 
-    let ai_robot = artificial_incompetence::types::RobotState {
+    let ai_robot = core_dump::types::RobotState {
       id: robot_id,
       pos: (robot.pos.unwrap_or_default()) / Vec2::new(field.width as f32, field.height as f32),
       vel: (robot.vel.unwrap_or_default()) / Vec2::new(field.width as f32, field.height as f32),

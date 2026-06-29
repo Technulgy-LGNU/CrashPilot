@@ -3,7 +3,7 @@ use crate::game_logic::defend::goalie_wall;
 use crate::game_logic::types::{GamePhase, PrepPhase, PrepTask, PrepTaskStatus, Robot};
 use crate::helpers::best_angle_to_goal::shoot_to_goal;
 use crate::{Communication, CrashPilot};
-use artificial_incompetence::types::Ai;
+use core_dump::types::Ai;
 use core_dump::proto::CpState::{StateFree, StateGoalie, StateHalt, StateStop};
 use core_dump::proto::CpTask::{TaskKick, TaskPos, TaskPosBall};
 use core_dump::proto::CpVector2;

@@ -27,3 +27,7 @@ sumatra-opponent = ["train", "simhark/sumatra", "dep:simhark-sumatra"]
 [[example]]
 name = "train_ai"
 required-features = ["train"]
+
+[[example]]
+name = "match_sim"
+required-features = ["train"]

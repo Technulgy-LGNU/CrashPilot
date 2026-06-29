@@ -3,7 +3,7 @@ use crate::config::{MAX_ROBOTS_PER_TEAM, NUM_POWER_BINS};
 use crate::grid::GridSpec;
 use crate::modules::actor::{Actor, ActorOutput};
 use crate::modules::critic::Critic;
-use crate::types::{Commands, RobotCommand};
+use core_dump::types::{Commands, RobotCommand};
 use tch::{Kind, Tensor, nn};
 
 pub struct Coach {

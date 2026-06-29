@@ -1,11 +1,12 @@
 use crate::grid::GridSpec;
 use crate::modules::coach::Coach;
-use crate::types::{Ai, Commands, GameState};
+use core_dump::types::{Ai, Commands, GameState};
 use std::env;
 use std::error::Error;
 use std::path::{Path, PathBuf};
 use tch::nn::VarStore;
 use tch::{Device, no_grad};
+use crate::GameStateExt;
 
 pub type InferenceResult<T> = Result<T, Box<dyn Error + Send + Sync>>;
 
@@ -79,7 +80,7 @@ impl Default for ArtificialIncompetence {
 impl Ai for ArtificialIncompetence {
   fn predict(&mut self, state: &GameState, _dt: f32) -> Commands {
     {
-      let batch = GameState::encode_multiple(&[*state], self._vs.device());
+      let batch = <GameState as GameStateExt>::encode_multiple(&[*state], self._vs.device());
       let (_, _, _, mut plans) = no_grad(|| self.coach.act(&batch, self.deterministic));
 
       plans.pop().unwrap_or_default()
