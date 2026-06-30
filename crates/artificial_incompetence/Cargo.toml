@@ -9,8 +9,8 @@ serde = { version = "1.0.228", features = ["derive"] }
 serde_json = { version = "1.0.145", optional = true }
 indicatif = { version = "0.18.3", optional = true }
 tch = { version = "0.24.0", features = ["download-libtorch"] }
-simhark = { git = "https://github.com/Technulgy-LGNU/simhark", rev = "bd0abe55d1ff07afc4683267576f14908172e0b7", optional = true }
-simhark-sumatra = { git = "https://github.com/Technulgy-LGNU/simhark", rev = "bd0abe55d1ff07afc4683267576f14908172e0b7", optional = true }
+simhark = { git = "https://github.com/Technulgy-LGNU/simhark", optional = true }
+simhark-sumatra = { git = "https://github.com/Technulgy-LGNU/simhark", optional = true }
 
 [features]
 default = []
@@ -22,12 +22,8 @@ train = [
   "dep:simhark",
   "simhark/viewer",
 ]
-sumatra-opponent = ["train", "simhark/sumatra", "dep:simhark-sumatra"]
+sumatra-opponent = ["train", "dep:simhark-sumatra"]
 
 [[example]]
 name = "train_ai"
-required-features = ["train"]
-
-[[example]]
-name = "match_sim"
 required-features = ["train"]
