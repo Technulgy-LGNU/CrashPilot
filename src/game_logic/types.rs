@@ -392,7 +392,12 @@ impl WorldState {
     }
 
     let ball_delta = self.ball.ball.pos - task.ball_pos;
-    if task.phase == PrepPhase::OffensiveFreeKick && task.has_acted && !task.follow_up_acted {
+    if matches!(
+      task.phase,
+      PrepPhase::OffensiveKickoff | PrepPhase::OffensiveFreeKick
+    ) && task.has_acted
+      && !task.follow_up_acted
+    {
       return;
     }
 
@@ -723,14 +728,14 @@ mod tests {
   }
 
   #[test]
-  fn ready_prep_task_clears_after_ball_moves() {
+  fn ready_penalty_prep_task_clears_after_ball_moves() {
     let mut state = WorldState {
       team: Team::Yellow,
       ..Default::default()
     };
     state.ball.ball.pos = Vec2::new(0.0, 0.0);
 
-    apply_referee(&mut state, Command::PrepareKickoffYellow, 1);
+    apply_referee(&mut state, Command::PreparePenaltyYellow, 1);
     apply_referee(&mut state, Command::NormalStart, 2);
 
     state.ball.ball.pos = Vec2::new(60.0, 0.0);
@@ -797,6 +802,36 @@ mod tests {
     state.mark_prep_follow_up_acted(state.ball.ball.pos);
     state.ball.ball.pos = Vec2::new(120.0, 0.0);
     apply_referee(&mut state, Command::DirectFreeYellow, 1);
+
+    assert_eq!(state.prep_phase, PrepPhase::Unknown);
+    assert!(state.prep_task.is_none());
+  }
+
+  #[test]
+  fn offensive_kickoff_survives_pass_until_receive_phase_finishes() {
+    let mut state = WorldState {
+      team: Team::Yellow,
+      ..Default::default()
+    };
+    state.ball.ball.pos = Vec2::new(0.0, 0.0);
+
+    apply_referee(&mut state, Command::PrepareKickoffYellow, 1);
+    apply_referee(&mut state, Command::NormalStart, 2);
+    state.mark_prep_acted();
+
+    state.ball.ball.pos = Vec2::new(60.0, 0.0);
+    apply_referee(&mut state, Command::NormalStart, 2);
+
+    let task = state
+      .prep_task
+      .expect("kickoff should stay alive while pass is travelling");
+    assert_eq!(task.phase, PrepPhase::OffensiveKickoff);
+    assert!(task.has_acted);
+    assert!(!task.follow_up_acted);
+
+    state.mark_prep_follow_up_acted(state.ball.ball.pos);
+    state.ball.ball.pos = Vec2::new(120.0, 0.0);
+    apply_referee(&mut state, Command::NormalStart, 2);
 
     assert_eq!(state.prep_phase, PrepPhase::Unknown);
     assert!(state.prep_task.is_none());

@@ -11,6 +11,7 @@ use core_dump::vec::types::Vec2;
 
 const PREP_SETUP_SPEED_MM_S: u32 = 1500;
 const RESTART_KICK_SPEED: u32 = 200;
+const KICKOFF_PASS_SPEED: u32 = 50;
 const KICKER_SETUP_DISTANCE_MM: f32 = 320.0;
 const FREE_KICK_RECEIVER_SPEED_MM_S: u32 = 2200;
 const FREE_KICK_SETUP_TOLERANCE_MM: f32 = 180.0;
@@ -149,8 +150,9 @@ fn prepare_offensive_restart<C: Communication, A: Ai + Send>(
 
   cp.state.mark_prep_actor(actor_id);
 
-  let target = setup_position_for_restart(cp, task);
-  let orientation = kick_direction_for_restart(cp, task).angle_in_u16() as u32;
+  let direction = prep_kick_direction(cp, task, actor_id);
+  let target = setup_position_for_direction(task.ball_pos, direction);
+  let orientation = direction.angle_in_u16() as u32;
 
   if let Some(robot) = cp.robots.get_mut(&(actor_id as u32)) {
     robot.msg.cmd.state = StateStop as i32;
@@ -175,6 +177,8 @@ fn execute_offensive_restart<C: Communication, A: Ai + Send>(
   if matches!(task.phase, PrepPhase::OffensivePenalty) {
     execute_penalty(cp, actor_id, all_robots);
     cp.state.mark_prep_acted();
+  } else if matches!(task.phase, PrepPhase::OffensiveKickoff) {
+    execute_kickoff(cp, task, actor_id);
   } else if matches!(task.phase, PrepPhase::OffensiveFreeKick) {
     execute_free_kick(cp, task, actor_id, all_robots);
   } else {
@@ -209,6 +213,61 @@ fn execute_penalty<C: Communication, A: Ai + Send>(
     &cp.state,
     &cp.field_setup,
   );
+}
+
+fn execute_kickoff<C: Communication, A: Ai + Send>(
+  cp: &mut CrashPilot<C, A>,
+  task: PrepTask,
+  actor_id: u8,
+) {
+  let receiver_id = if task.has_acted {
+    task
+      .receiving_robot
+      .filter(|robot_id| *robot_id != actor_id && is_available_field_robot(cp, *robot_id))
+  } else {
+    kickoff_receiver_id(cp, task, actor_id)
+  };
+
+  let Some(receiver_id) = receiver_id else {
+    if task.has_acted {
+      cp.state.clear_prep_task();
+    } else {
+      execute_kick_restart(cp, task, actor_id);
+      cp.state.mark_prep_acted();
+      cp.state.mark_prep_follow_up_acted(task.ball_pos);
+    }
+    return;
+  };
+
+  cp.state.mark_prep_receiver(receiver_id);
+
+  let pass_direction = direction_to_robot_or_restart(cp, task, receiver_id);
+  let actor_target = setup_position_for_direction(task.ball_pos, pass_direction);
+  let actor_orientation = pass_direction.angle_in_u16() as u32;
+
+  if task.has_acted {
+    command_robot_pos(
+      cp,
+      actor_id,
+      actor_target,
+      actor_orientation,
+      Some(0),
+      StateStop as i32,
+    );
+
+    if receiver_ready_to_shoot(cp, receiver_id) {
+      cp.state.clear_prep_task();
+    } else {
+      command_receiver_receive(cp, receiver_id, pass_direction);
+    }
+
+    return;
+  }
+
+  if command_kick_to_robot(cp, actor_id, receiver_id, task.ball_pos, KICKOFF_PASS_SPEED) {
+    command_receiver_receive(cp, receiver_id, pass_direction);
+    cp.state.mark_prep_acted();
+  }
 }
 
 fn execute_free_kick<C: Communication, A: Ai + Send>(
@@ -319,6 +378,34 @@ fn prep_actor_id<C: Communication, A: Ai + Send>(
     .or_else(|| closest_field_robot_to_ball(cp))
 }
 
+fn kickoff_receiver_id<C: Communication, A: Ai + Send>(
+  cp: &CrashPilot<C, A>,
+  task: PrepTask,
+  actor_id: u8,
+) -> Option<u8> {
+  task
+    .receiving_robot
+    .filter(|robot_id| {
+      *robot_id != actor_id
+        && is_available_field_robot(cp, *robot_id)
+        && robot_is_in_own_half(cp, *robot_id)
+    })
+    .or_else(|| {
+      cp.state
+        .robots_self
+        .iter()
+        .filter(|robot| {
+          robot.robot_id != actor_id
+            && is_available_field_robot(cp, robot.robot_id)
+            && robot_pos_is_in_own_half(cp, robot.pos)
+        })
+        .min_by(|a, b| {
+          distance_to_target(a, task.ball_pos).total_cmp(&distance_to_target(b, task.ball_pos))
+        })
+        .map(|robot| robot.robot_id)
+    })
+}
+
 fn prep_receiver_id<C: Communication, A: Ai + Send>(
   cp: &CrashPilot<C, A>,
   task: PrepTask,
@@ -362,11 +449,19 @@ fn is_available_field_robot<C: Communication, A: Ai + Send>(
   cp.robots.contains_key(&(robot_id as u32)) && cp.state.goalie != Some(robot_id)
 }
 
-fn setup_position_for_restart<C: Communication, A: Ai + Send>(
-  cp: &CrashPilot<C, A>,
+fn prep_kick_direction<C: Communication, A: Ai + Send>(
+  cp: &mut CrashPilot<C, A>,
   task: PrepTask,
+  actor_id: u8,
 ) -> Vec2<f32> {
-  setup_position_for_direction(task.ball_pos, kick_direction_for_restart(cp, task))
+  if matches!(task.phase, PrepPhase::OffensiveKickoff)
+    && let Some(receiver_id) = kickoff_receiver_id(cp, task, actor_id)
+  {
+    cp.state.mark_prep_receiver(receiver_id);
+    return direction_to_robot_or_restart(cp, task, receiver_id);
+  }
+
+  kick_direction_for_restart(cp, task)
 }
 
 fn setup_position_for_direction(ball_pos: Vec2<f32>, direction: Vec2<f32>) -> Vec2<f32> {
@@ -386,6 +481,49 @@ fn kick_direction_for_restart<C: Communication, A: Ai + Send>(
   } else {
     direction
   }
+}
+
+fn direction_to_robot_or_restart<C: Communication, A: Ai + Send>(
+  cp: &CrashPilot<C, A>,
+  task: PrepTask,
+  receiver_id: u8,
+) -> Vec2<f32> {
+  cp.state
+    .robots_self
+    .iter()
+    .find(|robot| robot.robot_id == receiver_id)
+    .and_then(|robot| robot.pos)
+    .map(|pos| direction_or_attack(cp, pos - task.ball_pos))
+    .unwrap_or_else(|| kick_direction_for_restart(cp, task))
+}
+
+fn command_kick_to_robot<C: Communication, A: Ai + Send>(
+  cp: &mut CrashPilot<C, A>,
+  actor_id: u8,
+  receiver_id: u8,
+  ball_pos: Vec2<f32>,
+  kick_speed: u32,
+) -> bool {
+  let Some(receiver_pos) = cp
+    .state
+    .robots_self
+    .iter()
+    .find(|robot| robot.robot_id == receiver_id)
+    .and_then(|robot| robot.pos)
+  else {
+    return false;
+  };
+
+  let dir = direction_or_attack(cp, receiver_pos - ball_pos);
+  let Some(robot) = cp.robots.get_mut(&(actor_id as u32)) else {
+    return false;
+  };
+
+  robot.msg.cmd.state = StateFree as i32;
+  robot.msg.cmd.task = TaskKick as i32;
+  robot.msg.cmd.kick_orient = Some(dir.angle_in_u16() as u32);
+  robot.msg.cmd.kick_speed = Some(kick_speed);
+  true
 }
 
 fn free_kick_receiver_target<C: Communication, A: Ai + Send>(
@@ -628,6 +766,27 @@ fn distance_to_segment(point: Vec2<f32>, start: Vec2<f32>, end: Vec2<f32>) -> f3
 
   let t = ((point - start).dot(&segment) / len_sq).clamp(0.0, 1.0);
   (point - (start + segment * t)).length()
+}
+
+fn robot_is_in_own_half<C: Communication, A: Ai + Send>(
+  cp: &CrashPilot<C, A>,
+  robot_id: u8,
+) -> bool {
+  cp.state
+    .robots_self
+    .iter()
+    .find(|robot| robot.robot_id == robot_id)
+    .map(|robot| robot_pos_is_in_own_half(cp, robot.pos))
+    .unwrap_or_default()
+}
+
+fn robot_pos_is_in_own_half<C: Communication, A: Ai + Send>(
+  cp: &CrashPilot<C, A>,
+  pos: Option<Vec2<f32>>,
+) -> bool {
+  pos
+    .map(|pos| pos.x * attacking_side(cp) <= 0.0)
+    .unwrap_or_default()
 }
 
 fn direction_or_attack<C: Communication, A: Ai + Send>(
