@@ -1,19 +1,19 @@
-pub use crate::communication::Events;
-#[cfg(feature = "loki")]
-use crate::communication::loki::LokiPublisher;
 #[cfg(feature = "loki")]
 use crate::communication::loki::spawn_loki_publisher;
+#[cfg(feature = "loki")]
+use crate::communication::loki::LokiPublisher;
 use crate::communication::robot_sender::{NetworkSender, RobotSender};
 #[cfg(feature = "ssl_game_controller")]
 pub use crate::communication::ssl_gc_handler::SslGameController;
-use crate::communication::{EventShare, WebsocketOut, communication_receiver};
+pub use crate::communication::Events;
+use crate::communication::{communication_receiver, EventShare, WebsocketOut};
 pub use crate::config::Config;
 use crate::game_logic::game_logic;
 use crate::game_logic::types::{BallData, GamePhase, PrepPhase, Robot, WorldState};
 use crate::helpers::robot_data::create_robot_data;
 #[cfg(feature = "prometheus")]
 use crate::metrics::PrometheusMetrics;
-use crate::utils::{FieldSetup, PacketBuffer, spawn_robot_socket};
+use crate::utils::{spawn_robot_socket, FieldSetup, PacketBuffer};
 use core_dump::proto::cp_game_phase::{
   GamePhase as InterfaceGamePhase, PrepPhase as InterfacePrepPhase,
 };
@@ -22,11 +22,11 @@ use core_dump::proto::{AdvantageChoice, ControllerToTeam};
 use core_dump::proto::{CpCommand, CpGamePhase, CpInterfaceWrapper, CpRobot};
 use std::collections::HashMap;
 use std::path::Path;
-use std::sync::Arc;
 use std::sync::atomic::AtomicU64;
+use std::sync::Arc;
 use std::time::Instant;
 use tokio::net::UdpSocket;
-use tokio::time::{Duration, MissedTickBehavior, interval};
+use tokio::time::{interval, Duration, MissedTickBehavior};
 
 pub use crate::utils::RobotData;
 
@@ -414,12 +414,6 @@ impl<C, A: Ai> CrashPilot<C, A> {
       }
       self.packet_buffer.interface_command = packet.interface_command;
       self.state.new_goalie = Some(self.packet_buffer.interface_command.game.goalkeeper_id as u8);
-
-      if self.packet_buffer.interface_command.game.team_color {
-        self.team = 2;
-      } else {
-        self.team = 1;
-      }
     }
 
     if let Some(packet) = events.gc {
@@ -437,29 +431,42 @@ impl<C, A: Ai> CrashPilot<C, A> {
   }
 
   pub fn update_data(&mut self) {
-    // Update site dependent on referee data
-    if self
-      .packet_buffer
-      .referee
-      .blue_team_on_positive_half
-      .is_some()
-    {
-      if self
-        .packet_buffer
-        .referee
-        .blue_team_on_positive_half
-        .unwrap()
-      {
-        self.site = -1f32
+    // Update site dependent on referee data && Also update team based on that
+    // Start by getting own Team Color
+    if self.packet_buffer.referee.yellow.name == "Robocup Junior SSL Team" {
+      self.team = 1;
+      // We are the yellow team, check on which site blue is and decide based on that
+      if let Some(blue_pos_half) = self.packet_buffer.referee.blue_team_on_positive_half {
+        self.site = if blue_pos_half { -1f32 } else { 1f32 }
       } else {
-        self.site = 1f32
+        // No valid gc data, use interface command
+        self.site = if self.packet_buffer.interface_command.game.side {
+          -1f32
+        } else {
+          1f32
+        };
+      }
+    } else if self.packet_buffer.referee.blue.name == "Robpocup Junior SSL Team" {
+      self.team = 2;
+      // We are the blue team, check on whoch side we are and just assign that
+      if let Some(blue_pos_half) = self.packet_buffer.referee.blue_team_on_positive_half {
+        self.site = if blue_pos_half { 1f32 } else { -1f32 }
+      } else {
+        // No valid gc data, use interface command
+        self.site = if self.packet_buffer.interface_command.game.side {
+          -1f32
+        } else {
+          1f32
+        };
       }
     } else {
-      if self.packet_buffer.interface_command.game.side {
-        self.site = 1f32
+      self.team = if self.packet_buffer.interface_command.game.team_color { 1 } else { 2 };
+      // No valid gc data, use interface command
+      self.site = if self.packet_buffer.interface_command.game.side {
+        -1f32
       } else {
-        self.site = -1f32
-      }
+        1f32
+      };
     }
 
     // Create state
@@ -526,12 +533,12 @@ impl<C, A: Ai> CrashPilot<C, A> {
     // Update robots by filtering between own and opponent team
     self.ai_data.own_robots = self_robots_to_ai_robots(
       self.state.robots_self.clone(),
-      self.field_setup.clone(),
+      self.field_setup,
       self.state.goalie.unwrap_or_default(),
     );
     self.ai_data.opp_robots = self_robots_to_ai_robots(
       self.state.robots_opp.clone(),
-      self.field_setup.clone(),
+      self.field_setup,
       self.state.goalie.unwrap_or_default(),
     );
 
