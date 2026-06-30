@@ -291,7 +291,6 @@ checksum = "245097e9a4535ee1e3e3931fcfcd55a796a44c643e8596ff6566d68f09b87bbc"
 [[package]]
 name = "core_dump"
 version = "0.1.0"
-source = "git+https://github.com/Technulgy-LGNU/core-dump#39a97c3e0a8621d299be647f703f88209a75004b"
 dependencies = [
  "num-traits",
  "prost 0.14.4",
@@ -1054,9 +1053,9 @@ dependencies = [
 
 [[package]]
 name = "indicatif"
-version = "0.18.5"
+version = "0.18.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "993f007684f2e9727160da8b960ec161264703bfd1af084fd2e34d040c9a0dd4"
+checksum = "25470f23803092da7d239834776d653104d551bc4d7eacaf31e6837854b8e9eb"
 dependencies = [
  "console",
  "portable-atomic",
@@ -1097,9 +1096,9 @@ checksum = "8f42a60cbdf9a97f5d2305f08a87dc4e09308d1276d28c869c684d7777685682"
 
 [[package]]
 name = "jiff"
-version = "0.2.31"
+version = "0.2.29"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ccfe6121cbe750cf81efa362d85c0bde7ea298ec43092d3a193baca59cdbd634"
+checksum = "34f877a98676d2fb664698d74cc6a51ce6c484ce8c770f05d0108ec9090aeb46"
 dependencies = [
  "defmt",
  "jiff-static",
@@ -1111,9 +1110,9 @@ dependencies = [
 
 [[package]]
 name = "jiff-static"
-version = "0.2.31"
+version = "0.2.29"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e165e897f662d428f3cd3828a919dbe067c2d42bb1031eede74ef9d27ecdedd2"
+checksum = "0666b5ab5ecaca213fc2a85b8c0083d9004e84ee2d5f9a7e0017aaf50986f25f"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -2083,7 +2082,6 @@ checksum = "703d5c7ef118737c72f1af64ad2f6f8c5e1921f818cdcb97b8fe6fc69bf66214"
 [[package]]
 name = "simhark"
 version = "0.1.0"
-source = "git+https://github.com/Technulgy-LGNU/simhark?rev=bd0abe55d1ff07afc4683267576f14908172e0b7#bd0abe55d1ff07afc4683267576f14908172e0b7"
 dependencies = [
  "crossbeam-channel",
  "env_logger",
@@ -2106,9 +2104,11 @@ dependencies = [
 [[package]]
 name = "simhark-sumatra"
 version = "0.1.0"
-source = "git+https://github.com/Technulgy-LGNU/simhark?rev=bd0abe55d1ff07afc4683267576f14908172e0b7#bd0abe55d1ff07afc4683267576f14908172e0b7"
 dependencies = [
  "anyhow",
+ "prost 0.14.4",
+ "prost-build",
+ "prost-types 0.14.4",
  "serde",
  "simhark",
  "tempfile",
@@ -2899,3 +2899,19 @@ dependencies = [
  "cc",
  "pkg-config",
 ]
+
+[[patch.unused]]
+name = "referris"
+version = "0.1.0"
+
+[[patch.unused]]
+name = "referris-simhark"
+version = "0.1.0"
+
+[[patch.unused]]
+name = "loguna"
+version = "0.1.0"
+
+[[patch.unused]]
+name = "tf_jetsoncode"
+version = "0.1.0"
