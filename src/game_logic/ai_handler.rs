@@ -1,3 +1,4 @@
+use core_dump::proto::CpCommand;
 use crate::CrashPilot;
 use crate::game_logic::types::Robot;
 use crate::helpers::best_angle_to_goal::shoot_to_goal;
@@ -7,6 +8,7 @@ use core_dump::proto::CpTask::{
   TaskBlock, TaskDribble, TaskKick, TaskPos, TaskPosBall, TaskRecKick, TaskSteal,
 };
 use core_dump::vec::types::Vec2;
+use crate::utils::FieldSetup;
 
 #[inline]
 pub fn ai_handler<C, A: Ai>(all_robots: &[Robot], cp: &mut CrashPilot<C, A>) {
@@ -34,13 +36,18 @@ pub fn ai_handler<C, A: Ai>(all_robots: &[Robot], cp: &mut CrashPilot<C, A>) {
           robot.msg.cmd.state = StateFree as i32;
           match command {
             RobotCommand::Pos(pos) => {
-              robot.msg.cmd.task = TaskPos as i32;
-              robot.msg.cmd.pos = Option::from(
-                (*pos * Vec2::new(cp.field_setup.width as f32, cp.field_setup.height as f32))
-                  .to_cp_vec2(),
-              );
-              robot.msg.cmd.speed = Option::from(4000);
+              set_pos_command(&mut robot.msg.cmd, *pos, None, None, cp.field_setup);
             }
+            RobotCommand::PosSpeed(pos, speed) => {
+              set_pos_command(&mut robot.msg.cmd, *pos, Some(*speed), None, cp.field_setup);
+            }
+            RobotCommand::PosFace(pos, orient) => {
+              set_pos_command(&mut robot.msg.cmd, *pos, None, Some(*orient), cp.field_setup);
+            }
+            RobotCommand::PosFaceSpeed(pos, orient, speed) => {
+              set_pos_command(&mut robot.msg.cmd, *pos, Some(*speed), Some(*orient), cp.field_setup);
+            }
+
             RobotCommand::Kick(orient) => {
               robot.msg.cmd.task = TaskKick as i32;
               robot.msg.cmd.kick_orient = Option::from((orient * 360f32) as u32);
@@ -134,4 +141,15 @@ pub fn ai_handler<C, A: Ai>(all_robots: &[Robot], cp: &mut CrashPilot<C, A>) {
       }
     }
   }
+}
+
+
+fn set_pos_command(cmd: &mut CpCommand, pos: Vec2<f32>, speed: Option<u32>, orientation: Option<u32>, fs: FieldSetup) {
+  cmd.task = TaskPos as i32;
+  cmd.pos = Some(
+    (pos * Vec2::new(fs.width as f32, fs.height as f32))
+        .to_cp_vec2(),
+  );
+  cmd.speed = speed.or(Some(4000));
+  cmd.orientation = orientation;
 }

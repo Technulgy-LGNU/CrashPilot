@@ -15,7 +15,7 @@ pub struct RobotData {
   pub feedback: RobotCp,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub struct FieldSetup {
   pub width: u32,
   pub height: u32,
@@ -46,7 +46,7 @@ impl From<&SslGeometryData> for FieldSetup {
       height: geometry.field.field_width as u32,
       goal_width: geometry.field.goal_width as u32,
       penalty_width: geometry.field.penalty_area_width.unwrap_or_default() as u32,
-      penalty_height: geometry.field.penalty_area_width.unwrap_or_default() as u32,
+      penalty_height: geometry.field.penalty_area_depth.unwrap_or_default() as u32,
       _center_circle_radius: geometry.field.center_circle_radius.unwrap_or_default() as u32,
       run_off_width: geometry.field.goal_substitution_area_width.unwrap_or(200) as u32,
     }
