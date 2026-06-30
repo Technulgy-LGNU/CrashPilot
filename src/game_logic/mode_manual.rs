@@ -12,7 +12,7 @@ pub fn mode_manual(
   for robot in robot_data.values_mut() {
     let cmd: CpCommand = match robots_ws_data.get(&robot.msg.robot_id) {
       None => Default::default(),
-      Some(cmd) => *cmd,
+      Some(cmd) => cmd.clone(),
     };
     robot.msg.cmd = cmd;
 

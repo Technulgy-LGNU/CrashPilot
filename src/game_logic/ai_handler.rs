@@ -1,14 +1,14 @@
-use core_dump::proto::CpCommand;
-use crate::CrashPilot;
 use crate::game_logic::types::Robot;
 use crate::helpers::best_angle_to_goal::shoot_to_goal;
-use core_dump::types::{Ai, RobotCommand};
+use crate::utils::FieldSetup;
+use crate::CrashPilot;
+use core_dump::proto::CpCommand;
 use core_dump::proto::CpState::{StateFree, StateGoalie};
 use core_dump::proto::CpTask::{
   TaskBlock, TaskDribble, TaskKick, TaskPos, TaskPosBall, TaskRecKick, TaskSteal,
 };
+use core_dump::types::{Ai, RobotCommand};
 use core_dump::vec::types::Vec2;
-use crate::utils::FieldSetup;
 
 #[inline]
 pub fn ai_handler<C, A: Ai>(all_robots: &[Robot], cp: &mut CrashPilot<C, A>) {
@@ -42,10 +42,22 @@ pub fn ai_handler<C, A: Ai>(all_robots: &[Robot], cp: &mut CrashPilot<C, A>) {
               set_pos_command(&mut robot.msg.cmd, *pos, Some(*speed), None, cp.field_setup);
             }
             RobotCommand::PosFace(pos, orient) => {
-              set_pos_command(&mut robot.msg.cmd, *pos, None, Some(*orient), cp.field_setup);
+              set_pos_command(
+                &mut robot.msg.cmd,
+                *pos,
+                None,
+                Some(*orient),
+                cp.field_setup,
+              );
             }
             RobotCommand::PosFaceSpeed(pos, orient, speed) => {
-              set_pos_command(&mut robot.msg.cmd, *pos, Some(*speed), Some(*orient), cp.field_setup);
+              set_pos_command(
+                &mut robot.msg.cmd,
+                *pos,
+                Some(*speed),
+                Some(*orient),
+                cp.field_setup,
+              );
             }
 
             RobotCommand::Kick(orient) => {
@@ -105,14 +117,15 @@ pub fn ai_handler<C, A: Ai>(all_robots: &[Robot], cp: &mut CrashPilot<C, A>) {
                 let from = robot_self.pos.unwrap_or_default();
                 let to = to_robot.pos.unwrap_or_default();
                 let base_dir = to - from;
-                let base_dist =
-                  ((base_dir.x * base_dir.x + base_dir.y * base_dir.y).sqrt()).max(1.0);
+                let base_dist = (base_dir.x * base_dir.x + base_dir.y * base_dir.y)
+                  .sqrt()
+                  .max(1.0);
                 let receiver_vel = to_robot.vel.unwrap_or_default();
                 let lead_s = (base_dist / 4500.0).clamp(0.05, 0.22);
                 let to = to + receiver_vel * lead_s;
                 let dir = to - from;
                 robot.msg.cmd.kick_orient = Option::from(dir.angle_in_u16() as u32);
-                let dist = ((dir.x * dir.x + dir.y * dir.y).sqrt()).max(1.0);
+                let dist = (dir.x * dir.x + dir.y * dir.y).sqrt().max(1.0);
                 let power = (dist * 0.06).clamp(70.0, 200.0) as u32;
                 robot.msg.cmd.kick_speed = Option::from(power);
               } else {
@@ -143,13 +156,15 @@ pub fn ai_handler<C, A: Ai>(all_robots: &[Robot], cp: &mut CrashPilot<C, A>) {
   }
 }
 
-
-fn set_pos_command(cmd: &mut CpCommand, pos: Vec2<f32>, speed: Option<u32>, orientation: Option<u32>, fs: FieldSetup) {
+fn set_pos_command(
+  cmd: &mut CpCommand,
+  pos: Vec2<f32>,
+  speed: Option<u32>,
+  orientation: Option<u32>,
+  fs: FieldSetup,
+) {
   cmd.task = TaskPos as i32;
-  cmd.pos = Some(
-    (pos * Vec2::new(fs.width as f32, fs.height as f32))
-        .to_cp_vec2(),
-  );
+  cmd.pos = Some((pos * Vec2::new(fs.width as f32, fs.height as f32)).to_cp_vec2());
   cmd.speed = speed.or(Some(4000));
   cmd.orientation = orientation
 }
