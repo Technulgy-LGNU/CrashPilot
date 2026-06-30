@@ -50,12 +50,12 @@ pub fn ai_handler<C, A: Ai>(all_robots: &[Robot], cp: &mut CrashPilot<C, A>) {
 
             RobotCommand::Kick(orient) => {
               robot.msg.cmd.task = TaskKick as i32;
-              robot.msg.cmd.kick_orient = Option::from((orient * 360f32) as u32);
+              robot.msg.cmd.kick_orient = Option::from(orient as u32);
               robot.msg.cmd.kick_speed = Option::from(255);
             }
             RobotCommand::Chip(orient) => {
               robot.msg.cmd.task = TaskKick as i32;
-              robot.msg.cmd.kick_orient = Option::from((orient * 360f32) as u32);
+              robot.msg.cmd.kick_orient = Option::from(orient as u32);
               robot.msg.cmd.kick_speed = Option::from(200);
             }
             RobotCommand::RecKick(_) => {
@@ -144,12 +144,12 @@ pub fn ai_handler<C, A: Ai>(all_robots: &[Robot], cp: &mut CrashPilot<C, A>) {
 }
 
 
-fn set_pos_command(cmd: &mut CpCommand, pos: Vec2<f32>, speed: Option<u32>, orientation: Option<u32>, fs: FieldSetup) {
+fn set_pos_command(cmd: &mut CpCommand, pos: Vec2<f32>, speed: Option<u32>, orientation: Option<f32>, fs: FieldSetup) {
   cmd.task = TaskPos as i32;
   cmd.pos = Some(
     (pos * Vec2::new(fs.width as f32, fs.height as f32))
         .to_cp_vec2(),
   );
   cmd.speed = speed.or(Some(4000));
-  cmd.orientation = orientation;
+  cmd.orientation = orientation.map(|o| o as u32);
 }
