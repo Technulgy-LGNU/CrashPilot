@@ -8,8 +8,9 @@ use prost::Message;
 use std::collections::HashMap;
 use std::net::{SocketAddr, SocketAddrV4};
 use std::sync::atomic::Ordering;
+use std::time::Instant;
 use tokio::net::UdpSocket;
-use tokio::time::{Duration, Instant};
+use tokio::time::Duration;
 
 pub struct NetworkSender<'a> {
   pub socket: &'a UdpSocket,

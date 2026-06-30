@@ -66,7 +66,7 @@ pub struct CrashPilot<C = CommunicationChannels, A: Ai = ArtificialIncompetence>
   packet_buffer: PacketBuffer,
   comm: C,
   heartbeat: RobotHeartbeat,
-  process_start: tokio::time::Instant,
+  process_start: Instant,
   site: f32,
 }
 
@@ -112,7 +112,7 @@ impl CrashPilot {
   }
 
   pub async fn with_ai(ai: ArtificialIncompetence) -> Self {
-    let process_start = tokio::time::Instant::now();
+    let process_start = Instant::now();
     // Interface as feature
     #[cfg(feature = "interface")]
     interface::spawn_interface();
@@ -319,7 +319,7 @@ impl<C: Default, A: Ai + Default> CrashPilot<C, A> {
       #[cfg(feature = "prometheus")]
       metrics,
       RobotHeartbeat::default(),
-      tokio::time::Instant::now(),
+      Instant::now(),
     )
   }
 }
@@ -332,7 +332,7 @@ impl<C, A: Ai> CrashPilot<C, A> {
     #[cfg(feature = "loki")] loki: Option<LokiPublisher>,
     #[cfg(feature = "prometheus")] metrics: PrometheusMetrics,
     heartbeats: RobotHeartbeat,
-    process_start: tokio::time::Instant,
+    process_start: Instant,
   ) -> Self {
     // Robots Hashmap
     let mut robots: HashMap<u32, RobotData> = HashMap::new();

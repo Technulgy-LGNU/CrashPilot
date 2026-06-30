@@ -25,7 +25,7 @@ use std::sync::Arc;
 use std::sync::atomic::AtomicU64;
 use tokio::sync::Notify;
 use tokio::sync::RwLock;
-use tokio::time::Instant;
+use std::time::Instant;
 
 pub type RobotHeartbeat = Arc<Vec<AtomicU64>>;
 
