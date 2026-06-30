@@ -30,5 +30,5 @@ websocket_port = 4096
 #3 = { ip = "10.0.64.103", substitution_pos = { x = 1600, y = 0 } }
 #4 = { ip = "10.0.64.104", substitution_pos = { x = 2000, y = 0 } } # Old Robot
 #5 = { ip = "10.0.64.105", substitution_pos = { x = 2400, y = 0 } } # Old Robot
-7 = { ip = "10.0.64.121", substitution_pos = { x = 3000, y = 600 } } # LNX
-8 = { ip = "10.0.64.122", substitution_pos = { x = 3400, y = 600 } } # LNX
+5 = { ip = "10.0.64.121", substitution_pos = { x = 3000, y = 600 } } # LNX
+6 = { ip = "10.0.64.122", substitution_pos = { x = 3400, y = 600 } } # LNX
