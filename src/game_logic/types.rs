@@ -1,10 +1,10 @@
-use std::cmp::PartialEq;
-use std::collections::HashMap;
-use std::ops::Neg;
 use crate::FieldSetup;
 use core_dump::proto::referee::Command;
 use core_dump::proto::{InterfaceCommandCp, Referee, TrackerWrapperPacket};
 use core_dump::vec::types::Vec2;
+use std::cmp::PartialEq;
+use std::collections::HashMap;
+use std::ops::Neg;
 
 /// GameState, GamePhase, and RefMachine merged
 /// Advanced Update functions
@@ -89,7 +89,9 @@ pub struct PrepTask {
   pub command_timestamp: u64,
   pub ball_pos: Vec2<f32>,
   pub acting_robot: Option<u8>,
+  pub receiving_robot: Option<u8>,
   pub has_acted: bool,
+  pub follow_up_acted: bool,
 }
 
 #[derive(Debug, Default, Clone)]
@@ -222,6 +224,7 @@ pub enum RefState {
 
 impl WorldState {
   #[inline]
+  #[warn(clippy::too_many_arguments)]
   pub fn update(
     &mut self,
     robots_self: Vec<Robot>,
@@ -331,7 +334,9 @@ impl WorldState {
       command_timestamp: self.referee.command_timestamp,
       ball_pos: self.ball.ball.pos,
       acting_robot: None,
+      receiving_robot: None,
       has_acted: false,
+      follow_up_acted: false,
     });
   }
 
@@ -344,10 +349,25 @@ impl WorldState {
   }
 
   #[inline]
+  pub fn mark_prep_receiver(&mut self, robot_id: u8) {
+    if let Some(task) = self.prep_task.as_mut() {
+      task.receiving_robot = Some(robot_id);
+    }
+  }
+
+  #[inline]
   pub fn mark_prep_acted(&mut self) {
     self.has_acted = true;
     if let Some(task) = self.prep_task.as_mut() {
       task.has_acted = true;
+    }
+  }
+
+  #[inline]
+  pub fn mark_prep_follow_up_acted(&mut self, ball_pos: Vec2<f32>) {
+    if let Some(task) = self.prep_task.as_mut() {
+      task.follow_up_acted = true;
+      task.ball_pos = ball_pos;
     }
   }
 
@@ -372,6 +392,10 @@ impl WorldState {
     }
 
     let ball_delta = self.ball.ball.pos - task.ball_pos;
+    if task.phase == PrepPhase::OffensiveFreeKick && task.has_acted && !task.follow_up_acted {
+      return;
+    }
+
     if ball_delta.norm_squared() >= BALL_MOVED_DISTANCE_MM * BALL_MOVED_DISTANCE_MM {
       self.clear_prep_task();
     }
@@ -747,5 +771,34 @@ mod tests {
     assert_eq!(state.phase, GamePhase::Stopped);
     assert_eq!(task.phase, PrepPhase::DefensiveFreeKick);
     assert_eq!(task.status, PrepTaskStatus::Ready);
+  }
+
+  #[test]
+  fn offensive_free_kick_survives_pass_and_clears_after_follow_up_shot() {
+    let mut state = WorldState {
+      team: Team::Yellow,
+      ..Default::default()
+    };
+    state.ball.ball.pos = Vec2::new(0.0, 0.0);
+
+    apply_referee(&mut state, Command::DirectFreeYellow, 1);
+    state.mark_prep_acted();
+
+    state.ball.ball.pos = Vec2::new(60.0, 0.0);
+    apply_referee(&mut state, Command::DirectFreeYellow, 1);
+
+    let task = state
+      .prep_task
+      .expect("free kick should stay alive while pass is travelling");
+    assert_eq!(task.phase, PrepPhase::OffensiveFreeKick);
+    assert!(task.has_acted);
+    assert!(!task.follow_up_acted);
+
+    state.mark_prep_follow_up_acted(state.ball.ball.pos);
+    state.ball.ball.pos = Vec2::new(120.0, 0.0);
+    apply_referee(&mut state, Command::DirectFreeYellow, 1);
+
+    assert_eq!(state.prep_phase, PrepPhase::Unknown);
+    assert!(state.prep_task.is_none());
   }
 }
