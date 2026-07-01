@@ -23,7 +23,7 @@ pub fn ai_handler<C, A: Ai>(all_robots: &[Robot], cp: &mut CrashPilot<C, A>) {
     for (id, command) in commands.iter().enumerate() {
       if let Some(command) = command
         && let Some(goalie) = cp.state.goalie
-        && (goalie != id as u8 || matches!(command, RobotCommand::GoalieGuard))
+        && (goalie != id as u8 || goalie_ai_command_allowed(*command))
       {
         // Get the robot
         let Some(robot) = cp.robots.get_mut(&(id as u32)) else {
@@ -117,7 +117,8 @@ pub fn ai_handler<C, A: Ai>(all_robots: &[Robot], cp: &mut CrashPilot<C, A>) {
                 // Aim the kicker along the direction to the receiver. Scale kick
                 // power with pass distance so short passes do not overrun the
                 // receiver and long ones still arrive.
-                let from = robot_self.pos.unwrap_or_default();
+                let robot_pos = robot_self.pos.unwrap_or_default();
+                let from = kick_origin(robot_pos, cp.state.ball.ball.pos);
                 let to = to_robot.pos.unwrap_or_default();
                 let base_dir = to - from;
                 let base_dist = (base_dir.x * base_dir.x + base_dir.y * base_dir.y)
@@ -125,7 +126,7 @@ pub fn ai_handler<C, A: Ai>(all_robots: &[Robot], cp: &mut CrashPilot<C, A>) {
                   .max(1.0);
                 let receiver_vel = to_robot.vel.unwrap_or_default();
                 let lead_s = (base_dist / 4500.0).clamp(0.05, 0.22);
-                let to = to + receiver_vel * lead_s;
+                let to = receiver_intake_target(from, to + receiver_vel * lead_s);
                 let dir = to - from;
                 robot.msg.cmd.kick_orient = Option::from(dir.angle_in_u16() as u32);
                 let dist = (dir.x * dir.x + dir.y * dir.y).sqrt().max(1.0);
@@ -159,6 +160,10 @@ pub fn ai_handler<C, A: Ai>(all_robots: &[Robot], cp: &mut CrashPilot<C, A>) {
   }
 }
 
+fn goalie_ai_command_allowed(command: RobotCommand) -> bool {
+  matches!(command, RobotCommand::GoalieGuard | RobotCommand::PassTo(_))
+}
+
 fn set_pos_command(
   cmd: &mut CpCommand,
   pos: Vec2<f32>,
@@ -170,4 +175,44 @@ fn set_pos_command(
   cmd.pos = Some((pos * Vec2::new(fs.width as f32, fs.height as f32)).to_cp_vec2());
   cmd.speed = speed.or(Some(4000));
   cmd.orientation = orientation
+}
+
+#[inline]
+fn kick_origin(robot_pos: Vec2<f32>, ball_pos: Vec2<f32>) -> Vec2<f32> {
+  const MAX_CAPTURED_BALL_DIST_MM: f32 = 260.0;
+
+  if (ball_pos - robot_pos).length() <= MAX_CAPTURED_BALL_DIST_MM {
+    ball_pos
+  } else {
+    robot_pos
+  }
+}
+
+#[inline]
+fn receiver_intake_target(from: Vec2<f32>, receiver_center: Vec2<f32>) -> Vec2<f32> {
+  const RECEIVER_CENTER_FROM_INTAKE_MM: f32 = 80.0;
+
+  let pass = receiver_center - from;
+  let pass_len = pass.length();
+  if pass_len <= 1.0 {
+    return receiver_center;
+  }
+
+  receiver_center - pass / pass_len * RECEIVER_CENTER_FROM_INTAKE_MM
+}
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  #[test]
+  fn receiver_intake_target_aims_before_receiver_center() {
+    let from = Vec2::new(0.0, 0.0);
+    let receiver = Vec2::new(1000.0, 0.0);
+
+    assert_eq!(
+      receiver_intake_target(from, receiver),
+      Vec2::new(920.0, 0.0)
+    );
+  }
 }

@@ -802,7 +802,7 @@ fn direction_or_attack<C: Communication, A: Ai + Send>(
 
 fn attacking_side<C: Communication, A: Ai + Send>(cp: &CrashPilot<C, A>) -> f32 {
   if cp.state.site.abs() > f32::EPSILON {
-    cp.state.site.signum()
+    -cp.state.site.signum()
   } else {
     1.0
   }

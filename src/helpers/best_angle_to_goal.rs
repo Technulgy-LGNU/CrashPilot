@@ -12,8 +12,10 @@ pub fn shoot_to_goal(
   state: &WorldState,
   field_setup: &FieldSetup,
 ) {
-  let shooter = robot_self.pos.unwrap_or_default();
-  let goal_center = Vec2::new(field_setup.width as f32 * 0.5 * state.site, 0f32);
+  let robot_pos = robot_self.pos.unwrap_or_default();
+  let shooter = shot_origin(robot_pos, state.ball.ball.pos);
+  let opponent_goal_side = opponent_goal_side(state);
+  let goal_center = Vec2::new(field_setup.width as f32 * 0.5 * opponent_goal_side, 0f32);
   let opponents: Vec<Robot> = all_robots
     .iter()
     .filter(|r| r.team != robot_self.team)
@@ -24,12 +26,12 @@ pub fn shoot_to_goal(
     shooter,
     &opponents,
     Vec2::new(
-      field_setup.width as f32 * 0.5 * state.site,
-      field_setup.goal_width as f32 * 0.5,
+      field_setup.width as f32 * 0.5 * opponent_goal_side,
+      shot_goal_half_width(field_setup),
     ),
     Vec2::new(
-      field_setup.width as f32 * 0.5 * state.site,
-      -(field_setup.goal_width as f32) * 0.5,
+      field_setup.width as f32 * 0.5 * opponent_goal_side,
+      -shot_goal_half_width(field_setup),
     ),
   ) {
     None => {
@@ -46,6 +48,33 @@ pub fn shoot_to_goal(
       robot.msg.cmd.kick_speed = Option::from(200);
     }
   };
+}
+
+#[inline]
+fn shot_origin(robot_pos: Vec2<f32>, ball_pos: Vec2<f32>) -> Vec2<f32> {
+  const MAX_CAPTURED_BALL_DIST_MM: f32 = 260.0;
+
+  if (ball_pos - robot_pos).length() <= MAX_CAPTURED_BALL_DIST_MM {
+    ball_pos
+  } else {
+    robot_pos
+  }
+}
+
+#[inline]
+fn shot_goal_half_width(field_setup: &FieldSetup) -> f32 {
+  const GOAL_POST_CLEARANCE_MM: f32 = 120.0;
+
+  (field_setup.goal_width as f32 * 0.5 - GOAL_POST_CLEARANCE_MM).max(50.0)
+}
+
+#[inline]
+fn opponent_goal_side(state: &WorldState) -> f32 {
+  if state.site.abs() > f32::EPSILON {
+    -state.site.signum()
+  } else {
+    1.0
+  }
 }
 
 #[inline]
@@ -176,8 +205,8 @@ fn normalize_angle_deg(angle: f32) -> f32 {
 
 #[cfg(test)]
 mod tests {
-  use crate::game_logic::types::Team;
   use super::*;
+  use crate::game_logic::types::Team;
 
   fn robot_at(x: f32, y: f32) -> Robot {
     Robot {
@@ -240,5 +269,68 @@ mod tests {
     ));
 
     assert_eq!(angle, 354);
+  }
+
+  #[test]
+  fn kick_goal_targets_negative_x_when_own_goal_is_positive_x() {
+    let mut robot = RobotData::default();
+    let robot_self = robot_at(0.0, 0.0);
+    let state = WorldState {
+      site: 1.0,
+      ..WorldState::default()
+    };
+
+    shoot_to_goal(&mut robot, &robot_self, &[], &state, &FieldSetup::default());
+
+    assert_eq!(robot.msg.cmd.task, TaskKick as i32);
+    assert_eq!(robot.msg.cmd.kick_orient, Some(180));
+  }
+
+  #[test]
+  fn kick_goal_targets_positive_x_when_own_goal_is_negative_x() {
+    let mut robot = RobotData::default();
+    let robot_self = robot_at(0.0, 0.0);
+    let state = WorldState {
+      site: -1.0,
+      ..WorldState::default()
+    };
+
+    shoot_to_goal(&mut robot, &robot_self, &[], &state, &FieldSetup::default());
+
+    assert_eq!(robot.msg.cmd.task, TaskKick as i32);
+    assert_eq!(robot.msg.cmd.kick_orient, Some(0));
+  }
+
+  #[test]
+  fn uses_ball_position_as_shot_origin_when_captured() {
+    let mut robot = RobotData::default();
+    let robot_self = robot_at(0.0, 0.0);
+    let state = WorldState {
+      site: -1.0,
+      ball: crate::game_logic::types::BallData {
+        ball: crate::game_logic::types::Ball {
+          pos: Vec2::new(180.0, 180.0),
+          ..Default::default()
+        },
+        ..Default::default()
+      },
+      ..WorldState::default()
+    };
+
+    shoot_to_goal(&mut robot, &robot_self, &[], &state, &FieldSetup::default());
+
+    assert_eq!(robot.msg.cmd.task, TaskKick as i32);
+    assert_eq!(robot.msg.cmd.kick_orient, Some(358));
+  }
+
+  #[test]
+  fn keeps_selected_shot_inside_goal_posts() {
+    let field = FieldSetup {
+      goal_width: 1000,
+      ..FieldSetup::default()
+    };
+    let half_width = shot_goal_half_width(&field);
+
+    assert_eq!(half_width, 380.0);
   }
 }
