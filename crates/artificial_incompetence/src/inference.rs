@@ -1,3 +1,4 @@
+use crate::GameStateExt;
 use crate::grid::GridSpec;
 use crate::modules::coach::Coach;
 use core_dump::types::{Ai, Commands, GameState};
@@ -6,7 +7,6 @@ use std::error::Error;
 use std::path::{Path, PathBuf};
 use tch::nn::VarStore;
 use tch::{Device, no_grad};
-use crate::GameStateExt;
 
 pub type InferenceResult<T> = Result<T, Box<dyn Error + Send + Sync>>;
 

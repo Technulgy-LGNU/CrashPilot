@@ -4,8 +4,8 @@ use crate::config;
 use core_dump::proto::RobotCp;
 use prost::Message;
 use std::sync::atomic::Ordering;
-use tokio::sync::RwLockWriteGuard;
 use std::time::Instant;
+use tokio::sync::RwLockWriteGuard;
 
 pub fn robot_receiver(
   cfg: &config::Config,

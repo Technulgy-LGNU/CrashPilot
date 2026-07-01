@@ -23,9 +23,9 @@ use core_dump::proto::{
 };
 use std::sync::Arc;
 use std::sync::atomic::AtomicU64;
+use std::time::Instant;
 use tokio::sync::Notify;
 use tokio::sync::RwLock;
-use std::time::Instant;
 
 pub type RobotHeartbeat = Arc<Vec<AtomicU64>>;
 

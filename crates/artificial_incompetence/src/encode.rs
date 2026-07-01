@@ -4,7 +4,6 @@ use core_dump::types::{BallState, GameState, RobotState};
 use std::mem;
 use tch::{Kind, Tensor};
 
-
 pub trait GameStateExt {
   fn encode(&self, dev: tch::Device) -> Batch;
   fn encode_multiple(states: &[GameState], dev: tch::Device) -> MultiBatch;

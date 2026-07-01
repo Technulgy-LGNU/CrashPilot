@@ -19,3 +19,12 @@ referris-simhark = { path = "../referris/referris-simhark" }
 [patch."https://github.com/Technulgy-LGNU/simhark"]
 simhark = { path = "../simhark" }
 simhark-sumatra = { path = "../simhark/crates/simhark-sumatra"}
+
+[path."../dummy/bangka"]
+bangka = { path = "../../../bangka/bangka" }
+
+[path."../dummy/bongka"]
+bongka = { path = "../../../bangka/bongka" }
+
+[path."../dummy/ungabunga"]
+ungabunga = { path = "../../../bangka/ungabunga" }
