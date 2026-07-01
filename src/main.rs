@@ -1,10 +1,6 @@
 #[tokio::main]
 async fn main() {
-  let opts = Options::parse();
-  let mut cp = match opts.ai_checkpoint {
-    Some(path) => crashpilot::CrashPilot::with_ai_checkpoint(path).await,
-    None => crashpilot::CrashPilot::default().await,
-  };
+  let mut cp = crashpilot::CrashPilot::default().await;
 
   cp.run().await
 }

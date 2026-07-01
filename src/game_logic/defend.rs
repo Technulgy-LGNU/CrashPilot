@@ -1,5 +1,5 @@
 use crate::{Communication, CrashPilot};
-use artificial_incompetence::Ai;
+use core_dump::types::Ai;
 use core_dump::proto::CpState::StateFree;
 use core_dump::proto::CpTask::TaskPos;
 use core_dump::vec::types::Vec2;

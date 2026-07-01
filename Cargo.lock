@@ -137,6 +137,13 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f2032f911046de80f0a198e0901378627c33f59ea0ac00e363d481118bd70a53"
 
 [[package]]
+name = "bangka"
+version = "0.1.0"
+dependencies = [
+ "core_dump",
+]
+
+[[package]]
 name = "base64"
 version = "0.22.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -291,7 +298,6 @@ checksum = "245097e9a4535ee1e3e3931fcfcd55a796a44c643e8596ff6566d68f09b87bbc"
 [[package]]
 name = "core_dump"
 version = "0.1.0"
-source = "git+https://github.com/Technulgy-LGNU/core-dump#13b06fd95d087aa5fda8ad1cee6da8916551de70"
 dependencies = [
  "num-traits",
  "prost 0.14.4",
@@ -321,7 +327,7 @@ name = "crashpilot"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "artificial_incompetence",
+ "bangka",
  "core_dump",
  "futures-util",
  "http-body-util",
@@ -2128,7 +2134,6 @@ checksum = "703d5c7ef118737c72f1af64ad2f6f8c5e1921f818cdcb97b8fe6fc69bf66214"
 [[package]]
 name = "simhark"
 version = "0.1.0"
-source = "git+https://github.com/Technulgy-LGNU/simhark#2eb00a5cd042c795ff721e3a02c52d4e70c71612"
 dependencies = [
  "crossbeam-channel",
  "env_logger",
@@ -2151,7 +2156,6 @@ dependencies = [
 [[package]]
 name = "simhark-sumatra"
 version = "0.1.0"
-source = "git+https://github.com/Technulgy-LGNU/simhark#2eb00a5cd042c795ff721e3a02c52d4e70c71612"
 dependencies = [
  "anyhow",
  "prost 0.14.4",
@@ -2946,3 +2950,19 @@ dependencies = [
  "cc",
  "pkg-config",
 ]
+
+[[patch.unused]]
+name = "referris"
+version = "0.1.0"
+
+[[patch.unused]]
+name = "referris-simhark"
+version = "0.1.0"
+
+[[patch.unused]]
+name = "loguna"
+version = "0.1.0"
+
+[[patch.unused]]
+name = "tf_jetsoncode"
+version = "0.1.0"

@@ -25,6 +25,7 @@ use std::path::Path;
 use std::sync::Arc;
 use std::sync::atomic::AtomicU64;
 use std::time::Instant;
+use bangka::Bangka;
 use tokio::net::UdpSocket;
 use tokio::time::{Duration, MissedTickBehavior, interval};
 
@@ -42,7 +43,7 @@ mod metrics;
 mod utils;
 
 use crate::communication::RobotHeartbeat;
-use artificial_incompetence::{Ai, ArtificialIncompetence};
+use core_dump::types::Ai;
 pub use core_dump;
 use core_dump::vec::types::Vec2;
 use game_logic::types::Team;
@@ -50,7 +51,7 @@ use game_logic::types::Team;
 #[cfg(feature = "ssl_game_controller")]
 const TEAM_NAME: &str = "Robocup Junior SSL Team";
 
-pub struct CrashPilot<C = CommunicationChannels, A: Ai = ArtificialIncompetence> {
+pub struct CrashPilot<C = CommunicationChannels, A: Ai = Bangka> {
   config: Config,
   #[cfg(feature = "prometheus")]
   metrics: PrometheusMetrics,
@@ -107,18 +108,18 @@ impl Communication for () {
 
 impl CrashPilot {
   pub async fn default() -> Self {
-    Self::with_ai(ArtificialIncompetence::default()).await
+    Self::with_ai(Bangka::default()).await
   }
 
-  pub async fn with_ai_checkpoint<P: AsRef<Path>>(path: P) -> Self {
-    let ai = ArtificialIncompetence::load_auto(path).unwrap_or_else(|err| {
-      panic!("failed to load AI checkpoint: {err}");
-    });
+  // pub async fn with_ai_checkpoint<P: AsRef<Path>>(path: P) -> Self {
+  //   let ai = Bangka::load_auto(path).unwrap_or_else(|err| {
+  //     panic!("failed to load AI checkpoint: {err}");
+  //   });
+  //
+  //   Self::with_ai(ai).await
+  // }
 
-    Self::with_ai(ai).await
-  }
-
-  pub async fn with_ai(ai: ArtificialIncompetence) -> Self {
+  pub async fn with_ai(ai: Bangka) -> Self {
     let process_start = Instant::now();
     // Interface as feature
     #[cfg(feature = "interface")]
