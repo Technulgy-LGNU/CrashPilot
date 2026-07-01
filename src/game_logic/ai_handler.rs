@@ -15,6 +15,8 @@ use core_dump::vec::types::Vec2;
 pub fn ai_handler<C, A: Ai>(all_robots: &[Robot], cp: &mut CrashPilot<C, A>) {
   // AI does it thing
   let commands = cp.ai.predict(&cp.ai_data, cp.logic_dt());
+  let planned_receive_kicks =
+    planned_receive_kicks(&commands, &cp.state.robots_self, cp.state.ball.ball.pos);
   #[cfg(feature = "viewer-debug")]
   {
     cp.last_ai_commands = commands;
@@ -115,30 +117,12 @@ pub fn ai_handler<C, A: Ai>(all_robots: &[Robot], cp: &mut CrashPilot<C, A>) {
               robot.msg.cmd.task = TaskKick as i32;
 
               if let Some(to_robot) = cp.state.robots_self.iter().find(|r| r.robot_id == *r_id) {
-                // Aim the kicker along the direction to the receiver. Scale kick
-                // power with pass distance so short passes do not overrun the
-                // receiver and long ones still arrive.
-                let robot_pos = robot_self.pos.unwrap_or_default();
-                let from = kick_origin(robot_pos, cp.state.ball.ball.pos);
-                let to = to_robot.pos.unwrap_or_default();
-                let base_dir = to - from;
-                let base_dist = (base_dir.x * base_dir.x + base_dir.y * base_dir.y)
-                  .sqrt()
-                  .max(1.0);
-                let receiver_vel = to_robot.vel.unwrap_or_default();
-                let lead_s = (base_dist / 4500.0).clamp(0.05, 0.22);
-                let to = receiver_intake_target(from, to + receiver_vel * lead_s);
-                let dir = to - from;
-                let dist = (dir.x * dir.x + dir.y * dir.y).sqrt().max(1.0);
-                let power = (dist * 0.06).clamp(90.0, 200.0) as u32;
-                let compensated_dir = compensated_kick_direction(
-                  dir,
-                  robot_self.vel.unwrap_or_default(),
-                  robot_self.angular_vel,
-                  power,
-                );
-                robot.msg.cmd.kick_orient = Option::from(compensated_dir.angle_in_u16() as u32);
-                robot.msg.cmd.kick_speed = Option::from(power);
+                if let Some(plan) =
+                  planned_pass_from_robots(robot_self, to_robot, cp.state.ball.ball.pos)
+                {
+                  robot.msg.cmd.kick_orient = Option::from(plan.kick_orient);
+                  robot.msg.cmd.kick_speed = Option::from(plan.kick_speed);
+                }
               } else {
                 // Shoot to goal
                 shoot_to_goal(robot, robot_self, all_robots, &cp.state, &cp.field_setup);
@@ -146,6 +130,12 @@ pub fn ai_handler<C, A: Ai>(all_robots: &[Robot], cp: &mut CrashPilot<C, A>) {
             }
             RobotCommand::RecPass => {
               robot.msg.cmd.task = TaskRecKick as i32;
+              robot.msg.cmd.kick_orient = None;
+              robot.msg.cmd.kick_speed = None;
+              if let Some(plan) = planned_receive_kick(&planned_receive_kicks, id as u8) {
+                robot.msg.cmd.kick_orient = Option::from(plan.kick_orient);
+                robot.msg.cmd.kick_speed = Option::from(plan.kick_speed);
+              }
             }
             RobotCommand::GoalWall => {
               // Add the robot to the defense struct, so the crashpilot can create a wall
@@ -169,6 +159,74 @@ pub fn ai_handler<C, A: Ai>(all_robots: &[Robot], cp: &mut CrashPilot<C, A>) {
 
 fn goalie_ai_command_allowed(command: RobotCommand) -> bool {
   matches!(command, RobotCommand::GoalieGuard | RobotCommand::PassTo(_))
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct PlannedPass {
+  kick_orient: u32,
+  kick_speed: u32,
+}
+
+fn planned_receive_kicks(
+  commands: &[Option<RobotCommand>],
+  own_robots: &[Robot],
+  ball_pos: Vec2<f32>,
+) -> Vec<(u8, PlannedPass)> {
+  commands
+    .iter()
+    .enumerate()
+    .filter_map(|(from_id, command)| {
+      let Some(RobotCommand::PassTo(receiver_id)) = command else {
+        return None;
+      };
+      let passer = own_robots
+        .iter()
+        .find(|robot| robot.robot_id == from_id as u8)?;
+      let receiver = own_robots
+        .iter()
+        .find(|robot| robot.robot_id == *receiver_id)?;
+      planned_pass_from_robots(passer, receiver, ball_pos).map(|plan| (*receiver_id, plan))
+    })
+    .collect()
+}
+
+fn planned_receive_kick(planned: &[(u8, PlannedPass)], receiver_id: u8) -> Option<PlannedPass> {
+  planned
+    .iter()
+    .find_map(|(id, plan)| (*id == receiver_id).then_some(*plan))
+}
+
+fn planned_pass_from_robots(
+  passer: &Robot,
+  receiver: &Robot,
+  ball_pos: Vec2<f32>,
+) -> Option<PlannedPass> {
+  // Aim the kicker along the direction to the receiver. Scale kick
+  // power with pass distance so short passes do not overrun the
+  // receiver and long ones still arrive.
+  let robot_pos = passer.pos.unwrap_or_default();
+  let from = kick_origin(robot_pos, ball_pos);
+  let to = receiver.pos.unwrap_or_default();
+  let base_dir = to - from;
+  let base_dist = (base_dir.x * base_dir.x + base_dir.y * base_dir.y)
+    .sqrt()
+    .max(1.0);
+  let receiver_vel = receiver.vel.unwrap_or_default();
+  let lead_s = (base_dist / 4500.0).clamp(0.05, 0.22);
+  let to = receiver_intake_target(from, to + receiver_vel * lead_s);
+  let dir = to - from;
+  let dist = (dir.x * dir.x + dir.y * dir.y).sqrt().max(1.0);
+  let power = (dist * 0.06).clamp(90.0, 200.0) as u32;
+  let compensated_dir = compensated_kick_direction(
+    dir,
+    passer.vel.unwrap_or_default(),
+    passer.angular_vel,
+    power,
+  );
+  Some(PlannedPass {
+    kick_orient: compensated_dir.angle_in_u16() as u32,
+    kick_speed: power,
+  })
 }
 
 fn set_pos_command(
@@ -211,6 +269,7 @@ fn receiver_intake_target(from: Vec2<f32>, receiver_center: Vec2<f32>) -> Vec2<f
 #[cfg(test)]
 mod tests {
   use super::*;
+  use crate::game_logic::types::Team;
 
   #[test]
   fn receiver_intake_target_aims_before_receiver_center() {
@@ -221,5 +280,39 @@ mod tests {
       receiver_intake_target(from, receiver),
       Vec2::new(920.0, 0.0)
     );
+  }
+
+  #[test]
+  fn planned_receive_kick_matches_pass_to_plan() {
+    let robots = vec![
+      test_robot(0, Vec2::new(0.0, 0.0), Vec2::new(0.0, 400.0)),
+      test_robot(1, Vec2::new(1000.0, 250.0), Vec2::new(150.0, 0.0)),
+    ];
+    let ball_pos = Vec2::new(40.0, 0.0);
+    let commands = vec![Some(RobotCommand::PassTo(1)), Some(RobotCommand::RecPass)];
+
+    let receive_plan =
+      planned_receive_kick(&planned_receive_kicks(&commands, &robots, ball_pos), 1)
+        .expect("receiver should inherit the pass plan");
+    let pass_to_plan = planned_pass_from_robots(&robots[0], &robots[1], ball_pos)
+      .expect("passer should have a pass plan");
+
+    assert_eq!(receive_plan, pass_to_plan);
+  }
+
+  fn test_robot(id: u8, pos: Vec2<f32>, vel: Vec2<f32>) -> Robot {
+    Robot {
+      robot_id: id,
+      pos: Some(pos),
+      vel: Some(vel),
+      orientation: 0.0,
+      angular_vel: 0.0,
+      team: Team::Yellow,
+      distance_team: Default::default(),
+      _distance_opponent: Default::default(),
+      distance_ball: None,
+      _distance_goal: None,
+      _distance_wall: None,
+    }
   }
 }

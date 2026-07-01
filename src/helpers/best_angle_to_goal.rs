@@ -49,7 +49,10 @@ pub fn shoot_to_goal(
       robot.msg.cmd.kick_speed = Option::from(GOAL_KICK_POWER);
     }
     Some(angle) => {
-      let selected_direction = direction_from_command_deg(angle);
+      // compensated_kick_direction needs the real mm shot length: a bare unit
+      // vector trips its degenerate-input guard and skips compensation.
+      let shot_distance = (goal_center - shooter).length().max(1.5);
+      let selected_direction = direction_from_command_deg(angle) * shot_distance;
       let kick_direction = compensated_kick_direction(
         selected_direction,
         robot_self.vel.unwrap_or_default(),
@@ -360,6 +363,37 @@ mod tests {
     assert!(
       moving_angle > 330,
       "expected wrapped negative compensation, got {moving_angle}"
+    );
+  }
+
+  #[test]
+  fn selected_shot_window_also_compensates_shooter_velocity() {
+    let mut robot = RobotData::default();
+    let mut stationary_robot = RobotData::default();
+    let stationary_self = robot_at(0.0, 0.0);
+    let mut robot_self = robot_at(0.0, 0.0);
+    robot_self.vel = Some(Vec2::new(0.0, 1_000.0));
+    let state = WorldState {
+      site: -1.0,
+      ..WorldState::default()
+    };
+
+    shoot_to_goal(
+      &mut stationary_robot,
+      &stationary_self,
+      &[],
+      &state,
+      &FieldSetup::default(),
+    );
+    shoot_to_goal(&mut robot, &robot_self, &[], &state, &FieldSetup::default());
+
+    assert_eq!(robot.msg.cmd.task, TaskKick as i32);
+    let stationary_angle = stationary_robot.msg.cmd.kick_orient.unwrap();
+    let moving_angle = robot.msg.cmd.kick_orient.unwrap();
+    assert_eq!(stationary_angle, 0);
+    assert!(
+      moving_angle > 330,
+      "open-window shot must compensate sideways shooter velocity, got {moving_angle}"
     );
   }
 
