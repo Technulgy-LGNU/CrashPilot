@@ -14,6 +14,7 @@ use crate::helpers::robot_data::create_robot_data;
 #[cfg(feature = "prometheus")]
 use crate::metrics::PrometheusMetrics;
 use crate::utils::{FieldSetup, PacketBuffer, spawn_robot_socket};
+use bangka::Bangka;
 use core_dump::proto::cp_game_phase::{
   GamePhase as InterfaceGamePhase, PrepPhase as InterfacePrepPhase,
 };
@@ -25,7 +26,6 @@ use std::path::Path;
 use std::sync::Arc;
 use std::sync::atomic::AtomicU64;
 use std::time::Instant;
-use bangka::Bangka;
 use tokio::net::UdpSocket;
 use tokio::time::{Duration, MissedTickBehavior, interval};
 
@@ -43,8 +43,8 @@ mod metrics;
 mod utils;
 
 use crate::communication::RobotHeartbeat;
-use core_dump::types::Ai;
 pub use core_dump;
+use core_dump::types::Ai;
 use core_dump::vec::types::Vec2;
 use game_logic::types::Team;
 

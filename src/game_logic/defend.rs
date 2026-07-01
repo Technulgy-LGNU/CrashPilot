@@ -1,7 +1,7 @@
 use crate::{Communication, CrashPilot};
-use core_dump::types::Ai;
 use core_dump::proto::CpState::StateFree;
 use core_dump::proto::CpTask::TaskPos;
+use core_dump::types::Ai;
 use core_dump::vec::types::Vec2;
 
 const WALL_DEPTH_MM: f32 = 700.0;

@@ -43,10 +43,17 @@ pub fn ai_handler<C, A: Ai>(all_robots: &[Robot], cp: &mut CrashPilot<C, A>) {
           robot.msg.cmd.state = StateFree as i32;
           match command {
             RobotCommand::Pos(pos) => {
-              set_pos_command(&mut robot.msg.cmd, *pos, None, None, cp.field_setup);
+              set_pos_command(&mut robot.msg.cmd, *pos, None, None, false, cp.field_setup);
             }
             RobotCommand::PosSpeed(pos, speed) => {
-              set_pos_command(&mut robot.msg.cmd, *pos, Some(*speed), None, cp.field_setup);
+              set_pos_command(
+                &mut robot.msg.cmd,
+                *pos,
+                Some(*speed),
+                None,
+                false,
+                cp.field_setup,
+              );
             }
             RobotCommand::PosFace(pos, orient) => {
               set_pos_command(
@@ -54,6 +61,7 @@ pub fn ai_handler<C, A: Ai>(all_robots: &[Robot], cp: &mut CrashPilot<C, A>) {
                 *pos,
                 None,
                 Some(*orient),
+                false,
                 cp.field_setup,
               );
             }
@@ -63,6 +71,17 @@ pub fn ai_handler<C, A: Ai>(all_robots: &[Robot], cp: &mut CrashPilot<C, A>) {
                 *pos,
                 Some(*speed),
                 Some(*orient),
+                false,
+                cp.field_setup,
+              );
+            }
+            RobotCommand::WallPos(pos, orient) => {
+              set_pos_command(
+                &mut robot.msg.cmd,
+                *pos,
+                Some(4000),
+                Some(*orient),
+                true,
                 cp.field_setup,
               );
             }
@@ -234,12 +253,14 @@ fn set_pos_command(
   pos: Vec2<f32>,
   speed: Option<u32>,
   orientation: Option<u32>,
+  raw: bool,
   fs: FieldSetup,
 ) {
   cmd.task = TaskPos as i32;
   cmd.pos = Some((pos * Vec2::new(fs.width as f32, fs.height as f32)).to_cp_vec2());
   cmd.speed = speed.or(Some(4000));
-  cmd.orientation = orientation
+  cmd.orientation = orientation;
+  cmd.raw = raw.then_some(true);
 }
 
 #[inline]
