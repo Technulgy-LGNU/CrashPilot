@@ -13,7 +13,11 @@ use core_dump::vec::types::Vec2;
 #[inline]
 pub fn ai_handler<C, A: Ai>(all_robots: &[Robot], cp: &mut CrashPilot<C, A>) {
   // AI does it thing
-  let commands = cp.ai.predict(&cp.ai_data, 1f32);
+  let commands = cp.ai.predict(&cp.ai_data, cp.logic_dt());
+  #[cfg(feature = "viewer-debug")]
+  {
+    cp.last_ai_commands = commands;
+  }
   // Convert the commands to robot commands
   if !commands.is_empty() {
     for (id, command) in commands.iter().enumerate() {

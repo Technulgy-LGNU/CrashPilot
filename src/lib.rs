@@ -1,19 +1,19 @@
-#[cfg(feature = "loki")]
-use crate::communication::loki::spawn_loki_publisher;
+pub use crate::communication::Events;
 #[cfg(feature = "loki")]
 use crate::communication::loki::LokiPublisher;
+#[cfg(feature = "loki")]
+use crate::communication::loki::spawn_loki_publisher;
 use crate::communication::robot_sender::{NetworkSender, RobotSender};
 #[cfg(feature = "ssl_game_controller")]
 pub use crate::communication::ssl_gc_handler::SslGameController;
-pub use crate::communication::Events;
-use crate::communication::{communication_receiver, EventShare, WebsocketOut};
+use crate::communication::{EventShare, WebsocketOut, communication_receiver};
 pub use crate::config::Config;
 use crate::game_logic::game_logic;
 use crate::game_logic::types::{BallData, GamePhase, PrepPhase, Robot, WorldState};
 use crate::helpers::robot_data::create_robot_data;
 #[cfg(feature = "prometheus")]
 use crate::metrics::PrometheusMetrics;
-use crate::utils::{spawn_robot_socket, FieldSetup, PacketBuffer};
+use crate::utils::{FieldSetup, PacketBuffer, spawn_robot_socket};
 use core_dump::proto::cp_game_phase::{
   GamePhase as InterfaceGamePhase, PrepPhase as InterfacePrepPhase,
 };
@@ -22,11 +22,11 @@ use core_dump::proto::{AdvantageChoice, ControllerToTeam};
 use core_dump::proto::{CpCommand, CpGamePhase, CpInterfaceWrapper, CpRobot};
 use std::collections::HashMap;
 use std::path::Path;
-use std::sync::atomic::AtomicU64;
 use std::sync::Arc;
+use std::sync::atomic::AtomicU64;
 use std::time::Instant;
 use tokio::net::UdpSocket;
-use tokio::time::{interval, Duration, MissedTickBehavior};
+use tokio::time::{Duration, MissedTickBehavior, interval};
 
 pub use crate::utils::RobotData;
 
@@ -60,6 +60,8 @@ pub struct CrashPilot<C = CommunicationChannels, A: Ai = ArtificialIncompetence>
   robots_ws_data: HashMap<u32, CpCommand>,
   state: WorldState,
   ai_data: core_dump::types::GameState,
+  #[cfg(feature = "viewer-debug")]
+  last_ai_commands: core_dump::types::Commands,
   ai: A,
   team: i32,
   field_setup: FieldSetup,
@@ -68,6 +70,11 @@ pub struct CrashPilot<C = CommunicationChannels, A: Ai = ArtificialIncompetence>
   heartbeat: RobotHeartbeat,
   process_start: Instant,
   site: f32,
+  sim_logic_dt: f32,
+  #[cfg(feature = "sim-time")]
+  last_sim_timestamp: Option<f64>,
+  #[cfg(feature = "sim-time")]
+  sim_timestamp: f32,
 }
 
 pub struct CommunicationChannels {
@@ -380,6 +387,8 @@ impl<C, A: Ai> CrashPilot<C, A> {
       robots_ws_data,
       state,
       ai_data: Default::default(),
+      #[cfg(feature = "viewer-debug")]
+      last_ai_commands: Default::default(),
       ai,
       team,
       field_setup,
@@ -388,7 +397,21 @@ impl<C, A: Ai> CrashPilot<C, A> {
       heartbeat: heartbeats,
       process_start,
       site: 0.0,
+      sim_logic_dt: 1.0,
+      #[cfg(feature = "sim-time")]
+      last_sim_timestamp: None,
+      #[cfg(feature = "sim-time")]
+      sim_timestamp: 0.0,
     }
+  }
+
+  pub fn get_ai(&self) -> &A {
+    &self.ai
+  }
+
+  #[cfg(feature = "viewer-debug")]
+  pub fn ai_commands(&self) -> &core_dump::types::Commands {
+    &self.last_ai_commands
   }
 
   pub fn interpret(&mut self, events: Events) {
@@ -430,6 +453,8 @@ impl<C, A: Ai> CrashPilot<C, A> {
   }
 
   pub fn update_data(&mut self) {
+    self.update_sim_logic_dt();
+
     // Update site dependent on referee data && Also update team based on that
     // Start by getting own Team Color
     if self.packet_buffer.referee.yellow.name == "Robocup Junior SSL Team" {
@@ -459,7 +484,11 @@ impl<C, A: Ai> CrashPilot<C, A> {
         };
       }
     } else {
-      self.team = if self.packet_buffer.interface_command.game.team_color { 1 } else { 2 };
+      self.team = if self.packet_buffer.interface_command.game.team_color {
+        2
+      } else {
+        1
+      };
       // No valid gc data, use interface command
       self.site = if self.packet_buffer.interface_command.game.side {
         -1f32
@@ -501,6 +530,34 @@ impl<C, A: Ai> CrashPilot<C, A> {
     // Create AI State
     self.update_ai_data();
   }
+
+  pub fn logic_dt(&self) -> f32 {
+    self.sim_logic_dt
+  }
+
+  #[cfg(feature = "sim-time")]
+  fn update_sim_logic_dt(&mut self) {
+    let Some(timestamp) = self
+      .packet_buffer
+      .vis_tracked
+      .tracked_frame
+      .as_ref()
+      .map(|frame| frame.timestamp)
+    else {
+      return;
+    };
+    let dt = self
+      .last_sim_timestamp
+      .map(|previous| timestamp - previous)
+      .filter(|dt| *dt > f64::EPSILON)
+      .unwrap_or(1.0 / 60.0);
+    self.last_sim_timestamp = Some(timestamp);
+    self.sim_timestamp = timestamp as f32;
+    self.sim_logic_dt = dt as f32;
+  }
+
+  #[cfg(not(feature = "sim-time"))]
+  fn update_sim_logic_dt(&mut self) {}
 
   pub fn interpret_and_update(&mut self, events: Events) {
     self.interpret(events);
@@ -559,7 +616,17 @@ impl<C, A: Ai> CrashPilot<C, A> {
       .ball
       .kicked_ball
       .end_time
-      .unwrap_or(Instant::now().elapsed().as_millis() as f32);
+      .unwrap_or(self.default_ball_stop_time());
+  }
+
+  #[cfg(feature = "sim-time")]
+  fn default_ball_stop_time(&self) -> f32 {
+    self.sim_timestamp
+  }
+
+  #[cfg(not(feature = "sim-time"))]
+  fn default_ball_stop_time(&self) -> f32 {
+    Instant::now().elapsed().as_millis() as f32
   }
 }
 
