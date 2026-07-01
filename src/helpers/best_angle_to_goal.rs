@@ -1,5 +1,6 @@
 use crate::RobotData;
 use crate::game_logic::types::{Robot, WorldState};
+use crate::helpers::compensated_kick_direction;
 use crate::utils::FieldSetup;
 use core_dump::proto::CpTask::TaskKick;
 use core_dump::vec::types::Vec2;
@@ -36,19 +37,34 @@ pub fn shoot_to_goal(
   ) {
     None => {
       // Try to shoot to the center
-      let angle = (goal_center - shooter).angle_in_u16();
+      let kick_direction = compensated_kick_direction(
+        goal_center - shooter,
+        robot_self.vel.unwrap_or_default(),
+        robot_self.angular_vel,
+        GOAL_KICK_POWER,
+      );
 
       robot.msg.cmd.task = TaskKick as i32;
-      robot.msg.cmd.kick_orient = Option::from(angle as u32);
-      robot.msg.cmd.kick_speed = Option::from(200);
+      robot.msg.cmd.kick_orient = Option::from(kick_direction.angle_in_u16() as u32);
+      robot.msg.cmd.kick_speed = Option::from(GOAL_KICK_POWER);
     }
     Some(angle) => {
+      let selected_direction = direction_from_command_deg(angle);
+      let kick_direction = compensated_kick_direction(
+        selected_direction,
+        robot_self.vel.unwrap_or_default(),
+        robot_self.angular_vel,
+        GOAL_KICK_POWER,
+      );
+
       robot.msg.cmd.task = TaskKick as i32;
-      robot.msg.cmd.kick_orient = Option::from(angle);
-      robot.msg.cmd.kick_speed = Option::from(200);
+      robot.msg.cmd.kick_orient = Option::from(kick_direction.angle_in_u16() as u32);
+      robot.msg.cmd.kick_speed = Option::from(GOAL_KICK_POWER);
     }
   };
 }
+
+const GOAL_KICK_POWER: u32 = 200;
 
 #[inline]
 fn shot_origin(robot_pos: Vec2<f32>, ball_pos: Vec2<f32>) -> Vec2<f32> {
@@ -75,6 +91,12 @@ fn opponent_goal_side(state: &WorldState) -> f32 {
   } else {
     1.0
   }
+}
+
+#[inline]
+fn direction_from_command_deg(angle: u32) -> Vec2<f32> {
+  let radians = (angle as f32).to_radians();
+  Vec2::new(radians.cos(), radians.sin())
 }
 
 #[inline]
@@ -299,6 +321,46 @@ mod tests {
 
     assert_eq!(robot.msg.cmd.task, TaskKick as i32);
     assert_eq!(robot.msg.cmd.kick_orient, Some(0));
+  }
+
+  #[test]
+  fn kick_goal_compensates_sideways_shooter_velocity() {
+    let mut robot = RobotData::default();
+    let mut stationary_robot = RobotData::default();
+    let stationary_self = robot_at(0.0, 0.0);
+    let mut robot_self = robot_at(0.0, 0.0);
+    robot_self.vel = Some(Vec2::new(0.0, 1_000.0));
+    let mut blocker = robot_at(1_000.0, 0.0);
+    blocker.team = Team::Blue;
+    let state = WorldState {
+      site: -1.0,
+      ..WorldState::default()
+    };
+    let all_robots = [blocker];
+
+    shoot_to_goal(
+      &mut stationary_robot,
+      &stationary_self,
+      &all_robots,
+      &state,
+      &FieldSetup::default(),
+    );
+    shoot_to_goal(
+      &mut robot,
+      &robot_self,
+      &all_robots,
+      &state,
+      &FieldSetup::default(),
+    );
+
+    assert_eq!(robot.msg.cmd.task, TaskKick as i32);
+    let stationary_angle = stationary_robot.msg.cmd.kick_orient.unwrap();
+    let moving_angle = robot.msg.cmd.kick_orient.unwrap();
+    assert_eq!(stationary_angle, 0);
+    assert!(
+      moving_angle > 330,
+      "expected wrapped negative compensation, got {moving_angle}"
+    );
   }
 
   #[test]

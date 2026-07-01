@@ -1,6 +1,7 @@
 use crate::CrashPilot;
 use crate::game_logic::types::Robot;
 use crate::helpers::best_angle_to_goal::shoot_to_goal;
+use crate::helpers::compensated_kick_direction;
 use crate::utils::FieldSetup;
 use core_dump::proto::CpCommand;
 use core_dump::proto::CpState::{StateFree, StateGoalie};
@@ -128,9 +129,15 @@ pub fn ai_handler<C, A: Ai>(all_robots: &[Robot], cp: &mut CrashPilot<C, A>) {
                 let lead_s = (base_dist / 4500.0).clamp(0.05, 0.22);
                 let to = receiver_intake_target(from, to + receiver_vel * lead_s);
                 let dir = to - from;
-                robot.msg.cmd.kick_orient = Option::from(dir.angle_in_u16() as u32);
                 let dist = (dir.x * dir.x + dir.y * dir.y).sqrt().max(1.0);
                 let power = (dist * 0.06).clamp(90.0, 200.0) as u32;
+                let compensated_dir = compensated_kick_direction(
+                  dir,
+                  robot_self.vel.unwrap_or_default(),
+                  robot_self.angular_vel,
+                  power,
+                );
+                robot.msg.cmd.kick_orient = Option::from(compensated_dir.angle_in_u16() as u32);
                 robot.msg.cmd.kick_speed = Option::from(power);
               } else {
                 // Shoot to goal
