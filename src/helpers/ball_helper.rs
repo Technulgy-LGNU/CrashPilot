@@ -43,35 +43,21 @@ pub fn convert_ball(balls: VisionBalls, interface_command: &InterfaceCommandCp) 
     // Switch between the test areas
     // We different between the four areas with their omen
     match interface_command.manual.testfield {
-      // -x || +y
+      // +x
       0 => {
         correct_balls = balls_generic
           .iter()
-          .filter(|ball| ball.pos.x < 0.0 && ball.pos.y > 0.0)
+          .filter(|ball| ball.pos.x.is_sign_positive())
           .collect::<Vec<&TrackedBall>>();
       }
-      // +x || +y
+      // -x
       1 => {
         correct_balls = balls_generic
           .iter()
-          .filter(|ball| ball.pos.x > 0.0 && ball.pos.y > 0.0)
+          .filter(|ball| ball.pos.x.is_sign_negative())
           .collect::<Vec<&TrackedBall>>();
       }
-      // +x || -y
-      2 => {
-        correct_balls = balls_generic
-          .iter()
-          .filter(|ball| ball.pos.x > 0.0 && ball.pos.y < 0.0)
-          .collect::<Vec<&TrackedBall>>();
-      }
-      // -x || -y
-      3 => {
-        correct_balls = balls_generic
-          .iter()
-          .filter(|ball| ball.pos.x < 0.0 && ball.pos.y < 0.0)
-          .collect::<Vec<&TrackedBall>>();
-      }
-      _ => (),
+      _ => println!("Wrong Test Mode: 0 = X+, 1 = X-"),
     }
     if !correct_balls.is_empty() {
       correct_ball = *correct_balls[0];
