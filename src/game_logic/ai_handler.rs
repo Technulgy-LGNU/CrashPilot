@@ -1,7 +1,7 @@
+use crate::CrashPilot;
 use crate::game_logic::types::Robot;
 use crate::helpers::best_angle_to_goal::shoot_to_goal;
 use crate::utils::FieldSetup;
-use crate::CrashPilot;
 use core_dump::proto::CpCommand;
 use core_dump::proto::CpState::{StateFree, StateGoalie};
 use core_dump::proto::CpTask::{
@@ -19,7 +19,7 @@ pub fn ai_handler<C, A: Ai>(all_robots: &[Robot], cp: &mut CrashPilot<C, A>) {
     for (id, command) in commands.iter().enumerate() {
       if let Some(command) = command
         && let Some(goalie) = cp.state.goalie
-        && goalie != id as u8
+        && (goalie != id as u8 || matches!(command, RobotCommand::GoalieGuard))
       {
         // Get the robot
         let Some(robot) = cp.robots.get_mut(&(id as u32)) else {
@@ -76,6 +76,9 @@ pub fn ai_handler<C, A: Ai>(all_robots: &[Robot], cp: &mut CrashPilot<C, A>) {
             RobotCommand::Steal => {
               robot.msg.cmd.task = TaskSteal as i32;
               robot.msg.cmd.speed = Option::from(4000);
+              let from = robot_self.pos.unwrap_or_default();
+              let ball = cp.state.ball.ball.pos;
+              robot.msg.cmd.orientation = Option::from((ball - from).angle_in_u16() as u32);
             }
             RobotCommand::Dribble(pos) => {
               robot.msg.cmd.task = TaskDribble as i32;
@@ -85,10 +88,8 @@ pub fn ai_handler<C, A: Ai>(all_robots: &[Robot], cp: &mut CrashPilot<C, A>) {
               robot.msg.cmd.speed = Option::from(2000);
               // The firmware uses cmd.orientation as the direction to push the
               // ball; aim it from the ball toward the dribble target.
-              robot.msg.cmd.orientation = Option::from(
-                (target - cp.state.ball.ball.pos * Vec2::new(1000f32, 1000f32)).angle_in_u16()
-                  as u32,
-              );
+              robot.msg.cmd.orientation =
+                Option::from((target - cp.state.ball.ball.pos).angle_in_u16() as u32);
             }
             RobotCommand::PosBall(pos) => {
               robot.msg.cmd.task = TaskPosBall as i32;
@@ -96,10 +97,8 @@ pub fn ai_handler<C, A: Ai>(all_robots: &[Robot], cp: &mut CrashPilot<C, A>) {
                 *pos * Vec2::new(cp.field_setup.width as f32, cp.field_setup.height as f32);
               robot.msg.cmd.pos = Option::from(target.to_cp_vec2());
               robot.msg.cmd.speed = Option::from(2000);
-              robot.msg.cmd.orientation = Option::from(
-                (target - cp.state.ball.ball.pos * Vec2::new(1000f32, 1000f32)).angle_in_u16()
-                  as u32,
-              );
+              robot.msg.cmd.orientation =
+                Option::from((target - cp.state.ball.ball.pos).angle_in_u16() as u32);
             }
             RobotCommand::Kickoff(_) => {}
             RobotCommand::FreeKick(_) => {}
@@ -126,7 +125,7 @@ pub fn ai_handler<C, A: Ai>(all_robots: &[Robot], cp: &mut CrashPilot<C, A>) {
                 let dir = to - from;
                 robot.msg.cmd.kick_orient = Option::from(dir.angle_in_u16() as u32);
                 let dist = (dir.x * dir.x + dir.y * dir.y).sqrt().max(1.0);
-                let power = (dist * 0.06).clamp(70.0, 200.0) as u32;
+                let power = (dist * 0.06).clamp(90.0, 200.0) as u32;
                 robot.msg.cmd.kick_speed = Option::from(power);
               } else {
                 // Shoot to goal
