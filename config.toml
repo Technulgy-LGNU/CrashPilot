@@ -20,7 +20,7 @@ robot_socket_host = "10.0.4.41"
 robot_socket_port = 8192
 robots_port = 1024
 robot_receive_port = 2048
-websocket_host = "10.0."
+websocket_host = "10.0.64.41"
 websocket_port = 4096
 
 [robots]
