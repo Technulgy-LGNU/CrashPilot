@@ -1,19 +1,19 @@
-pub use crate::communication::Events;
-#[cfg(feature = "loki")]
-use crate::communication::loki::LokiPublisher;
 #[cfg(feature = "loki")]
 use crate::communication::loki::spawn_loki_publisher;
+#[cfg(feature = "loki")]
+use crate::communication::loki::LokiPublisher;
 use crate::communication::robot_sender::{NetworkSender, RobotSender};
 #[cfg(feature = "ssl_game_controller")]
 pub use crate::communication::ssl_gc_handler::SslGameController;
-use crate::communication::{EventShare, WebsocketOut, communication_receiver};
+pub use crate::communication::Events;
+use crate::communication::{communication_receiver, EventShare, WebsocketOut};
 pub use crate::config::Config;
 use crate::game_logic::game_logic;
 use crate::game_logic::types::{BallData, GamePhase, PrepPhase, Robot, WorldState};
 use crate::helpers::robot_data::create_robot_data;
 #[cfg(feature = "prometheus")]
 use crate::metrics::PrometheusMetrics;
-use crate::utils::{FieldSetup, PacketBuffer, spawn_robot_socket};
+use crate::utils::{spawn_robot_socket, FieldSetup, PacketBuffer};
 use bangka::Bangka;
 use core_dump::proto::cp_game_phase::{
   GamePhase as InterfaceGamePhase, PrepPhase as InterfacePrepPhase,
@@ -22,12 +22,11 @@ use core_dump::proto::cp_game_phase::{
 use core_dump::proto::{AdvantageChoice, ControllerToTeam};
 use core_dump::proto::{CpCommand, CpGamePhase, CpInterfaceWrapper, CpRobot};
 use std::collections::HashMap;
-use std::path::Path;
-use std::sync::Arc;
 use std::sync::atomic::AtomicU64;
+use std::sync::Arc;
 use std::time::Instant;
 use tokio::net::UdpSocket;
-use tokio::time::{Duration, MissedTickBehavior, interval};
+use tokio::time::{interval, Duration, MissedTickBehavior};
 
 pub use crate::utils::RobotData;
 
@@ -426,7 +425,13 @@ impl<C, A: Ai> CrashPilot<C, A> {
     }
 
     if let Some(packet) = events.tracked {
-      self.packet_buffer.vis_tracked = packet;
+      if let Some(source_name) = &packet.source_name
+        && source_name == "TIGERs"
+      {
+        self.packet_buffer.vis_tracked = packet;
+      } else {
+        println!("Found another tracked package: {:?}", packet.source_name);
+      }
     }
 
     if let Some(packet) = events.ws {
