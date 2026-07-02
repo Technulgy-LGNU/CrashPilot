@@ -32,15 +32,15 @@ pub struct SendReport {
 
 #[derive(Debug)]
 pub struct RobotSendFailure {
-  pub _robot_id: u32,
-  pub _error: Error,
+  pub robot_id: u32,
+  pub error: Error,
 }
 
 impl SendReport {
   fn push_failure(&mut self, robot_id: u32, error: Error) {
     self.failed.push(RobotSendFailure {
-      _robot_id: robot_id,
-      _error: error,
+      robot_id,
+      error,
     });
   }
 }

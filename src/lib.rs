@@ -195,17 +195,17 @@ impl CrashPilot {
       cfg: &self.config,
       process_start: self.process_start,
     };
-    let _send_report = network_sender.send_to_all_robots();
-    // if !send_report.failed.is_empty() {
-    //   eprintln!(
-    //     "Robot send: {} ok, {} failed",
-    //     send_report.sent,
-    //     send_report.failed.len()
-    //   );
-    //   for failure in &send_report.failed {
-    //     eprintln!("  robot {}: {:#}", failure.robot_id, failure.error);
-    //   }
-    // }
+    let send_report = network_sender.send_to_all_robots();
+    if !send_report.failed.is_empty() {
+      eprintln!(
+        "Robot send: {} ok, {} failed",
+        send_report.sent,
+        send_report.failed.len()
+      );
+      for failure in &send_report.failed {
+        eprintln!("robot {}: {}", failure.robot_id, failure.error);
+      }
+    }
     #[cfg(feature = "prometheus")]
     let failed_robot_ids: HashSet<u32> = send_report
       .failed
@@ -494,7 +494,7 @@ impl<C, A: Ai> CrashPilot<C, A> {
           1f32
         };
       }
-    } else if self.packet_buffer.referee.blue.name == "Robpocup Junior SSL Team" {
+    } else if self.packet_buffer.referee.blue.name == "Robocup Junior SSL Team" {
       self.team = 2;
       // We are the blue team, check on whoch side we are and just assign that
       if let Some(blue_pos_half) = self.packet_buffer.referee.blue_team_on_positive_half {
@@ -549,6 +549,8 @@ impl<C, A: Ai> CrashPilot<C, A> {
       &self.packet_buffer.vis_raw,
       &self.packet_buffer.interface_command,
       &self.field_setup,
+      if self.team == 1 { false } else { true },
+      if self.site == 1f32 { false } else { true },
     );
 
     // Create AI State
