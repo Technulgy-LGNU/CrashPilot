@@ -12,7 +12,7 @@ pub fn spawn_udp_listener<T>(
 {
   tokio::spawn(async move {
     loop {
-      let mut buf = [0; 1024];
+      let mut buf = [0; 65536];
       match socket.recv_from(&mut buf).await {
         Ok((size, _)) => {
           if let Ok(mut latest_msg) = T::decode(&buf[..size]) {
