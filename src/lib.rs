@@ -416,6 +416,9 @@ impl<C, A: Ai> CrashPilot<C, A> {
 
   pub fn interpret(&mut self, events: Events) {
     if let Some(packet) = events.raw {
+      #[cfg(feature = "debug")]
+      println!("Received new raw package");
+
       self.packet_buffer.vis_raw = packet;
 
       // Create the FieldSetup Var
@@ -431,9 +434,11 @@ impl<C, A: Ai> CrashPilot<C, A> {
       if let Some(source_name) = &packet.source_name
         && source_name == "TIGERs"
       {
+        #[cfg(feature = "debug")]
+        println!("Received new tracked packet from tigers");
+
         self.packet_buffer.vis_tracked = packet;
       } else {
-        #[cfg(feature = "debug")]
         println!("Found another tracked package: {:?}", packet.source_name);
       }
     } else {
@@ -452,6 +457,9 @@ impl<C, A: Ai> CrashPilot<C, A> {
     }
 
     if let Some(packet) = events.gc {
+      #[cfg(feature = "debug")]
+      println!("Received new gc packet");
+
       self.packet_buffer.referee = packet;
     } else {
       #[cfg(feature = "debug")]
