@@ -432,6 +432,7 @@ impl<C, A: Ai> CrashPilot<C, A> {
     }
 
     if let Some(packet) = events.tracked {
+      #[cfg(feature = "tracked_packages_check")]
       if let Some(source_name) = &packet.source_name
         && source_name == "TIGERs"
       {
@@ -442,10 +443,16 @@ impl<C, A: Ai> CrashPilot<C, A> {
       } else {
         println!("Found another tracked package: {:?}", packet.source_name);
       }
+
+      #[cfg(not(feature = "tracked_packages_check"))]
+      {
+        self.packet_buffer.vis_tracked = packet;
+      }
     } else {
       #[cfg(feature = "debug")]
       println!("No tracked package received, using previous one");
     }
+
 
     if let Some(packet) = events.ws {
       for robot_command in packet.robot_commands {
