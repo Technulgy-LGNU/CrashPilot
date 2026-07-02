@@ -422,6 +422,9 @@ impl<C, A: Ai> CrashPilot<C, A> {
       if let Some(geometry) = self.packet_buffer.vis_raw.geometry.as_ref() {
         self.field_setup = geometry.into()
       }
+    } else {
+      #[cfg(feature = "debug")]
+      println!("No raw package received, using previous one");
     }
 
     if let Some(packet) = events.tracked {
@@ -430,8 +433,12 @@ impl<C, A: Ai> CrashPilot<C, A> {
       {
         self.packet_buffer.vis_tracked = packet;
       } else {
+        #[cfg(feature = "debug")]
         println!("Found another tracked package: {:?}", packet.source_name);
       }
+    } else {
+      #[cfg(feature = "debug")]
+      println!("No tracked package received, using previous one");
     }
 
     if let Some(packet) = events.ws {
@@ -446,6 +453,9 @@ impl<C, A: Ai> CrashPilot<C, A> {
 
     if let Some(packet) = events.gc {
       self.packet_buffer.referee = packet;
+    } else {
+      #[cfg(feature = "debug")]
+      println!("No gc packet received, using previous one");
     }
 
     if let Some(packet) = events.rf
