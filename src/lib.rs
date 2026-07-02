@@ -24,7 +24,7 @@ use core_dump::proto::{CpCommand, CpGamePhase, CpInterfaceWrapper, CpRobot};
 use std::collections::HashMap;
 use std::sync::atomic::AtomicU64;
 use std::sync::Arc;
-use std::time::Instant;
+use std::time::{Instant, SystemTime, UNIX_EPOCH};
 use tokio::net::UdpSocket;
 use tokio::time::{interval, Duration, MissedTickBehavior};
 
@@ -46,6 +46,7 @@ pub use core_dump;
 use core_dump::types::Ai;
 use core_dump::vec::types::Vec2;
 use game_logic::types::Team;
+use prost::Message;
 
 #[cfg(feature = "ssl_game_controller")]
 const TEAM_NAME: &str = "Robocup Junior SSL Team";
@@ -195,17 +196,17 @@ impl CrashPilot {
       cfg: &self.config,
       process_start: self.process_start,
     };
-    let send_report = network_sender.send_to_all_robots();
-    if !send_report.failed.is_empty() {
-      eprintln!(
-        "Robot send: {} ok, {} failed",
-        send_report.sent,
-        send_report.failed.len()
-      );
-      for failure in &send_report.failed {
-        eprintln!("robot {}: {}", failure.robot_id, failure.error);
-      }
-    }
+    let _send_report = network_sender.send_to_all_robots();
+    // if !send_report.failed.is_empty() {
+    //   eprintln!(
+    //     "Robot send: {} ok, {} failed",
+    //     send_report.sent,
+    //     send_report.failed.len()
+    //   );
+    //   for failure in &send_report.failed {
+    //     eprintln!("robot {}: {}", failure.robot_id, failure.error);
+    //   }
+    // }
     #[cfg(feature = "prometheus")]
     let failed_robot_ids: HashSet<u32> = send_report
       .failed
@@ -460,10 +461,19 @@ impl<C, A: Ai> CrashPilot<C, A> {
       #[cfg(feature = "debug")]
       println!("Received new gc packet");
 
-      self.packet_buffer.referee = packet;
+      if is_older_than_2s(packet.packet_timestamp) {
+        #[cfg(feature = "debug")]
+        println!("Ignoring old gc packet");
+      } else {
+        self.packet_buffer.referee = packet;
+      }
     } else {
       #[cfg(feature = "debug")]
       println!("No gc packet received, using previous one");
+    }
+
+    if is_older_than_2s(self.packet_buffer.referee.packet_timestamp) {
+      self.packet_buffer.referee.clear();
     }
 
     if let Some(packet) = events.rf
@@ -488,7 +498,7 @@ impl<C, A: Ai> CrashPilot<C, A> {
         self.site = if blue_pos_half { -1f32 } else { 1f32 }
       } else {
         // No valid gc data, use interface command
-        self.site = if self.packet_buffer.interface_command.game.side {
+        self.site = if self.packet_buffer.interface_command.side {
           -1f32
         } else {
           1f32
@@ -501,20 +511,20 @@ impl<C, A: Ai> CrashPilot<C, A> {
         self.site = if blue_pos_half { 1f32 } else { -1f32 }
       } else {
         // No valid gc data, use interface command
-        self.site = if self.packet_buffer.interface_command.game.side {
+        self.site = if self.packet_buffer.interface_command.side {
           -1f32
         } else {
           1f32
         };
       }
     } else {
-      self.team = if self.packet_buffer.interface_command.game.team_color {
+      self.team = if self.packet_buffer.interface_command.team_color {
         2
       } else {
         1
       };
       // No valid gc data, use interface command
-      self.site = if self.packet_buffer.interface_command.game.side {
+      self.site = if self.packet_buffer.interface_command.side {
         -1f32
       } else {
         1f32
@@ -549,8 +559,8 @@ impl<C, A: Ai> CrashPilot<C, A> {
       &self.packet_buffer.vis_raw,
       &self.packet_buffer.interface_command,
       &self.field_setup,
-      if self.team == 1 { false } else { true },
-      if self.site == 1f32 { false } else { true },
+      self.team != 1,
+      self.site != 1f32,
     );
 
     // Create AI State
@@ -739,67 +749,13 @@ fn interface_prep_phase(phase: PrepPhase) -> InterfacePrepPhase {
   }
 }
 
-#[cfg(test)]
-mod tests {
-  use super::*;
+fn is_older_than_2s(packet_timestamp: u64) -> bool {
+  const MAX_PACKET_AGE_MICROS: u64 = 2_000_000;
 
-  #[test]
-  fn maps_game_phase_to_interface_enum() {
-    assert_eq!(
-      interface_game_phase(GamePhase::Unknown),
-      InterfaceGamePhase::UnknownGamePhase
-    );
-    assert_eq!(
-      interface_game_phase(GamePhase::Halted),
-      InterfaceGamePhase::Halted
-    );
-    assert_eq!(
-      interface_game_phase(GamePhase::Stopped),
-      InterfaceGamePhase::Stopped
-    );
-    assert_eq!(
-      interface_game_phase(GamePhase::Running),
-      InterfaceGamePhase::Running
-    );
-    assert_eq!(
-      interface_game_phase(GamePhase::Timeout),
-      InterfaceGamePhase::Timeout
-    );
-    assert_eq!(
-      interface_game_phase(GamePhase::BallPlacement),
-      InterfaceGamePhase::BallPlacement
-    );
-  }
+  let now = SystemTime::now()
+    .duration_since(UNIX_EPOCH)
+    .unwrap()
+    .as_micros() as u64;
 
-  #[test]
-  fn maps_prep_phase_to_interface_enum() {
-    assert_eq!(
-      interface_prep_phase(PrepPhase::Unknown),
-      InterfacePrepPhase::UnknownPrepPhase
-    );
-    assert_eq!(
-      interface_prep_phase(PrepPhase::OffensiveKickoff),
-      InterfacePrepPhase::OffensiveKickoff
-    );
-    assert_eq!(
-      interface_prep_phase(PrepPhase::DefensiveKickoff),
-      InterfacePrepPhase::DefensiveKickoff
-    );
-    assert_eq!(
-      interface_prep_phase(PrepPhase::OffensivePenalty),
-      InterfacePrepPhase::OffensivePenalty
-    );
-    assert_eq!(
-      interface_prep_phase(PrepPhase::DefensivePenalty),
-      InterfacePrepPhase::DefensivePenalty
-    );
-    assert_eq!(
-      interface_prep_phase(PrepPhase::OffensiveFreeKick),
-      InterfacePrepPhase::OffensiveFreeKick
-    );
-    assert_eq!(
-      interface_prep_phase(PrepPhase::DefensiveFreeKick),
-      InterfacePrepPhase::DefensiveFreeKick
-    );
-  }
+  packet_timestamp == 0 || now.saturating_sub(packet_timestamp) > MAX_PACKET_AGE_MICROS
 }

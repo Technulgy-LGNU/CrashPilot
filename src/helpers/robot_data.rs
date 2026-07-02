@@ -86,8 +86,8 @@ pub fn create_robot_data(
 
     // At last set info stuff
     robot.msg.infos = CpInfos {
-      team_color: team_color,
-      team_site: team_site,
+      team_color,
+      team_site,
       width: field.width,
       height: field.height,
       runoff_width: field.run_off_width,
