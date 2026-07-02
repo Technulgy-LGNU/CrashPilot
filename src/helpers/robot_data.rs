@@ -7,6 +7,7 @@ use core_dump::proto::{
   TrackerWrapperPacket,
 };
 use std::collections::HashMap;
+#[cfg(not(feature = "sim-time"))]
 use std::time::{SystemTime, UNIX_EPOCH};
 
 #[inline]
@@ -24,10 +25,7 @@ pub fn create_robot_data(
   for robot in robots.values_mut() {
     // Basic data
     robot.msg.packet_id = packet_id;
-    robot.msg.timestamp = SystemTime::now()
-      .duration_since(UNIX_EPOCH)
-      .map(|d| d.as_secs_f64())
-      .unwrap_or_default();
+    robot.msg.timestamp = robot_timestamp_seconds(vis_tracked);
 
     // Tracked frame, if not empty
     // Robot Position Data
@@ -98,4 +96,21 @@ pub fn create_robot_data(
       goal_width: field.goal_width,
     }
   }
+}
+
+#[cfg(feature = "sim-time")]
+fn robot_timestamp_seconds(vis_tracked: &TrackerWrapperPacket) -> f64 {
+  vis_tracked
+    .tracked_frame
+    .as_ref()
+    .map(|frame| frame.timestamp)
+    .unwrap_or_default()
+}
+
+#[cfg(not(feature = "sim-time"))]
+fn robot_timestamp_seconds(_vis_tracked: &TrackerWrapperPacket) -> f64 {
+  SystemTime::now()
+    .duration_since(UNIX_EPOCH)
+    .map(|d| d.as_secs_f64())
+    .unwrap_or_default()
 }

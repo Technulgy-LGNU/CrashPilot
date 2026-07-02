@@ -151,6 +151,11 @@ pub fn ai_handler<C, A: Ai>(all_robots: &[Robot], cp: &mut CrashPilot<C, A>) {
               robot.msg.cmd.task = TaskRecKick as i32;
               robot.msg.cmd.kick_orient = None;
               robot.msg.cmd.kick_speed = None;
+              robot.msg.cmd.pos = planned_receive_target(&planned_receive_kicks, id as u8)
+                .or_else(|| {
+                  rolling_receive_target(robot_self, cp.state.ball.ball.pos, cp.state.ball.ball.vel)
+                })
+                .map(|target| target.to_cp_vec2());
               if let Some(plan) = planned_receive_kick(&planned_receive_kicks, id as u8) {
                 robot.msg.cmd.kick_orient = Option::from(plan.kick_orient);
                 robot.msg.cmd.kick_speed = Option::from(plan.kick_speed);
@@ -180,10 +185,11 @@ fn goalie_ai_command_allowed(command: RobotCommand) -> bool {
   matches!(command, RobotCommand::GoalieGuard | RobotCommand::PassTo(_))
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 struct PlannedPass {
   kick_orient: u32,
   kick_speed: u32,
+  receive_target: Vec2<f32>,
 }
 
 fn planned_receive_kicks(
@@ -213,6 +219,12 @@ fn planned_receive_kick(planned: &[(u8, PlannedPass)], receiver_id: u8) -> Optio
   planned
     .iter()
     .find_map(|(id, plan)| (*id == receiver_id).then_some(*plan))
+}
+
+fn planned_receive_target(planned: &[(u8, PlannedPass)], receiver_id: u8) -> Option<Vec2<f32>> {
+  planned
+    .iter()
+    .find_map(|(id, plan)| (*id == receiver_id).then_some(plan.receive_target))
 }
 
 fn planned_pass_from_robots(
@@ -245,7 +257,29 @@ fn planned_pass_from_robots(
   Some(PlannedPass {
     kick_orient: compensated_dir.angle_in_u16() as u32,
     kick_speed: power,
+    receive_target: to,
   })
+}
+
+fn rolling_receive_target(
+  receiver: &Robot,
+  ball_pos: Vec2<f32>,
+  ball_vel: Vec2<f32>,
+) -> Option<Vec2<f32>> {
+  const RECEIVE_CENTER_OFFSET_MM: f32 = 80.0;
+  const RECEIVE_PROJECT_S: f32 = 0.35;
+  const MIN_BALL_SPEED_MM_S: f32 = 200.0;
+
+  let receiver_pos = receiver.pos?;
+  let ball_speed = ball_vel.length();
+  if ball_speed < MIN_BALL_SPEED_MM_S {
+    return None;
+  }
+
+  let ball_dir = ball_vel / ball_speed;
+  let along = (receiver_pos - ball_pos).dot(&ball_dir);
+  let projection = along.max(0.0).min(ball_speed * RECEIVE_PROJECT_S);
+  Some(ball_pos + ball_dir * (projection + RECEIVE_CENTER_OFFSET_MM))
 }
 
 fn set_pos_command(
@@ -321,6 +355,34 @@ mod tests {
     assert_eq!(receive_plan, pass_to_plan);
   }
 
+  #[test]
+  fn planned_receive_target_is_on_planned_pass_line() {
+    let robots = vec![
+      test_robot(0, Vec2::new(0.0, 0.0), Vec2::new(0.0, 400.0)),
+      test_robot(1, Vec2::new(1000.0, 250.0), Vec2::new(150.0, 0.0)),
+    ];
+    let ball_pos = Vec2::new(40.0, 0.0);
+    let commands = vec![Some(RobotCommand::PassTo(1)), Some(RobotCommand::RecPass)];
+    let target = planned_receive_target(&planned_receive_kicks(&commands, &robots, ball_pos), 1)
+      .expect("receiver should get a planned target");
+
+    let plan = planned_pass_from_robots(&robots[0], &robots[1], ball_pos).unwrap();
+    assert_eq!(target, plan.receive_target);
+    assert!(point_line_dist(ball_pos, plan.receive_target, target) < 1e-3);
+  }
+
+  #[test]
+  fn rolling_receive_target_projects_receiver_onto_ball_trajectory() {
+    let receiver = test_robot(1, Vec2::new(1000.0, -350.0), Vec2::new(0.0, 0.0));
+    let ball_pos = Vec2::new(100.0, 40.0);
+    let ball_vel = Vec2::new(1200.0, 300.0);
+    let target = rolling_receive_target(&receiver, ball_pos, ball_vel)
+      .expect("moving ball should produce a receive target");
+
+    assert!(point_line_dist(ball_pos, ball_pos + ball_vel, target) < 1e-3);
+    assert!((target - ball_pos).dot(&ball_vel) > 0.0);
+  }
+
   fn test_robot(id: u8, pos: Vec2<f32>, vel: Vec2<f32>) -> Robot {
     Robot {
       robot_id: id,
@@ -335,5 +397,15 @@ mod tests {
       _distance_goal: None,
       _distance_wall: None,
     }
+  }
+
+  fn point_line_dist(a: Vec2<f32>, b: Vec2<f32>, p: Vec2<f32>) -> f32 {
+    let ab = b - a;
+    let ap = p - a;
+    let ab_len = ab.length();
+    if ab_len <= 1e-6 {
+      return ap.length();
+    }
+    (ab.x * ap.y - ab.y * ap.x).abs() / ab_len
   }
 }
