@@ -441,7 +441,8 @@ impl<C, A: Ai> CrashPilot<C, A> {
 
         self.packet_buffer.vis_tracked = packet;
       } else {
-        println!("Found another tracked package: {:?}", packet.source_name);
+        // println!("Found another tracked package: {:?}", packet.source_name);
+        self.packet_buffer.vis_tracked = packet;
       }
 
       #[cfg(not(feature = "tracked_packages_check"))]
@@ -505,7 +506,7 @@ impl<C, A: Ai> CrashPilot<C, A> {
         self.site = if blue_pos_half { -1f32 } else { 1f32 }
       } else {
         // No valid gc data, use interface command
-        self.site = if self.packet_buffer.interface_command.game.side {
+        self.site = if self.packet_buffer.interface_command.side {
           -1f32
         } else {
           1f32
@@ -518,20 +519,20 @@ impl<C, A: Ai> CrashPilot<C, A> {
         self.site = if blue_pos_half { 1f32 } else { -1f32 }
       } else {
         // No valid gc data, use interface command
-        self.site = if self.packet_buffer.interface_command.game.side {
+        self.site = if self.packet_buffer.interface_command.side {
           -1f32
         } else {
           1f32
         };
       }
     } else {
-      self.team = if self.packet_buffer.interface_command.game.team_color {
+      self.team = if self.packet_buffer.interface_command.team_color {
         2
       } else {
         1
       };
       // No valid gc data, use interface command
-      self.site = if self.packet_buffer.interface_command.game.side {
+      self.site = if self.packet_buffer.interface_command.side {
         -1f32
       } else {
         1f32
