@@ -256,10 +256,11 @@ impl WorldState {
 
     // Apply goalie update
     #[cfg(feature = "ssl_game_controller")]
-    if self.site.is_sign_positive() {
-      self.goalie = Some(self.referee.yellow.goalkeeper as u8)
-    } else {
-      self.goalie = Some(self.referee.blue.goalkeeper as u8)
+    {
+      self.goalie = Some(match self.team {
+        Team::Yellow => self.referee.yellow.goalkeeper as u8,
+        Team::Blue => self.referee.blue.goalkeeper as u8,
+      });
     }
     #[cfg(not(feature = "ssl_game_controller"))]
     if self.goalie != self.new_goalie {
