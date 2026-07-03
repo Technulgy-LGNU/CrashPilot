@@ -442,7 +442,6 @@ impl<C, A: Ai> CrashPilot<C, A> {
         self.packet_buffer.vis_tracked = packet;
       } else {
         // println!("Found another tracked package: {:?}", packet.source_name);
-        self.packet_buffer.vis_tracked = packet;
       }
 
       #[cfg(not(feature = "tracked_packages_check"))]
