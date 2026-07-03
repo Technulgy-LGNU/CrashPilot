@@ -38,10 +38,7 @@ pub struct RobotSendFailure {
 
 impl SendReport {
   fn push_failure(&mut self, robot_id: u32, error: Error) {
-    self.failed.push(RobotSendFailure {
-      robot_id,
-      error,
-    });
+    self.failed.push(RobotSendFailure { robot_id, error });
   }
 }
 
@@ -100,7 +97,10 @@ impl RobotSender for NetworkSender<'_> {
           }
         };
 
-        let addr = SocketAddr::V4(SocketAddrV4::new(robot_cfg.ip, self.cfg.server.robots_port));
+        let addr = SocketAddr::V4(SocketAddrV4::new(
+          robot_cfg.ip,
+          robot_cfg.destination_port(&self.cfg.server),
+        ));
 
         let start = Instant::now();
         // Wrap send_to with timeout to prevent hanging on unreachable robots

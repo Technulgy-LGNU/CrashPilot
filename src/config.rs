@@ -21,6 +21,7 @@ impl Default for Config {
       1,
       RobotConfig {
         ip: Ipv4Addr::new(10, 0, 64, 101),
+        port: None,
         substitution_pos: Default::default(),
       },
     );
@@ -28,6 +29,7 @@ impl Default for Config {
       2,
       RobotConfig {
         ip: Ipv4Addr::new(10, 0, 64, 102),
+        port: None,
         substitution_pos: Default::default(),
       },
     );
@@ -35,6 +37,7 @@ impl Default for Config {
       3,
       RobotConfig {
         ip: Ipv4Addr::new(10, 0, 64, 103),
+        port: None,
         substitution_pos: Default::default(),
       },
     );
@@ -42,6 +45,7 @@ impl Default for Config {
       4,
       RobotConfig {
         ip: Ipv4Addr::new(10, 0, 64, 104),
+        port: None,
         substitution_pos: Default::default(),
       },
     );
@@ -126,14 +130,23 @@ impl Default for LoggingConfig {
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct RobotConfig {
   pub ip: Ipv4Addr,
+  #[serde(skip_serializing_if = "Option::is_none")]
+  pub port: Option<u16>,
   pub substitution_pos: Vector2,
 }
 impl Default for RobotConfig {
   fn default() -> Self {
     Self {
       ip: Ipv4Addr::new(10, 0, 64, 101),
+      port: None,
       substitution_pos: Vector2::default(),
     }
+  }
+}
+impl RobotConfig {
+  #[inline]
+  pub fn destination_port(&self, server: &ServerConfig) -> u16 {
+    self.port.unwrap_or(server.robots_port)
   }
 }
 
@@ -171,4 +184,42 @@ pub fn load_or_create_config(path: &str) -> Result<Config, Box<dyn Error>> {
   let config: Config = toml::from_str(&content)?;
 
   Ok(config)
+}
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  #[test]
+  fn robot_config_without_port_uses_global_robot_port() {
+    let robot: RobotConfig = toml::from_str(
+      r#"
+ip = "10.0.64.101"
+substitution_pos = { x = 800, y = 0 }
+"#,
+    )
+    .expect("robot config should parse without a port");
+    let mut server = ServerConfig::default();
+    server.robots_port = 2049;
+
+    assert_eq!(robot.port, None);
+    assert_eq!(robot.destination_port(&server), 2049);
+  }
+
+  #[test]
+  fn robot_config_port_overrides_global_robot_port() {
+    let robot: RobotConfig = toml::from_str(
+      r#"
+ip = "10.0.64.101"
+port = 3050
+substitution_pos = { x = 800, y = 0 }
+"#,
+    )
+    .expect("robot config should parse with a port override");
+    let mut server = ServerConfig::default();
+    server.robots_port = 2049;
+
+    assert_eq!(robot.port, Some(3050));
+    assert_eq!(robot.destination_port(&server), 3050);
+  }
 }
