@@ -32,8 +32,8 @@ impl SslGameController {
     let (tx, rx) = mpsc::channel(32);
     let actor = GameControllerActor {
       addr: SocketAddr::new(cfg.ssl.ssl_gc_msg_ip.into(), cfg.ssl.ssl_gc_msg_port),
-      team_name: TEAM_NAME.to_string(),
-      team: None,
+      team_name: std::env::var("CRASHPILOT_TEAM_NAME").unwrap_or_else(|_| TEAM_NAME.to_string()),
+      team: configured_team(),
       events,
     };
 
@@ -95,6 +95,18 @@ impl SslGameController {
         msg: Some(team_to_controller::Msg::Ping(true)),
       })
       .await
+  }
+}
+
+fn configured_team() -> Option<Team> {
+  match std::env::var("CRASHPILOT_TEAM")
+    .ok()?
+    .to_ascii_lowercase()
+    .as_str()
+  {
+    "yellow" => Some(Team::Yellow),
+    "blue" => Some(Team::Blue),
+    _ => None,
   }
 }
 

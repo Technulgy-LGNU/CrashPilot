@@ -298,7 +298,6 @@ checksum = "245097e9a4535ee1e3e3931fcfcd55a796a44c643e8596ff6566d68f09b87bbc"
 [[package]]
 name = "core_dump"
 version = "0.1.0"
-source = "git+https://github.com/Technulgy-LGNU/core-dump#3c7c5a0c4e41d4fd0648c840eccf95a52255906f"
 dependencies = [
  "num-traits",
  "prost 0.14.4",
@@ -337,6 +336,7 @@ dependencies = [
  "prost 0.14.4",
  "serde",
  "serde_json",
+ "socket2",
  "tokio",
  "tokio-tungstenite",
  "toml",
@@ -2135,7 +2135,6 @@ checksum = "703d5c7ef118737c72f1af64ad2f6f8c5e1921f818cdcb97b8fe6fc69bf66214"
 [[package]]
 name = "simhark"
 version = "0.1.0"
-source = "git+https://github.com/Technulgy-LGNU/simhark#ea3099f7e33802f86963672d8f25dfc1fde02a3c"
 dependencies = [
  "crossbeam-channel",
  "env_logger",
@@ -2158,7 +2157,6 @@ dependencies = [
 [[package]]
 name = "simhark-sumatra"
 version = "0.1.0"
-source = "git+https://github.com/Technulgy-LGNU/simhark#ea3099f7e33802f86963672d8f25dfc1fde02a3c"
 dependencies = [
  "anyhow",
  "prost 0.14.4",
@@ -2953,3 +2951,19 @@ dependencies = [
  "cc",
  "pkg-config",
 ]
+
+[[patch.unused]]
+name = "referris"
+version = "0.1.0"
+
+[[patch.unused]]
+name = "referris-simhark"
+version = "0.1.0"
+
+[[patch.unused]]
+name = "loguna"
+version = "0.1.0"
+
+[[patch.unused]]
+name = "tf_jetsoncode"
+version = "0.1.0"

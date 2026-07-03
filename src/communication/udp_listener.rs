@@ -15,25 +15,9 @@ pub fn spawn_udp_listener<T>(
       let mut buf = [0; 65536];
       match socket.recv_from(&mut buf).await {
         Ok((size, _)) => {
-          if let Ok(mut latest_msg) = T::decode(&buf[..size]) {
-            // Drain all buffered packets, keeping only the most recent
-            loop {
-              match socket.try_recv_from(&mut buf) {
-                Ok((size, _)) => {
-                  if let Ok(msg) = T::decode(&buf[..size]) {
-                    latest_msg = msg;
-                  }
-                }
-                Err(ref e) if e.kind() == std::io::ErrorKind::WouldBlock => break,
-                Err(e) => {
-                  eprintln!("recv error: {:?}", e);
-                  break;
-                }
-              }
-            }
-
+          if let Ok(msg) = T::decode(&buf[..size]) {
             let lock = tx.write().await;
-            wrap(latest_msg, lock);
+            wrap(msg, lock);
           }
         }
         Err(e) => {

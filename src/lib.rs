@@ -1,32 +1,32 @@
-#[cfg(feature = "loki")]
-use crate::communication::loki::spawn_loki_publisher;
+pub use crate::communication::Events;
 #[cfg(feature = "loki")]
 use crate::communication::loki::LokiPublisher;
+#[cfg(feature = "loki")]
+use crate::communication::loki::spawn_loki_publisher;
 use crate::communication::robot_sender::{NetworkSender, RobotSender};
 #[cfg(feature = "ssl_game_controller")]
 pub use crate::communication::ssl_gc_handler::SslGameController;
-pub use crate::communication::Events;
-use crate::communication::{communication_receiver, EventShare, WebsocketOut};
+use crate::communication::{EventShare, WebsocketOut, communication_receiver};
 pub use crate::config::Config;
 use crate::game_logic::game_logic;
 use crate::game_logic::types::{BallData, GamePhase, PrepPhase, Robot, WorldState};
 use crate::helpers::robot_data::create_robot_data;
 #[cfg(feature = "prometheus")]
 use crate::metrics::PrometheusMetrics;
-use crate::utils::{spawn_robot_socket, FieldSetup, PacketBuffer};
+use crate::utils::{FieldSetup, PacketBuffer, spawn_robot_socket};
 use bangka::Bangka;
 use core_dump::proto::cp_game_phase::{
   GamePhase as InterfaceGamePhase, PrepPhase as InterfacePrepPhase,
 };
 #[cfg(feature = "ssl_game_controller")]
 use core_dump::proto::{AdvantageChoice, ControllerToTeam};
-use core_dump::proto::{CpCommand, CpGamePhase, CpInterfaceWrapper, CpRobot};
+use core_dump::proto::{CpCommand, CpGamePhase, CpInterfaceWrapper, CpRobot, SslDetectionFrame};
 use std::collections::HashMap;
-use std::sync::atomic::AtomicU64;
 use std::sync::Arc;
+use std::sync::atomic::AtomicU64;
 use std::time::{Instant, SystemTime, UNIX_EPOCH};
 use tokio::net::UdpSocket;
-use tokio::time::{interval, Duration, MissedTickBehavior};
+use tokio::time::{Duration, MissedTickBehavior, interval};
 
 pub use crate::utils::RobotData;
 
@@ -125,7 +125,9 @@ impl CrashPilot {
     #[cfg(feature = "interface")]
     interface::spawn_interface();
 
-    let config = match config::load_or_create_config("config.toml") {
+    let config_path =
+      std::env::var("CRASHPILOT_CONFIG").unwrap_or_else(|_| "config.toml".to_string());
+    let config = match config::load_or_create_config(&config_path) {
       Ok(config) => config,
       Err(e) => panic!("{}", e),
     };
@@ -431,6 +433,7 @@ impl<C, A: Ai> CrashPilot<C, A> {
       println!("No raw package received, using previous one");
     }
 
+    let tracked_updated = events.tracked.is_some();
     if let Some(packet) = events.tracked {
       #[cfg(feature = "tracked_packages_check")]
       if let Some(source_name) = &packet.source_name
