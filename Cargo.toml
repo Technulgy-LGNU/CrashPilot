@@ -21,11 +21,6 @@ bangka = { path = "../bangka/bangka" }
 
 [build-dependencies]
 
-[workspace]
-members = [
-    "crates/*"
-]
-
 [features]
 default = []
 loki = []

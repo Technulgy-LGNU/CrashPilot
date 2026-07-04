@@ -1,32 +1,32 @@
-pub use crate::communication::Events;
-#[cfg(feature = "loki")]
-use crate::communication::loki::LokiPublisher;
 #[cfg(feature = "loki")]
 use crate::communication::loki::spawn_loki_publisher;
+#[cfg(feature = "loki")]
+use crate::communication::loki::LokiPublisher;
 use crate::communication::robot_sender::{NetworkSender, RobotSender};
 #[cfg(feature = "ssl_game_controller")]
 pub use crate::communication::ssl_gc_handler::SslGameController;
-use crate::communication::{EventShare, WebsocketOut, communication_receiver};
+pub use crate::communication::Events;
+use crate::communication::{communication_receiver, EventShare, WebsocketOut};
 pub use crate::config::Config;
 use crate::game_logic::game_logic;
 use crate::game_logic::types::{BallData, GamePhase, PrepPhase, Robot, WorldState};
 use crate::helpers::robot_data::create_robot_data;
 #[cfg(feature = "prometheus")]
 use crate::metrics::PrometheusMetrics;
-use crate::utils::{FieldSetup, PacketBuffer, spawn_robot_socket};
+use crate::utils::{spawn_robot_socket, FieldSetup, PacketBuffer};
 use bangka::Bangka;
 use core_dump::proto::cp_game_phase::{
   GamePhase as InterfaceGamePhase, PrepPhase as InterfacePrepPhase,
 };
 #[cfg(feature = "ssl_game_controller")]
 use core_dump::proto::{AdvantageChoice, ControllerToTeam};
-use core_dump::proto::{CpCommand, CpGamePhase, CpInterfaceWrapper, CpRobot, SslDetectionFrame};
+use core_dump::proto::{CpCommand, CpGamePhase, CpInterfaceWrapper, CpRobot};
 use std::collections::HashMap;
-use std::sync::Arc;
 use std::sync::atomic::AtomicU64;
-use std::time::{Instant, SystemTime, UNIX_EPOCH};
+use std::sync::Arc;
+use std::time::{Duration, Instant};
 use tokio::net::UdpSocket;
-use tokio::time::{Duration, MissedTickBehavior, interval};
+use tokio::time::{interval, MissedTickBehavior};
 
 pub use crate::utils::RobotData;
 
@@ -51,6 +51,8 @@ use prost::Message;
 #[cfg(feature = "ssl_game_controller")]
 const TEAM_NAME: &str = "Robocup Junior SSL Team";
 
+const MAX_REFEREE_PACKET_AGE_MICROS: u64 = 2_000_000;
+
 pub struct CrashPilot<C = CommunicationChannels, A: Ai = Bangka> {
   config: Config,
   #[cfg(feature = "prometheus")]
@@ -67,6 +69,7 @@ pub struct CrashPilot<C = CommunicationChannels, A: Ai = Bangka> {
   team: i32,
   field_setup: FieldSetup,
   packet_buffer: PacketBuffer,
+  referee_packet_received_at: Option<Instant>,
   comm: C,
   heartbeat: RobotHeartbeat,
   process_start: Instant,
@@ -396,6 +399,7 @@ impl<C, A: Ai> CrashPilot<C, A> {
       team,
       field_setup,
       packet_buffer: PacketBuffer::default(),
+      referee_packet_received_at: None,
       comm,
       heartbeat: heartbeats,
       process_start,
@@ -433,7 +437,6 @@ impl<C, A: Ai> CrashPilot<C, A> {
       println!("No raw package received, using previous one");
     }
 
-    let tracked_updated = events.tracked.is_some();
     if let Some(packet) = events.tracked {
       #[cfg(feature = "tracked_packages_check")]
       if let Some(source_name) = &packet.source_name
@@ -456,7 +459,6 @@ impl<C, A: Ai> CrashPilot<C, A> {
       println!("No tracked package received, using previous one");
     }
 
-
     if let Some(packet) = events.ws {
       for robot_command in packet.robot_commands {
         self
@@ -471,19 +473,29 @@ impl<C, A: Ai> CrashPilot<C, A> {
       #[cfg(feature = "debug")]
       println!("Received new gc packet");
 
-      if is_older_than_2s(packet.packet_timestamp) {
+      if is_referee_packet_older_than_reference(
+        packet.packet_timestamp,
+        self.packet_buffer.referee.packet_timestamp,
+        self.referee_packet_received_at.as_ref(),
+      ) {
         #[cfg(feature = "debug")]
         println!("Ignoring old gc packet");
       } else {
         self.packet_buffer.referee = packet;
+        self.referee_packet_received_at = Some(Instant::now());
       }
     } else {
       #[cfg(feature = "debug")]
       println!("No gc packet received, using previous one");
     }
 
-    if is_older_than_2s(self.packet_buffer.referee.packet_timestamp) {
+    if is_referee_packet_older_than_reference(
+      self.packet_buffer.referee.packet_timestamp,
+      self.packet_buffer.referee.packet_timestamp,
+      self.referee_packet_received_at.as_ref(),
+    ) {
       self.packet_buffer.referee.clear();
+      self.referee_packet_received_at = None;
     }
 
     if let Some(packet) = events.rf
@@ -759,13 +771,23 @@ fn interface_prep_phase(phase: PrepPhase) -> InterfacePrepPhase {
   }
 }
 
-fn is_older_than_2s(packet_timestamp: u64) -> bool {
-  const MAX_PACKET_AGE_MICROS: u64 = 2_000_000;
+fn is_referee_packet_older_than_reference(
+  packet_timestamp: u64,
+  reference_timestamp: u64,
+  reference_received_at: Option<&Instant>,
+) -> bool {
+  if packet_timestamp == 0 {
+    return true;
+  }
 
-  let now = SystemTime::now()
-    .duration_since(UNIX_EPOCH)
-    .unwrap()
-    .as_micros() as u64;
+  let Some(reference_received_at) = reference_received_at else {
+    return false;
+  };
+  let elapsed_micros = reference_received_at
+    .elapsed()
+    .as_micros()
+    .min(u64::MAX as u128) as u64;
+  let reference_now = reference_timestamp.saturating_add(elapsed_micros);
 
-  packet_timestamp == 0 || now.saturating_sub(packet_timestamp) > MAX_PACKET_AGE_MICROS
+  reference_now.saturating_sub(packet_timestamp) > MAX_REFEREE_PACKET_AGE_MICROS
 }
