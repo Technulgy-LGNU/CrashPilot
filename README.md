@@ -139,7 +139,7 @@ loki_port = 3100
 [robots]
 0 = { ip = "10.0.64.100", substitution_pos = { x = 400, y = 0 } }
 1 = { ip = "10.0.64.101", substitution_pos = { x = 800, y = 0 } }
-4 = { ip = "10.0.64.104", substitution_pos = { x = 2000, y = 0 } }
+4 = { ip = "10.0.64.104", port = 1025, substitution_pos = { x = 2000, y = 0 } }
 ```
 
 Important ports:
@@ -151,13 +151,14 @@ Important ports:
 | `ssl_gc_ip:ssl_gc_port` | SSL GameController referee multicast input |
 | `ssl_gc_msg_ip:ssl_gc_msg_port` | Optional GameController team TCP endpoint |
 | `robot_socket_host:robot_socket_port` | Local UDP socket used to send robot commands |
-| `robots_port` | Destination UDP port on each robot |
+| `robots_port` | Default destination UDP port on each robot |
 | `robot_receive_port` | Local UDP port for robot feedback |
 | `websocket_host:websocket_port` | Operator interface WebSocket endpoint |
 
 Robot IDs are configured as TOML table keys under `[robots]`. Each robot needs
 an IP address and a `substitution_pos`, used during timeout/substitution
-positioning.
+positioning. A robot may also set `port` to override `server.robots_port` for
+that robot only.
 
 ## Building
 
@@ -277,7 +278,7 @@ When feedback is received from a configured robot IP:
 configured robot at:
 
 ```text
-robot.ip:server.robots_port
+robot.ip:(robot.port or server.robots_port)
 ```
 
 Sending is best-effort per robot. A failure for one robot does not stop sends to

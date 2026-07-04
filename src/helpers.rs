@@ -2,8 +2,12 @@ pub mod ball_helper;
 pub mod best_angle_to_goal;
 pub mod robot_data;
 
-use core_dump::proto::{CpVector2, Vector2};
+use core_dump::proto::{
+  CpVector2, RobotId, SslDetectionFrame, SslDetectionRobot, Team, TrackedBall, TrackedFrame,
+  TrackedRobot, TrackerWrapperPacket, Vector2, Vector3,
+};
 use core_dump::vec::types::Vec2;
+use std::collections::HashMap;
 
 #[inline]
 pub fn as_cp_vec2(v2: Vector2) -> CpVector2 {
@@ -11,6 +15,124 @@ pub fn as_cp_vec2(v2: Vector2) -> CpVector2 {
     x: (v2.x * 1000.0) as i32,
     y: (v2.y * 1000.0) as i32,
   }
+}
+
+pub fn raw_vision_to_tracked(
+  raw_frames: &HashMap<u32, SslDetectionFrame>,
+) -> Option<TrackerWrapperPacket> {
+  if raw_frames.is_empty() {
+    return None;
+  }
+  let newest_frame = raw_frames
+    .values()
+    .map(|frame| frame.frame_number)
+    .max()
+    .unwrap_or_default();
+  let newest_timestamp = raw_frames
+    .values()
+    .map(|frame| frame.t_capture)
+    .fold(0.0, f64::max);
+
+  Some(TrackerWrapperPacket {
+    uuid: "faabs-raw-vision-fallback".to_string(),
+    source_name: Some("raw SSL-Vision fallback".to_string()),
+    tracked_frame: Some(raw_detections_to_tracked_frame(
+      raw_frames
+        .values()
+        .filter(|frame| frame.frame_number.saturating_add(1) >= newest_frame),
+      newest_timestamp,
+    )),
+  })
+}
+
+fn raw_detections_to_tracked_frame<'a>(
+  detections: impl Iterator<Item = &'a SslDetectionFrame>,
+  timestamp: f64,
+) -> TrackedFrame {
+  let mut frame_number = 0;
+  let mut best_ball = None;
+  let mut robots_by_id: HashMap<(i32, u32), TrackedRobot> = HashMap::new();
+
+  for detection in detections {
+    frame_number = frame_number.max(detection.frame_number);
+    for ball in &detection.balls {
+      let tracked = TrackedBall {
+        pos: Vector3 {
+          x: ball.x / 1000.0,
+          y: ball.y / 1000.0,
+          z: ball.z.unwrap_or_default() / 1000.0,
+        },
+        vel: None,
+        visibility: Some(ball.confidence),
+      };
+      if best_ball
+        .as_ref()
+        .and_then(|ball: &TrackedBall| ball.visibility)
+        .unwrap_or_default()
+        <= ball.confidence
+      {
+        best_ball = Some(tracked);
+      }
+    }
+
+    merge_raw_robots(&mut robots_by_id, &detection.robots_yellow, Team::Yellow);
+    merge_raw_robots(&mut robots_by_id, &detection.robots_blue, Team::Blue);
+  }
+
+  let mut robots = robots_by_id.into_values().collect::<Vec<_>>();
+  robots.sort_by_key(|robot| {
+    (
+      robot.robot_id.team.unwrap_or_default(),
+      robot.robot_id.id.unwrap_or_default(),
+    )
+  });
+
+  TrackedFrame {
+    frame_number,
+    timestamp,
+    balls: best_ball.into_iter().collect(),
+    robots,
+    kicked_ball: None,
+    capabilities: Vec::new(),
+  }
+}
+
+fn merge_raw_robots(
+  robots_by_id: &mut HashMap<(i32, u32), TrackedRobot>,
+  robots: &[SslDetectionRobot],
+  team: Team,
+) {
+  for robot in robots {
+    let Some(tracked) = raw_robot_to_tracked(robot, team) else {
+      continue;
+    };
+    let key = (team as i32, tracked.robot_id.id.unwrap_or_default());
+    let old_confidence = robots_by_id
+      .get(&key)
+      .and_then(|robot| robot.visibility)
+      .unwrap_or_default();
+    if robot.confidence >= old_confidence {
+      robots_by_id.insert(key, tracked);
+    }
+  }
+}
+
+fn raw_robot_to_tracked(robot: &SslDetectionRobot, team: Team) -> Option<TrackedRobot> {
+  let id = robot.robot_id?;
+  Some(TrackedRobot {
+    robot_id: RobotId {
+      id: Some(id),
+      team: Some(team as i32),
+    },
+    pos: Vector2 {
+      x: robot.x / 1000.0,
+      y: robot.y / 1000.0,
+    },
+    orientation: robot.orientation.unwrap_or_default(),
+    vel: None,
+    vel_angular: None,
+    visibility: Some(robot.confidence),
+  })
 }
 
 #[inline]

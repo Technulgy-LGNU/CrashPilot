@@ -1,2 +1,0 @@
-mod baller;
-mod quadratic;
