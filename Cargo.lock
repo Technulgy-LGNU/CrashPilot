@@ -37,7 +37,9 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "core_dump",
+ "prost",
  "serde",
+ "socket2",
  "tokio",
  "toml",
 ]
