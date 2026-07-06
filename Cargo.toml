@@ -4,30 +4,13 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-prost = "0.14.3"
 tokio = { version = "1.50.0", features = ["net", "sync", "rt", "rt-multi-thread", "macros", "time", "io-util"] }
-tokio-tungstenite = "0.29.0"
-anyhow = "1.0.102"
 serde = { version = "1.0.228", features = ["derive"] }
-toml = "1.1.2"
-futures-util = "0.3.32"
-hyper = { version = "1", features = ["server", "client", "http1"] }
-hyper-util = { version = "0.1", features = ["server", "client-legacy", "http1", "tokio"] }
-http-body-util = "0.1"
-serde_json = "1.0.145"
-socket2 = "0.6.4"
-core_dump = { git = "https://github.com/Technulgy-LGNU/core-dump" }
-bangka = { path = "../bangka/bangka" }
+core_dump = { git = "https://github.com/Technulgy-LGNU/core-dump", features = ["serde"]}
+toml = "1.1.2+spec-1.1.0"
+anyhow = "1.0.103"
 
 [build-dependencies]
 
 [features]
 default = []
-loki = []
-prometheus = []
-interface = []
-ssl_game_controller = []
-sim-time = []
-viewer-debug = []
-debug = []
-tracked_packages_check = []

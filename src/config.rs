@@ -1,110 +1,37 @@
-use core_dump::proto::CpVector2;
+use core_dump::vec::types::Vec2;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-use std::error::Error;
 use std::fs;
 use std::net::Ipv4Addr;
 use std::path::Path;
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Default, Deserialize, Serialize)]
 pub struct Config {
   pub ssl: SslConfig,
-  pub server: ServerConfig,
   pub logging: LoggingConfig,
-  pub robots: HashMap<u32, RobotConfig>,
-}
-impl Default for Config {
-  fn default() -> Self {
-    let mut robots = HashMap::new();
-
-    robots.insert(
-      1,
-      RobotConfig {
-        ip: Ipv4Addr::new(10, 0, 64, 101),
-        port: None,
-        substitution_pos: Default::default(),
-      },
-    );
-    robots.insert(
-      2,
-      RobotConfig {
-        ip: Ipv4Addr::new(10, 0, 64, 102),
-        port: None,
-        substitution_pos: Default::default(),
-      },
-    );
-    robots.insert(
-      3,
-      RobotConfig {
-        ip: Ipv4Addr::new(10, 0, 64, 103),
-        port: None,
-        substitution_pos: Default::default(),
-      },
-    );
-    robots.insert(
-      4,
-      RobotConfig {
-        ip: Ipv4Addr::new(10, 0, 64, 104),
-        port: None,
-        substitution_pos: Default::default(),
-      },
-    );
-
-    Self {
-      ssl: SslConfig::default(),
-      server: ServerConfig::default(),
-      logging: LoggingConfig::default(),
-      robots,
-    }
-  }
+  pub cp_config: CPConfig,
+  pub robots: Vec<RobotConfig>,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct SslConfig {
-  pub ssl_vision_raw_ip: Ipv4Addr,
-  pub ssl_vision_raw_port: u16,
-  pub ssl_vision_tracked_ip: Ipv4Addr,
-  pub ssl_vision_tracked_port: u16,
-  pub ssl_gc_ip: Ipv4Addr,
-  pub ssl_gc_port: u16,
+  pub vision_raw_ip: Ipv4Addr,
+  pub vision_raw_port: u16,
+  pub vision_tracked_ip: Ipv4Addr,
+  pub vision_tracked_port: u16,
+  pub game_controller_ip: Ipv4Addr,
+  pub game_controller_port: u16,
   pub ssl_interface: Ipv4Addr,
-  pub ssl_gc_msg_port: u16,
-  pub ssl_gc_msg_ip: Ipv4Addr,
 }
 impl Default for SslConfig {
   fn default() -> Self {
     Self {
-      ssl_vision_raw_ip: Ipv4Addr::new(224, 5, 23, 2),
-      ssl_vision_raw_port: 10006,
-      ssl_vision_tracked_ip: Ipv4Addr::new(224, 5, 23, 2),
-      ssl_vision_tracked_port: 10010,
-      ssl_gc_ip: Ipv4Addr::new(224, 5, 23, 2),
-      ssl_gc_port: 10003,
-      ssl_gc_msg_ip: Ipv4Addr::new(127, 0, 0, 1),
-      ssl_gc_msg_port: 10008,
-      ssl_interface: Ipv4Addr::new(192, 168, 0, 1),
-    }
-  }
-}
-
-#[derive(Debug, Deserialize, Serialize)]
-pub struct ServerConfig {
-  pub robot_socket_host: Ipv4Addr,
-  pub robot_socket_port: u16,
-  pub robots_port: u16,
-  pub robot_receive_port: u16,
-  pub websocket_host: Ipv4Addr,
-  pub websocket_port: u16,
-}
-impl Default for ServerConfig {
-  fn default() -> Self {
-    Self {
-      robot_socket_host: Ipv4Addr::new(0, 0, 0, 0),
-      robot_socket_port: 8192,
-      robots_port: 1024,
-      robot_receive_port: 2048,
-      websocket_host: Ipv4Addr::new(0, 0, 0, 0),
-      websocket_port: 4096,
+      vision_raw_ip: Ipv4Addr::new(224, 5, 23, 2),
+      vision_raw_port: 10006,
+      vision_tracked_ip: Ipv4Addr::new(224, 5, 23, 2),
+      vision_tracked_port: 10010,
+      game_controller_ip: Ipv4Addr::new(224, 5, 23, 1),
+      game_controller_port: 10003,
+      ssl_interface: Ipv4Addr::new(0, 0, 0, 0),
     }
   }
 }
@@ -113,64 +40,51 @@ impl Default for ServerConfig {
 pub struct LoggingConfig {
   pub prometheus_host: Ipv4Addr,
   pub prometheus_port: u16,
-  pub loki_host: Ipv4Addr,
-  pub loki_port: u16,
 }
 impl Default for LoggingConfig {
   fn default() -> Self {
     Self {
-      prometheus_host: Ipv4Addr::new(10, 0, 64, 2),
-      prometheus_port: 9000,
-      loki_host: Ipv4Addr::new(10, 0, 64, 2),
-      loki_port: 3100,
+      prometheus_host: Ipv4Addr::new(10, 0, 64, 41),
+      prometheus_port: 9090,
     }
   }
 }
 
-#[derive(Debug, Deserialize, Serialize, Clone)]
+#[derive(Debug, Deserialize, Serialize)]
+pub struct CPConfig {
+  pub interface_host: Ipv4Addr,
+  pub interface_port: u16,
+  pub robot_rec_host: Ipv4Addr,
+  pub robot_rec_port: u16,
+}
+impl Default for CPConfig {
+  fn default() -> Self {
+    Self {
+      interface_host: Ipv4Addr::new(127, 0, 0, 1),
+      interface_port: 8080,
+      robot_rec_host: Ipv4Addr::new(0, 0, 0, 0),
+      robot_rec_port: 1024,
+    }
+  }
+}
+
+#[derive(Debug, Deserialize, Serialize)]
 pub struct RobotConfig {
-  pub ip: Ipv4Addr,
-  #[serde(skip_serializing_if = "Option::is_none")]
-  pub port: Option<u16>,
-  pub substitution_pos: Vector2,
+  pub robot_id: u8,
+  pub robot_ip: Ipv4Addr,
+  pub hold_point: Vec2<i32>,
 }
 impl Default for RobotConfig {
   fn default() -> Self {
     Self {
-      ip: Ipv4Addr::new(10, 0, 64, 101),
-      port: None,
-      substitution_pos: Vector2::default(),
-    }
-  }
-}
-impl RobotConfig {
-  #[inline]
-  pub fn destination_port(&self, server: &ServerConfig) -> u16 {
-    self.port.unwrap_or(server.robots_port)
-  }
-}
-
-#[derive(Debug, Deserialize, Serialize, Clone)]
-pub struct Vector2 {
-  pub x: i32,
-  pub y: i32,
-}
-impl Default for Vector2 {
-  fn default() -> Self {
-    Self { x: 6200, y: 400 }
-  }
-}
-impl Vector2 {
-  #[inline]
-  pub fn to_cp_vec2(&self) -> CpVector2 {
-    CpVector2 {
-      x: self.x,
-      y: self.y,
+      robot_id: 0,
+      robot_ip: Ipv4Addr::new(0, 0, 0, 0),
+      hold_point: Vec2::new(0, 0),
     }
   }
 }
 
-pub fn load_or_create_config(path: &str) -> Result<Config, Box<dyn Error>> {
+pub fn load_or_create_config(path: &str) -> anyhow::Result<Config> {
   if !Path::new(path).exists() {
     let default_config = Config::default();
 
@@ -184,42 +98,4 @@ pub fn load_or_create_config(path: &str) -> Result<Config, Box<dyn Error>> {
   let config: Config = toml::from_str(&content)?;
 
   Ok(config)
-}
-
-#[cfg(test)]
-mod tests {
-  use super::*;
-
-  #[test]
-  fn robot_config_without_port_uses_global_robot_port() {
-    let robot: RobotConfig = toml::from_str(
-      r#"
-ip = "10.0.64.101"
-substitution_pos = { x = 800, y = 0 }
-"#,
-    )
-    .expect("robot config should parse without a port");
-    let mut server = ServerConfig::default();
-    server.robots_port = 2049;
-
-    assert_eq!(robot.port, None);
-    assert_eq!(robot.destination_port(&server), 2049);
-  }
-
-  #[test]
-  fn robot_config_port_overrides_global_robot_port() {
-    let robot: RobotConfig = toml::from_str(
-      r#"
-ip = "10.0.64.101"
-port = 3050
-substitution_pos = { x = 800, y = 0 }
-"#,
-    )
-    .expect("robot config should parse with a port override");
-    let mut server = ServerConfig::default();
-    server.robots_port = 2049;
-
-    assert_eq!(robot.port, Some(3050));
-    assert_eq!(robot.destination_port(&server), 3050);
-  }
 }
