@@ -1,14 +1,17 @@
 use crate::communication::{EventShare, Events};
 use prost::Message;
 use socket2::{Domain, Protocol, SockAddr, Socket, Type};
+use std::io;
 use std::net::Ipv4Addr;
 use std::net::{SocketAddrV4, UdpSocket as StdUdpSocket};
+use std::time::Duration;
 use tokio::net::UdpSocket;
 use tokio::sync::RwLockWriteGuard;
+use tokio::time::sleep;
 
-/// Generic Multicast Listener for Protobuff streams
+/// Generic Multicast Listener for Protobuf streams
 pub fn multicast_handler<T>(
-  multicas_host: Ipv4Addr,
+  multicast_host: Ipv4Addr,
   port: u16,
   interface: Ipv4Addr,
   tx: EventShare,
@@ -17,76 +20,88 @@ pub fn multicast_handler<T>(
   T: Message + Default + Send + 'static,
 {
   tokio::spawn(async move {
-    // Create Socket2, so reuse Addr/Port is possible
-    let socket = match Socket::new(Domain::IPV4, Type::DGRAM, Some(Protocol::UDP)) {
-      Ok(socket) => socket,
-      Err(e) => {
-        panic!("Failed to create socket: {}", e);
-      }
-    };
+    let mut reconnect_delay = Duration::from_secs(1);
+    let max_reconnect_delay = Duration::from_secs(30);
 
-    // Allow reuse of address and port
-    match socket.set_reuse_address(true) {
-      Ok(_) => {}
-      Err(e) => {
-        panic!("Failed to set reuse address: {}", e);
-      }
-    }
-    match socket.set_reuse_port(true) {
-      Ok(_) => {}
-      Err(e) => {
-        eprintln!("Failed to set reuse port: {}", e);
-      }
-    }
-
-    // Bind the socket2
-    match socket.bind(&SockAddr::from(SocketAddrV4::new(interface, port))) {
-      Ok(_) => {}
-      Err(e) => {
-        eprintln!("Failed to bind socket: {}", e);
-      }
-    }
-
-    // Convert to stdsocket
-    let std_socket: StdUdpSocket = socket.into();
-
-    // Join multicast stream
-    match std_socket.join_multicast_v4(&multicas_host, &interface) {
-      Ok(_) => (),
-      Err(err) => {
-        eprintln!("Error during multicast join: {}", err);
-      }
-    };
-
-    // Set nonblocking
-    match std_socket.set_nonblocking(true) {
-      Ok(_) => (),
-      Err(err) => {
-        eprintln!("Error during setting socket to non blocking: {}", err);
-      }
-    };
-
-    // Convert to tokio udpsocket
-    let tokio_socket = match UdpSocket::from_std(std_socket) {
-      Ok(socket) => socket,
-      Err(err) => {
-        panic!("Error converting std socket to tokio socket: {}", err);
-      }
-    };
-
+    // Auto reconnect loop
     loop {
-      let mut buf = [0; 65536];
-      match tokio_socket.recv_from(&mut buf).await {
-        Ok((size, _)) => {
-          if let Ok(msg) = T::decode(&buf[..size]) {
-            let lock = tx.write().await;
-            wrap(msg, lock);
-          }
+      let tokio_socket = match create_multicast_socket(multicast_host, port, interface) {
+        Ok(socket) => {
+          reconnect_delay = Duration::from_secs(1);
+          socket
         }
-        Err(e) => {
-          eprintln!("recv error: {:?}", e);
+        Err(err) => {
+          eprintln!(
+            "Failed to create multicast socket for {}:{} on interface {}: {}. Retrying in {:?}",
+            multicast_host, port, interface, err, reconnect_delay
+          );
+
+          sleep(reconnect_delay).await;
+          reconnect_delay = (reconnect_delay * 2).min(max_reconnect_delay);
+          continue;
+        }
+      };
+
+      // Listen to packets
+      let mut buf = [0u8; 65_536];
+
+      loop {
+        match tokio_socket.recv_from(&mut buf).await {
+          Ok((size, _addr)) => match T::decode(&buf[..size]) {
+            Ok(msg) => {
+              let lock = tx.write().await;
+              wrap(msg, lock);
+            }
+            Err(err) => {
+              eprintln!("Failed to decode multicast protobuf message: {}", err);
+            }
+          },
+
+          Err(err) if err.kind() == io::ErrorKind::Interrupted => {
+            continue;
+          }
+
+          Err(err) => {
+            eprintln!(
+              "Multicast receive error on {}:{} via {}: {}. Reconnecting in {:?}",
+              multicast_host, port, interface, err, reconnect_delay
+            );
+
+            sleep(reconnect_delay).await;
+            reconnect_delay = (reconnect_delay * 2).min(max_reconnect_delay);
+
+            break;
+          }
         }
       }
     }
   });
+}
+
+/// Creates a simple multicast socket
+fn create_multicast_socket(
+  multicast_host: Ipv4Addr,
+  port: u16,
+  interface: Ipv4Addr,
+) -> io::Result<UdpSocket> {
+  // Start with socket2, so reuse addr & port work
+  let socket = Socket::new(Domain::IPV4, Type::DGRAM, Some(Protocol::UDP))?;
+
+  socket.set_reuse_address(true)?;
+
+  #[cfg(unix)]
+  {
+    if let Err(err) = socket.set_reuse_port(true) {
+      eprintln!("Failed to set SO_REUSEPORT: {}", err);
+    }
+  }
+
+  socket.bind(&SockAddr::from(SocketAddrV4::new(interface, port)))?;
+
+  let std_socket: StdUdpSocket = socket.into();
+
+  std_socket.join_multicast_v4(&multicast_host, &interface)?;
+  std_socket.set_nonblocking(true)?;
+
+  UdpSocket::from_std(std_socket)
 }
