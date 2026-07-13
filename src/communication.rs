@@ -21,6 +21,7 @@ use core_dump::proto::{
   ControllerToTeam, CpInterfaceWrapper, InterfaceWrapperCp, Referee, RobotCp, SslWrapperPacket,
   TrackerWrapperPacket,
 };
+use prost::Message;
 use std::sync::Arc;
 use std::sync::atomic::AtomicU64;
 use std::time::Instant;
@@ -33,6 +34,12 @@ pub type RobotHeartbeat = Arc<Vec<AtomicU64>>;
 pub struct Events {
   pub raw: Option<SslWrapperPacket>,
   pub tracked: Option<TrackerWrapperPacket>,
+  /// Every raw camera packet received since the controller last drained the inbox.
+  /// `raw` is retained for compatibility with simulator callers that construct
+  /// `Events` directly.
+  pub raw_frames: Vec<SslWrapperPacket>,
+  /// Every tracker packet received since the last drain, keyed later by UUID/source.
+  pub tracked_frames: Vec<TrackerWrapperPacket>,
   pub ws: Option<InterfaceWrapperCp>,
   pub gc: Option<Referee>,
   pub gc_team_messages: Vec<ControllerToTeam>,
@@ -44,6 +51,8 @@ impl Events {
     Self {
       raw: None,
       tracked: None,
+      raw_frames: Vec::new(),
+      tracked_frames: Vec::new(),
       ws: None,
       gc: None,
       gc_team_messages: Vec::new(),
@@ -55,6 +64,8 @@ impl Events {
     Self {
       raw: self.raw.take(),
       tracked: self.tracked.take(),
+      raw_frames: std::mem::take(&mut self.raw_frames),
+      tracked_frames: std::mem::take(&mut self.tracked_frames),
       ws: self.ws.take(),
       gc: self.gc.take(),
       gc_team_messages: std::mem::take(&mut self.gc_team_messages),
@@ -69,6 +80,7 @@ pub type EventShare = Arc<RwLock<Events>>;
 struct WsLatestState {
   seq: u64,
   payload: Option<CpInterfaceWrapper>,
+  encoded_payload: Option<Vec<u8>>,
 }
 
 /// Outbound WebSocket handle (CP -> interface).
@@ -94,6 +106,7 @@ impl WebsocketOut {
   pub async fn publish(&self, payload: CpInterfaceWrapper) {
     let mut lock = self.state.write().await;
     lock.seq = lock.seq.wrapping_add(1);
+    lock.encoded_payload = Some(payload.encode_to_vec());
     lock.payload = Some(payload);
     drop(lock);
     self.notify.notify_waiters();
@@ -103,6 +116,7 @@ impl WebsocketOut {
   pub fn publish_sync(&self, payload: CpInterfaceWrapper) {
     let mut lock = self.state.blocking_write();
     lock.seq = lock.seq.wrapping_add(1);
+    lock.encoded_payload = Some(payload.encode_to_vec());
     lock.payload = Some(payload);
     drop(lock);
     self.notify.notify_waiters();
@@ -125,6 +139,31 @@ impl WebsocketOut {
         }
       }
 
+      notified.await;
+    }
+  }
+
+  /// Publish a wire-compatible superset of CP_InterfaceWrapper. This is used
+  /// for diagnostics fields that have not landed in every core_dump branch yet.
+  pub async fn publish_encoded(&self, payload: Vec<u8>) {
+    let mut lock = self.state.write().await;
+    lock.seq = lock.seq.wrapping_add(1);
+    lock.encoded_payload = Some(payload);
+    drop(lock);
+    self.notify.notify_waiters();
+  }
+
+  pub async fn wait_latest_encoded_after(&self, last_seq: u64) -> (u64, Vec<u8>) {
+    loop {
+      let notified = self.notify.notified();
+      {
+        let lock = self.state.read().await;
+        if lock.seq != last_seq
+          && let Some(payload) = lock.encoded_payload.clone()
+        {
+          return (lock.seq, payload);
+        }
+      }
       notified.await;
     }
   }

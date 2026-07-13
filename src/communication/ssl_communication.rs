@@ -16,7 +16,8 @@ pub fn get_ssl_data(cfg: &Config, tx: EventShare) {
   };
 
   spawn_udp_listener::<SslWrapperPacket>(vis_raw_socket, tx.clone(), |event, mut lock| {
-    lock.raw = Some(event)
+    lock.raw = Some(event.clone());
+    lock.raw_frames.push(event);
   });
 
   // Vision Tracked
@@ -33,7 +34,8 @@ pub fn get_ssl_data(cfg: &Config, tx: EventShare) {
   };
 
   spawn_udp_listener::<TrackerWrapperPacket>(vis_tracked_socket, tx.clone(), |event, mut lock| {
-    lock.tracked = Some(event);
+    lock.tracked = Some(event.clone());
+    lock.tracked_frames.push(event);
   });
 
   // Referee

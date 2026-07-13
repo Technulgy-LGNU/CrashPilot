@@ -50,18 +50,12 @@ pub fn spawn_websocket(cfg: &config::Config, tx: EventShare, ws_out: WebsocketOu
 
         loop {
           // Wait for at least one newer message and then send exactly that newest snapshot.
-          let (seq, payload) = ws_out.wait_latest_after(last_seq).await;
+          let (seq, payload) = ws_out.wait_latest_encoded_after(last_seq).await;
           last_seq = seq;
-
-          let mut buf = Vec::with_capacity(payload.encoded_len());
-          if let Err(e) = payload.encode(&mut buf) {
-            eprintln!("Protobuf encode error: {}", e);
-            continue;
-          }
 
           if let Err(e) = outgoing
             .send(tokio_tungstenite::tungstenite::Message::Binary(
-              Bytes::from(buf),
+              Bytes::from(payload),
             ))
             .await
           {

@@ -16,6 +16,21 @@ prometheus_port = 9090
 loki_host = "10.0.64.2"
 loki_port = 3100
 
+[world_model]
+enabled = true
+history_ms = 2000
+fit_window_ms = 350
+predict_timeout_ms = 300
+invalid_timeout_ms = 500
+ball_max_speed_mm_s = 12000.0
+ball_max_accel_mm_s2 = 5000.0
+ball_outlier_gate_mm = 300.0
+wall_offset_mm = 200.0
+wall_restitution = 0.78
+own_robot_max_accel_mm_s2 = 2000.0
+own_robot_max_decel_mm_s2 = 3000.0
+opponent_max_accel_mm_s2 = 4500.0
+
 [server]
 robot_socket_host = "0.0.0.0"
 robot_socket_port = 8192
@@ -31,5 +46,5 @@ websocket_port = 4096
 #3 = { ip = "10.0.64.103", substitution_pos = { x = 1600, y = 0 } }
 #4 = { ip = "10.0.64.104", substitution_pos = { x = 2000, y = 0 } } # Old Robot
 #5 = { ip = "10.0.64.105", substitution_pos = { x = 2400, y = 0 } } # Old Robot
-5 = { ip = "10.0.64.121", substitution_pos = { x = 3000, y = 600 } } # LNX
+5 = { ip = "10.0.64.121", port = 1024, substitution_pos = { x = 3000, y = 600 } } # LNX
 6 = { ip = "10.0.64.122", substitution_pos = { x = 3400, y = 600 } } # LNX

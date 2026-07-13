@@ -12,6 +12,8 @@ pub struct Config {
   pub server: ServerConfig,
   pub logging: LoggingConfig,
   pub robots: HashMap<u32, RobotConfig>,
+  #[serde(default)]
+  pub world_model: WorldModelConfig,
 }
 impl Default for Config {
   fn default() -> Self {
@@ -55,6 +57,45 @@ impl Default for Config {
       server: ServerConfig::default(),
       logging: LoggingConfig::default(),
       robots,
+      world_model: WorldModelConfig::default(),
+    }
+  }
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(default)]
+pub struct WorldModelConfig {
+  pub enabled: bool,
+  pub history_ms: u64,
+  pub fit_window_ms: u64,
+  pub predict_timeout_ms: u64,
+  pub invalid_timeout_ms: u64,
+  pub ball_max_speed_mm_s: f32,
+  pub ball_max_accel_mm_s2: f32,
+  pub ball_outlier_gate_mm: f32,
+  pub wall_offset_mm: f32,
+  pub wall_restitution: f32,
+  pub own_robot_max_accel_mm_s2: f32,
+  pub own_robot_max_decel_mm_s2: f32,
+  pub opponent_max_accel_mm_s2: f32,
+}
+
+impl Default for WorldModelConfig {
+  fn default() -> Self {
+    Self {
+      enabled: true,
+      history_ms: 2_000,
+      fit_window_ms: 350,
+      predict_timeout_ms: 300,
+      invalid_timeout_ms: 500,
+      ball_max_speed_mm_s: 12_000.0,
+      ball_max_accel_mm_s2: 5_000.0,
+      ball_outlier_gate_mm: 300.0,
+      wall_offset_mm: 200.0,
+      wall_restitution: 0.78,
+      own_robot_max_accel_mm_s2: 2_000.0,
+      own_robot_max_decel_mm_s2: 3_000.0,
+      opponent_max_accel_mm_s2: 4_500.0,
     }
   }
 }

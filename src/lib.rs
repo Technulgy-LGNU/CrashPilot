@@ -1,32 +1,36 @@
-#[cfg(feature = "loki")]
-use crate::communication::loki::spawn_loki_publisher;
+pub use crate::communication::Events;
 #[cfg(feature = "loki")]
 use crate::communication::loki::LokiPublisher;
+#[cfg(feature = "loki")]
+use crate::communication::loki::spawn_loki_publisher;
 use crate::communication::robot_sender::{NetworkSender, RobotSender};
 #[cfg(feature = "ssl_game_controller")]
 pub use crate::communication::ssl_gc_handler::SslGameController;
-pub use crate::communication::Events;
-use crate::communication::{communication_receiver, EventShare, WebsocketOut};
+use crate::communication::{EventShare, WebsocketOut, communication_receiver};
 pub use crate::config::Config;
 use crate::game_logic::game_logic;
 use crate::game_logic::types::{BallData, GamePhase, PrepPhase, Robot, WorldState};
 use crate::helpers::robot_data::create_robot_data;
+use crate::interface_protocol::{ExtendedInterfaceWrapper, WorldModelQuality};
 #[cfg(feature = "prometheus")]
 use crate::metrics::PrometheusMetrics;
-use crate::utils::{spawn_robot_socket, FieldSetup, PacketBuffer};
+use crate::utils::{FieldSetup, PacketBuffer, spawn_robot_socket};
 use bangka::Bangka;
 use core_dump::proto::cp_game_phase::{
   GamePhase as InterfaceGamePhase, PrepPhase as InterfacePrepPhase,
 };
 #[cfg(feature = "ssl_game_controller")]
 use core_dump::proto::{AdvantageChoice, ControllerToTeam};
-use core_dump::proto::{CpCommand, CpGamePhase, CpInterfaceWrapper, CpRobot};
+use core_dump::proto::{
+  CpCommand, CpGamePhase, CpInterfaceWrapper, CpMode, CpRobot, SslWrapperPacket,
+  TrackerWrapperPacket,
+};
 use std::collections::HashMap;
-use std::sync::atomic::AtomicU64;
 use std::sync::Arc;
+use std::sync::atomic::AtomicU64;
 use std::time::{Duration, Instant};
 use tokio::net::UdpSocket;
-use tokio::time::{interval, MissedTickBehavior};
+use tokio::time::{MissedTickBehavior, interval};
 
 pub use crate::utils::RobotData;
 
@@ -34,6 +38,8 @@ pub mod communication;
 pub mod config;
 mod game_logic;
 mod helpers;
+mod interface_protocol;
+pub mod world_model;
 
 #[cfg(feature = "interface")]
 pub mod interface;
@@ -69,12 +75,17 @@ pub struct CrashPilot<C = CommunicationChannels, A: Ai = Bangka> {
   team: i32,
   field_setup: FieldSetup,
   packet_buffer: PacketBuffer,
+  world_model: world_model::WorldModel,
+  pending_raw_frames: Vec<SslWrapperPacket>,
+  pending_tracked_frames: Vec<TrackerWrapperPacket>,
+  clean_snapshot: Option<world_model::CleanWorldSnapshot>,
   referee_packet_received_at: Option<Instant>,
   comm: C,
   heartbeat: RobotHeartbeat,
   process_start: Instant,
   site: f32,
   sim_logic_dt: f32,
+  last_world_model_timestamp: Option<f64>,
   #[cfg(feature = "sim-time")]
   last_sim_timestamp: Option<f64>,
   #[cfg(feature = "sim-time")]
@@ -87,6 +98,47 @@ pub struct CommunicationChannels {
   #[cfg(feature = "ssl_game_controller")]
   gc: SslGameController,
   ws_out: WebsocketOut,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum GameTeam {
+  Yellow,
+  Blue,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum FieldSide {
+  PositiveX,
+  NegativeX,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct GameStartOptions {
+  pub team: GameTeam,
+  pub side: FieldSide,
+  pub goalkeeper_id: u32,
+  pub max_speed: u32,
+}
+
+impl GameStartOptions {
+  pub const fn new(team: GameTeam, side: FieldSide) -> Self {
+    Self {
+      team,
+      side,
+      goalkeeper_id: 0,
+      max_speed: 0,
+    }
+  }
+
+  pub const fn with_goalkeeper_id(mut self, goalkeeper_id: u32) -> Self {
+    self.goalkeeper_id = goalkeeper_id;
+    self
+  }
+
+  pub const fn with_max_speed(mut self, max_speed: u32) -> Self {
+    self.max_speed = max_speed;
+    self
+  }
 }
 
 pub trait Communication {
@@ -283,9 +335,28 @@ impl CrashPilot {
   /// Note: if no clients are connected, send() returns an error; that's fine.
   #[inline]
   pub async fn websocket_sender(&self) {
-    let ws_packet = self.interface_packet();
-
-    self.comm.ws_out.publish(ws_packet).await; // Publish the packet to the WebSocketOut channel
+    let legacy = self.interface_packet();
+    let extended = ExtendedInterfaceWrapper {
+      vision_raw: legacy.vision_raw,
+      vision_tracked: legacy.vision_tracked,
+      gc_data: legacy.gc_data,
+      robot_commands: legacy.robot_commands,
+      cp_gamephase: legacy.cp_gamephase,
+      vision_raw_sources: self.world_model.latest_raw_packets(),
+      vision_tracked_sources: self.world_model.latest_tracked_packets(),
+      vision_filtered: self
+        .clean_snapshot
+        .as_ref()
+        .map(|snapshot| snapshot.tracked_frame.clone()),
+      world_model_quality: self
+        .clean_snapshot
+        .as_ref()
+        .map(WorldModelQuality::from_snapshot),
+    };
+    let mut encoded = Vec::with_capacity(extended.encoded_len());
+    if extended.encode(&mut encoded).is_ok() {
+      self.comm.ws_out.publish_encoded(encoded).await;
+    }
   }
 
   #[cfg(feature = "ssl_game_controller")]
@@ -383,6 +454,7 @@ impl<C, A: Ai> CrashPilot<C, A> {
     // Field config
     let field_setup = FieldSetup::default();
 
+    let world_model = world_model::WorldModel::new(config.world_model.clone(), field_setup);
     Self {
       config,
       #[cfg(feature = "prometheus")]
@@ -399,12 +471,17 @@ impl<C, A: Ai> CrashPilot<C, A> {
       team,
       field_setup,
       packet_buffer: PacketBuffer::default(),
+      world_model,
+      pending_raw_frames: Vec::new(),
+      pending_tracked_frames: Vec::new(),
+      clean_snapshot: None,
       referee_packet_received_at: None,
       comm,
       heartbeat: heartbeats,
       process_start,
       site: 0.0,
       sim_logic_dt: 1.0,
+      last_world_model_timestamp: None,
       #[cfg(feature = "sim-time")]
       last_sim_timestamp: None,
       #[cfg(feature = "sim-time")]
@@ -416,17 +493,60 @@ impl<C, A: Ai> CrashPilot<C, A> {
     &self.ai
   }
 
+  pub fn world_model_snapshot(&self) -> Option<&world_model::CleanWorldSnapshot> {
+    self.clean_snapshot.as_ref()
+  }
+
+  /// Start game-mode operation for headless callers such as match-runner.
+  ///
+  /// The web interface normally provides these flags. In simulation there may
+  /// be no interface client, so callers can set the same state explicitly once
+  /// after construction.
+  pub fn start_game(&mut self, options: GameStartOptions) {
+    self.packet_buffer.interface_command.mode = CpMode::ModeGame as i32;
+    self.packet_buffer.interface_command.team_color = matches!(options.team, GameTeam::Blue);
+    self.packet_buffer.interface_command.side = matches!(options.side, FieldSide::NegativeX);
+    self.packet_buffer.interface_command.manual.ball_tracked = true;
+    self.packet_buffer.interface_command.manual.gc_data = true;
+    self.packet_buffer.interface_command.game.running = true;
+    self.packet_buffer.interface_command.game.goalkeeper_id = options.goalkeeper_id;
+    self.packet_buffer.interface_command.game.max_speed = options.max_speed;
+    self.state.new_goalie = Some(options.goalkeeper_id as u8);
+
+    self.team = match options.team {
+      GameTeam::Yellow => 1,
+      GameTeam::Blue => 2,
+    };
+    self.site = match options.side {
+      FieldSide::PositiveX => 1.0,
+      FieldSide::NegativeX => -1.0,
+    };
+  }
+
+  pub fn stop_game(&mut self) {
+    self.packet_buffer.interface_command.game.running = false;
+  }
+
   #[cfg(feature = "viewer-debug")]
   pub fn ai_commands(&self) -> &core_dump::types::Commands {
     &self.last_ai_commands
   }
 
   pub fn interpret(&mut self, events: Events) {
+    self
+      .pending_raw_frames
+      .extend(events.raw_frames.iter().cloned());
+    self
+      .pending_tracked_frames
+      .extend(events.tracked_frames.iter().cloned());
     if let Some(packet) = events.raw {
       #[cfg(feature = "debug")]
       println!("Received new raw package");
 
       self.packet_buffer.vis_raw = packet;
+      self
+        .pending_raw_frames
+        .push(self.packet_buffer.vis_raw.clone());
 
       // Create the FieldSetup Var
       if let Some(geometry) = self.packet_buffer.vis_raw.geometry.as_ref() {
@@ -438,6 +558,7 @@ impl<C, A: Ai> CrashPilot<C, A> {
     }
 
     if let Some(packet) = events.tracked {
+      self.pending_tracked_frames.push(packet.clone());
       #[cfg(feature = "tracked_packages_check")]
       if let Some(source_name) = &packet.source_name
         && source_name == "TIGERs"
@@ -510,6 +631,17 @@ impl<C, A: Ai> CrashPilot<C, A> {
 
   pub fn update_data(&mut self) {
     self.update_sim_logic_dt();
+    self.world_model.set_field(self.field_setup);
+    let raw_frames = std::mem::take(&mut self.pending_raw_frames);
+    let tracked_frames = std::mem::take(&mut self.pending_tracked_frames);
+    if self.config.world_model.enabled {
+      for packet in raw_frames {
+        self.world_model.ingest_raw(packet);
+      }
+      for packet in tracked_frames {
+        self.world_model.ingest_tracked(packet);
+      }
+    }
 
     // Update site dependent on referee data && Also update team based on that
     // Start by getting own Team Color
@@ -554,9 +686,39 @@ impl<C, A: Ai> CrashPilot<C, A> {
     }
 
     // Create state
-    let ball_data = BallData::new(&self.packet_buffer.vis_tracked);
+    let commands: HashMap<u32, CpCommand> = self
+      .robots
+      .iter()
+      .map(|(id, robot)| (*id, robot.msg.cmd.clone()))
+      .collect();
+    self.clean_snapshot = self
+      .config
+      .world_model
+      .enabled
+      .then(|| self.world_model.snapshot(self.team, &commands))
+      .flatten();
+    if let Some(timestamp) = self
+      .clean_snapshot
+      .as_ref()
+      .map(|snapshot| snapshot.timestamp.0)
+    {
+      self.sim_logic_dt = self
+        .last_world_model_timestamp
+        .map(|previous| timestamp - previous)
+        .filter(|dt| *dt > f64::EPSILON)
+        .unwrap_or(0.0) as f32;
+      if self.last_world_model_timestamp != Some(timestamp) {
+        self.last_world_model_timestamp = Some(timestamp);
+      }
+    }
+    let filtered_tracked = self
+      .clean_snapshot
+      .as_ref()
+      .map(|snapshot| snapshot.tracked_frame.clone())
+      .unwrap_or_else(|| self.packet_buffer.vis_tracked.clone());
+    let ball_data = BallData::new(&filtered_tracked);
     let (robots_self, robots_opp) = Robot::new_from_tracked(
-      &self.packet_buffer.vis_tracked,
+      &filtered_tracked,
       &ball_data.ball,
       self.team,
       &self.field_setup,
@@ -577,7 +739,7 @@ impl<C, A: Ai> CrashPilot<C, A> {
     create_robot_data(
       &mut self.robots,
       self.packet_buffer.packet_id,
-      &self.packet_buffer.vis_tracked,
+      &filtered_tracked,
       &self.packet_buffer.vis_raw,
       &self.packet_buffer.interface_command,
       &self.field_setup,
@@ -604,6 +766,10 @@ impl<C, A: Ai> CrashPilot<C, A> {
     else {
       return;
     };
+    if self.last_sim_timestamp == Some(timestamp) {
+      self.sim_logic_dt = 0.0;
+      return;
+    }
     let dt = self
       .last_sim_timestamp
       .map(|previous| timestamp - previous)
