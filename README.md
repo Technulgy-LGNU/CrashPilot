@@ -212,6 +212,47 @@ Run with common competition integrations:
 cargo run --features "interface ssl_game_controller prometheus"
 ```
 
+### Replaying vision logs through the filter
+
+The `vision-filter-replay` workspace binary opens an SSL `.log` or `.log.gz`
+file, runs its raw and tracked packets through CrashPilot's current world model,
+and starts the existing web interface. It does not start the controller or any
+robot sockets.
+
+```sh
+cargo run --release -p vision-filter-replay -- path/to/match.log.gz
+```
+
+The interface opens at <http://127.0.0.1:8080>. Use its **Raw SSL**,
+**Tracked**, and **CrashPilot filter** buttons to compare the recorded sources
+with the filtered result. Raw-camera and tracked-source selectors work exactly
+as they do for live vision.
+
+Playback is controlled from the terminal:
+
+| Key | Action |
+| --- | --- |
+| `Space` or `p` | Play or pause |
+| `+` / `-` | Double or halve playback speed |
+| `Left` / `Right` | Seek backward or forward one second |
+| `Shift+Left` / `Shift+Right` | Seek backward or forward ten seconds |
+| `,` / `.` | Step to the previous or next log event |
+| `Home` / `End` | Jump to the start or end |
+| `r` | Restart and play |
+| `?` | Show all controls |
+| `q`, `Esc`, or `Ctrl+C` | Quit |
+
+Useful startup options include `--paused`, `--speed 4`, `--no-browser`,
+`--interface-port`, `--websocket-port`, and `--config`. Run with `--help` for
+the complete CLI. Match payloads are spooled to a temporary on-disk cache so
+compressed logs remain seekable without retaining every decoded protobuf in
+memory; the cache and embedded interface process are removed on exit.
+
+The replay executable is a separate workspace package under
+`tools/vision-filter-replay`. Its Loguna, Clap, and terminal dependencies are
+not dependencies of the `crashpilot` package, and `crashpilot` remains the
+workspace's default build member.
+
 ## Feature Flags
 
 | Feature | Effect |
@@ -308,6 +349,26 @@ Coordinates and velocities are handled in SSL field units:
 - linear velocities: millimeters per second
 - orientations: degrees
 - angular velocities: degrees per second
+
+### Historical vision filter
+
+CrashPilot keeps a bounded, per-source history for every raw SSL camera and
+every tracked-vision publisher (identified by source name and UUID). The
+history is evaluated on the vision timestamps, so replay and accelerated
+simulation do not depend on wall-clock speed. Raw and tracked observations at
+the same logical time are grouped before fitting to avoid treating an
+autoref's already-filtered output as independent extra evidence.
+
+The filter produces one authoritative tracked frame used by the AI and sent
+to the robots. It estimates ball and robot position/velocity with robust
+linear fits, switches to a quadratic ball fit for sustained curvature, uses
+outbound commands as a bounded prior for own robots, and detects/learns wall
+bounces. The filtered frame and component uncertainty are also published to
+the interface alongside the original raw and tracked sources.
+
+`[world_model]` in `config.toml` controls history/fit windows, prediction
+timeouts, physical limits, and wall priors. Set `enabled = false` to restore
+the legacy direct tracked-vision path.
 
 Field dimensions come from SSL-Vision geometry when available. Before geometry
 arrives, `FieldSetup::default()` assumes a 9000 mm by 6000 mm field.

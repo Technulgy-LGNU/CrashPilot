@@ -1,0 +1,24 @@
+[package]
+name = "vision-filter-replay"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+anyhow = "1"
+clap = { version = "4", features = ["derive"] }
+core_dump = { git = "https://github.com/Technulgy-LGNU/core-dump", rev = "cc343c8294ee7fa16f1c138a160d1409eba236a8" }
+crossterm = "0.29"
+futures-util = "0.3"
+loguna = { git = "https://github.com/Technulgy-LGNU/loguna", rev = "35dbc333412512c053b2f3711d2cf5ab0d9580ef" }
+prost = "0.14"
+serde = { version = "1", features = ["derive"] }
+tempfile = "3"
+tokio = { version = "1", features = ["macros", "net", "rt-multi-thread", "sync", "time"] }
+tokio-tungstenite = "0.29"
+toml = "1"
+
+[features]
+default = []
+loki = []
+prometheus = []

@@ -21,6 +21,11 @@ bangka = { path = "../bangka/bangka" }
 
 [build-dependencies]
 
+[workspace]
+members = ["tools/vision-filter-replay"]
+default-members = ["."]
+resolver = "2"
+
 [features]
 default = []
 loki = []
