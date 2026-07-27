@@ -3,11 +3,9 @@ use crate::game_logic::types::Robot;
 use crate::helpers::best_angle_to_goal::shoot_to_goal;
 use crate::helpers::compensated_kick_direction;
 use crate::utils::FieldSetup;
-use core_dump::proto::CpCommand;
-use core_dump::proto::CpState::{StateFree, StateGoalie};
-use core_dump::proto::CpTask::{
-  TaskBlock, TaskDribble, TaskKick, TaskPos, TaskPosBall, TaskRecKick, TaskSteal,
-};
+use core_dump::proto::CrashpilotCommand;
+use core_dump::proto::CrashpilotState::{Free, Goalie};
+use core_dump::proto::CrashpilotTask::{Block, Dribble, Kick, Pos, PosBall, RecKick, Steal};
 use core_dump::types::{Ai, RobotCommand};
 use core_dump::vec::types::Vec2;
 
@@ -40,7 +38,7 @@ pub fn ai_handler<C, A: Ai>(all_robots: &[Robot], cp: &mut CrashPilot<C, A>) {
         };
 
         if *robot != crate::RobotData::default() {
-          robot.msg.cmd.state = StateFree as i32;
+          robot.msg.cmd.state = Free as i32;
           match command {
             RobotCommand::Pos(pos) => {
               set_pos_command(&mut robot.msg.cmd, *pos, None, None, false, cp.field_setup);
@@ -87,30 +85,30 @@ pub fn ai_handler<C, A: Ai>(all_robots: &[Robot], cp: &mut CrashPilot<C, A>) {
             }
 
             RobotCommand::Kick(orient) => {
-              robot.msg.cmd.task = TaskKick as i32;
+              robot.msg.cmd.task = Kick as i32;
               robot.msg.cmd.kick_orient = Option::from(*orient as u32);
               robot.msg.cmd.kick_speed = Option::from(255);
             }
             RobotCommand::Chip(orient) => {
-              robot.msg.cmd.task = TaskKick as i32;
+              robot.msg.cmd.task = Kick as i32;
               robot.msg.cmd.kick_orient = Option::from(*orient as u32);
               robot.msg.cmd.kick_speed = Option::from(200);
             }
             RobotCommand::RecKick(_) => {
-              robot.msg.cmd.task = TaskRecKick as i32;
+              robot.msg.cmd.task = RecKick as i32;
             }
             RobotCommand::Steal => {
-              robot.msg.cmd.task = TaskSteal as i32;
+              robot.msg.cmd.task = Steal as i32;
               robot.msg.cmd.speed = Option::from(4000);
               let from = robot_self.pos.unwrap_or_default();
               let ball = cp.state.ball.ball.pos;
               robot.msg.cmd.orientation = Option::from((ball - from).angle_in_u16() as u32);
             }
             RobotCommand::Dribble(pos) => {
-              robot.msg.cmd.task = TaskDribble as i32;
+              robot.msg.cmd.task = Dribble as i32;
               let target =
                 *pos * Vec2::new(cp.field_setup.width as f32, cp.field_setup.height as f32);
-              robot.msg.cmd.pos = Option::from(target.to_cp_vec2());
+              robot.msg.cmd.pos = Option::from(target.to_crashpilot_vec2());
               robot.msg.cmd.speed = Option::from(2000);
               // The firmware uses cmd.orientation as the direction to push the
               // ball; aim it from the ball toward the dribble target.
@@ -118,10 +116,10 @@ pub fn ai_handler<C, A: Ai>(all_robots: &[Robot], cp: &mut CrashPilot<C, A>) {
                 Option::from((target - cp.state.ball.ball.pos).angle_in_u16() as u32);
             }
             RobotCommand::PosBall(pos) => {
-              robot.msg.cmd.task = TaskPosBall as i32;
+              robot.msg.cmd.task = PosBall as i32;
               let target =
                 *pos * Vec2::new(cp.field_setup.width as f32, cp.field_setup.height as f32);
-              robot.msg.cmd.pos = Option::from(target.to_cp_vec2());
+              robot.msg.cmd.pos = Option::from(target.to_crashpilot_vec2());
               robot.msg.cmd.speed = Option::from(2000);
               robot.msg.cmd.orientation =
                 Option::from((target - cp.state.ball.ball.pos).angle_in_u16() as u32);
@@ -133,7 +131,7 @@ pub fn ai_handler<C, A: Ai>(all_robots: &[Robot], cp: &mut CrashPilot<C, A>) {
               shoot_to_goal(robot, robot_self, all_robots, &cp.state, &cp.field_setup)
             }
             RobotCommand::PassTo(r_id) => {
-              robot.msg.cmd.task = TaskKick as i32;
+              robot.msg.cmd.task = Kick as i32;
 
               if let Some(to_robot) = cp.state.robots_self.iter().find(|r| r.robot_id == *r_id) {
                 if let Some(plan) =
@@ -148,14 +146,14 @@ pub fn ai_handler<C, A: Ai>(all_robots: &[Robot], cp: &mut CrashPilot<C, A>) {
               }
             }
             RobotCommand::RecPass => {
-              robot.msg.cmd.task = TaskRecKick as i32;
+              robot.msg.cmd.task = RecKick as i32;
               robot.msg.cmd.kick_orient = None;
               robot.msg.cmd.kick_speed = None;
               robot.msg.cmd.pos = planned_receive_target(&planned_receive_kicks, id as u8)
                 .or_else(|| {
                   rolling_receive_target(robot_self, cp.state.ball.ball.pos, cp.state.ball.ball.vel)
                 })
-                .map(|target| target.to_cp_vec2());
+                .map(|target| target.to_crashpilot_vec2());
               if let Some(plan) = planned_receive_kick(&planned_receive_kicks, id as u8) {
                 robot.msg.cmd.kick_orient = Option::from(plan.kick_orient);
                 robot.msg.cmd.kick_speed = Option::from(plan.kick_speed);
@@ -166,8 +164,8 @@ pub fn ai_handler<C, A: Ai>(all_robots: &[Robot], cp: &mut CrashPilot<C, A>) {
               cp.state.defenders.push(robot.msg.robot_id as u8)
             }
             RobotCommand::GoalieGuard => {
-              robot.msg.cmd.state = StateGoalie as i32;
-              robot.msg.cmd.task = TaskBlock as i32;
+              robot.msg.cmd.state = Goalie as i32;
+              robot.msg.cmd.task = Block as i32;
               robot.msg.cmd.enemy_id = None;
               robot.msg.cmd.speed = Option::from(4000);
             }
@@ -283,15 +281,15 @@ fn rolling_receive_target(
 }
 
 fn set_pos_command(
-  cmd: &mut CpCommand,
+  cmd: &mut CrashpilotCommand,
   pos: Vec2<f32>,
   speed: Option<u32>,
   orientation: Option<u32>,
   raw: bool,
   fs: FieldSetup,
 ) {
-  cmd.task = TaskPos as i32;
-  cmd.pos = Some((pos * Vec2::new(fs.width as f32, fs.height as f32)).to_cp_vec2());
+  cmd.task = Pos as i32;
+  cmd.pos = Some((pos * Vec2::new(fs.width as f32, fs.height as f32)).to_crashpilot_vec2());
   cmd.speed = speed.or(Some(4000));
   cmd.orientation = orientation;
   cmd.raw = raw.then_some(true);

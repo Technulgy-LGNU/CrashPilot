@@ -12,7 +12,7 @@ use crate::game_logic::mode_manual::mode_manual;
 use crate::game_logic::mode_test::mode_test;
 use crate::game_logic::types::WorldState;
 use crate::{Communication, CrashPilot};
-use core_dump::proto::CpMode;
+use core_dump::proto::CrashpilotMode;
 use core_dump::types::Ai;
 
 /// Main Game Logic
@@ -32,8 +32,10 @@ pub fn game_logic<C: Communication, A: Ai + Send>(cp: &mut CrashPilot<C, A>) {
   //  - Manual: Use the interface commands to control the robots
   //  - Game: Use the AI and hardcoded game logic
   //  - Test: Run the tests
-  match CpMode::try_from(cp.packet_buffer.interface_command.mode).unwrap_or(CpMode::ModeManual) {
-    CpMode::ModeManual => {
+  match CrashpilotMode::try_from(cp.packet_buffer.interface_command.mode)
+    .unwrap_or(CrashpilotMode::Manual)
+  {
+    CrashpilotMode::Manual => {
       mode_manual(
         &mut cp.robots,
         &cp.robots_ws_data,
@@ -41,7 +43,7 @@ pub fn game_logic<C: Communication, A: Ai + Send>(cp: &mut CrashPilot<C, A>) {
         cp.packet_buffer.referee.command,
       );
     }
-    CpMode::ModeGame => {
+    CrashpilotMode::Game => {
       // If you stop the game in the interface, stop every robot
       if cp.packet_buffer.interface_command.game.running {
         mode_game(cp);
@@ -51,7 +53,7 @@ pub fn game_logic<C: Communication, A: Ai + Send>(cp: &mut CrashPilot<C, A>) {
         }
       }
     }
-    CpMode::ModeTest => {
+    CrashpilotMode::Test => {
       mode_test(&mut cp.robots, &mut cp.state, &cp.field_setup);
     }
   }

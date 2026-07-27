@@ -43,7 +43,7 @@ impl SendReport {
 }
 
 pub trait RobotSender {
-  /// Sends the current `CpRobot` message to all robots found in `self.data`.
+  /// Sends the current `CrashpilotRobot` message to all robots found in `self.data`.
   ///
   /// The function is **best-effort**: it will continue sending even if some robots fail.
   /// Returned `SendReport` describes successes and failures.
@@ -76,13 +76,16 @@ impl RobotSender for NetworkSender<'_> {
         if let Err(e) = robot_data.msg.encode(&mut buf) {
           report.push_failure(
             robot_id,
-            Error::new(e).context("failed to encode CpRobot protobuf"),
+            Error::new(e).context("failed to encode CrashpilotRobot protobuf"),
           );
           continue;
         }
 
         if buf.is_empty() {
-          report.push_failure(robot_id, anyhow!("encoded CpRobot message is empty"));
+          report.push_failure(
+            robot_id,
+            anyhow!("encoded CrashpilotRobot message is empty"),
+          );
           continue;
         }
 
@@ -146,24 +149,24 @@ impl RobotSender for NetworkSender<'_> {
 // mod tests {
 //   use super::*;
 //   use crate::config::{Config, RobotConfig};
-//   use core_dump::proto::{CpBall, CpCommand, CpRobot, CpVector2};
+//   use core_dump::proto::{CrashpilotBall, CrashpilotCommand, CrashpilotRobot, CrashpilotVector2};
 //   use std::net::Ipv4Addr;
 //   use std::time::Duration;
 //   use tokio::time::timeout;
 //
 //   fn sample_robot(robot_id: u32) -> RobotData {
 //     RobotData {
-//       msg: CpRobot {
+//       msg: CrashpilotRobot {
 //         robot_id,
 //         timestamp: 0f64,
 //         packet_id: 1,
-//         ball: CpBall {
-//           pos: CpVector2 { x: 0, y: 0 },
+//         ball: CrashpilotBall {
+//           pos: CrashpilotVector2 { x: 0, y: 0 },
 //           vel: None,
 //         },
 //         robots_yellow: vec![],
 //         robots_blue: vec![],
-//         cmd: CpCommand {
+//         cmd: CrashpilotCommand {
 //           state: 0,
 //           task: 0,
 //           pos: None,
@@ -217,7 +220,7 @@ impl RobotSender for NetworkSender<'_> {
 //       .expect("timed out waiting for udp datagram")
 //       .expect("recv_from failed");
 //
-//     let decoded = CpRobot::decode(&buf[..n]).expect("decode CpRobot");
+//     let decoded = CrashpilotRobot::decode(&buf[..n]).expect("decode CrashpilotRobot");
 //     assert_eq!(decoded.robot_id, 1);
 //     assert_eq!(decoded.packet_id, 1);
 //   }

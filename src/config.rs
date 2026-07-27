@@ -1,4 +1,4 @@
-use core_dump::proto::CpVector2;
+use core_dump::proto::CrashpilotVector2;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::error::Error;
@@ -203,8 +203,8 @@ impl Default for Vector2 {
 }
 impl Vector2 {
   #[inline]
-  pub fn to_cp_vec2(&self) -> CpVector2 {
-    CpVector2 {
+  pub fn to_crashpilot_vec2(&self) -> CrashpilotVector2 {
+    CrashpilotVector2 {
       x: self.x,
       y: self.y,
     }

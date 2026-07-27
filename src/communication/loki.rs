@@ -1,5 +1,7 @@
 use crate::config::Config;
-use core_dump::proto::{CpBall, CpCommand, CpRobot, CpTrackedRobot, CpVector2};
+use core_dump::proto::{
+  CrashpilotBall, CrashpilotCommand, CrashpilotRobot, CrashpilotTrackedRobot, CrashpilotVector2,
+};
 use http_body_util::Full;
 use hyper::Request;
 use hyper::body::Bytes;
@@ -7,7 +9,6 @@ use hyper::header::CONTENT_TYPE;
 use hyper_util::client::legacy::Client;
 use hyper_util::client::legacy::connect::HttpConnector;
 use hyper_util::rt::TokioExecutor;
-use prost_types::Timestamp;
 use serde::Serialize;
 use serde_json::json;
 use std::collections::BTreeMap;
@@ -26,7 +27,7 @@ pub struct LokiPublisher {
 
 #[derive(Debug, Clone)]
 struct OutgoingRobotLog {
-  robot: CpRobot,
+  robot: CrashpilotRobot,
   ts_ns: u128,
 }
 
@@ -42,7 +43,7 @@ struct LokiStream {
 }
 
 impl LokiPublisher {
-  pub fn publish_robot_message(&self, robot: CpRobot) {
+  pub fn publish_robot_message(&self, robot: CrashpilotRobot) {
     let _ = self.tx.try_send(OutgoingRobotLog {
       robot,
       ts_ns: now_unix_nanos(),
@@ -162,7 +163,7 @@ fn build_push_body(entries: &[OutgoingRobotLog]) -> String {
   serde_json::to_string(&LokiPushBody { streams }).expect("failed to serialize Loki payload")
 }
 
-fn cp_robot_to_value(robot: &CpRobot) -> serde_json::Value {
+fn cp_robot_to_value(robot: &CrashpilotRobot) -> serde_json::Value {
   json!({
     "robot_id": robot.robot_id,
     "timestamp": timestamp_to_value(&robot.timestamp),
@@ -174,21 +175,18 @@ fn cp_robot_to_value(robot: &CpRobot) -> serde_json::Value {
   })
 }
 
-fn timestamp_to_value(timestamp: &Timestamp) -> serde_json::Value {
-  json!({
-    "seconds": timestamp.seconds,
-    "nanos": timestamp.nanos,
-  })
+fn timestamp_to_value(timestamp: &f64) -> serde_json::Value {
+  json!(timestamp)
 }
 
-fn cp_ball_to_value(ball: &CpBall) -> serde_json::Value {
+fn cp_ball_to_value(ball: &CrashpilotBall) -> serde_json::Value {
   json!({
     "pos": cp_vector2_to_value(&ball.pos),
     "vel": ball.vel.as_ref().map(cp_vector2_to_value),
   })
 }
 
-fn cp_tracked_robot_to_value(robot: &CpTrackedRobot) -> serde_json::Value {
+fn cp_tracked_robot_to_value(robot: &CrashpilotTrackedRobot) -> serde_json::Value {
   json!({
     "robot_id": robot.robot_id,
     "pos": cp_vector2_to_value(&robot.pos),
@@ -198,14 +196,14 @@ fn cp_tracked_robot_to_value(robot: &CpTrackedRobot) -> serde_json::Value {
   })
 }
 
-fn cp_vector2_to_value(vec: &CpVector2) -> serde_json::Value {
+fn cp_vector2_to_value(vec: &CrashpilotVector2) -> serde_json::Value {
   json!({
     "x": vec.x,
     "y": vec.y,
   })
 }
 
-fn cp_command_to_value(cmd: &CpCommand) -> serde_json::Value {
+fn cp_command_to_value(cmd: &CrashpilotCommand) -> serde_json::Value {
   json!({
     "state": cmd.state,
     "task": cmd.task,
@@ -232,40 +230,40 @@ fn now_unix_nanos() -> u128 {
 
 #[cfg(test)]
 mod tests {
+  use super::*;
   use crate::config::Config;
   use serde_json::Value;
 
   #[test]
   fn builds_loki_payload_grouped_by_robot() {
-    let robot = CpRobot {
+    let robot = CrashpilotRobot {
       robot_id: 1,
-      timestamp: Timestamp {
-        seconds: 12,
-        nanos: 34,
-      },
+      timestamp: 12.000_000_034,
       packet_id: 10,
-      ball: CpBall {
-        pos: CpVector2 { x: 1, y: 2 },
-        vel: Some(CpVector2 { x: 3, y: 4 }),
+      ball: CrashpilotBall {
+        pos: CrashpilotVector2 { x: 1, y: 2 },
+        vel: Some(CrashpilotVector2 { x: 3, y: 4 }),
       },
-      robots_yellow: vec![CpTrackedRobot {
+      robots_yellow: vec![CrashpilotTrackedRobot {
         robot_id: 7,
-        pos: CpVector2 { x: 5, y: 6 },
+        pos: CrashpilotVector2 { x: 5, y: 6 },
         orientation: 90,
-        vel: Some(CpVector2 { x: 7, y: 8 }),
+        vel: Some(CrashpilotVector2 { x: 7, y: 8 }),
         visibility: 99,
       }],
       robots_blue: vec![],
-      cmd: CpCommand {
+      cmd: CrashpilotCommand {
         state: 1,
         task: 2,
-        pos: Some(CpVector2 { x: 9, y: 10 }),
+        pos: Some(CrashpilotVector2 { x: 9, y: 10 }),
         speed: Some(11),
         orientation: Some(12),
         kick_orient: Some(13),
         kick_speed: Some(14),
         enemy_id: Some(15),
+        ..Default::default()
       },
+      infos: Default::default(),
     };
 
     let payload = build_push_body(&[
@@ -274,7 +272,7 @@ mod tests {
         ts_ns: 111,
       },
       OutgoingRobotLog {
-        robot: CpRobot {
+        robot: CrashpilotRobot {
           robot_id: 1,
           packet_id: 11,
           ..robot.clone()
@@ -282,7 +280,7 @@ mod tests {
         ts_ns: 112,
       },
       OutgoingRobotLog {
-        robot: CpRobot {
+        robot: CrashpilotRobot {
           robot_id: 2,
           packet_id: 12,
           ..robot

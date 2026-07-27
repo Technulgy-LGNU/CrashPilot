@@ -3,8 +3,8 @@ use crate::helpers::as_cp_vec2;
 use crate::helpers::ball_helper::{VisionBalls, convert_ball};
 use crate::utils::FieldSetup;
 use core_dump::proto::{
-  CpInfos, CpTrackedRobot, InterfaceCommandCp, SslDetectionBall, SslWrapperPacket,
-  TrackerWrapperPacket,
+  CrashpilotInfos, CrashpilotInterfaceCommand, CrashpilotTrackedRobot, SslDetectionBall,
+  SslWrapperPacket, TrackerWrapperPacket,
 };
 use std::collections::HashMap;
 #[cfg(not(feature = "sim-time"))]
@@ -16,7 +16,7 @@ pub fn create_robot_data(
   packet_id: u32,
   vis_tracked: &TrackerWrapperPacket,
   vis_raw: &SslWrapperPacket,
-  interface_command: &InterfaceCommandCp,
+  interface_command: &CrashpilotInterfaceCommand,
   field: &FieldSetup,
   team_color: bool,
   team_site: bool,
@@ -35,7 +35,7 @@ pub fn create_robot_data(
       robot.msg.robots_yellow = vec![];
       robot.msg.robots_blue = vec![];
       for robot_tracked in frame.robots {
-        let robot_vis: CpTrackedRobot = CpTrackedRobot {
+        let robot_vis: CrashpilotTrackedRobot = CrashpilotTrackedRobot {
           robot_id: robot_tracked.robot_id.id.unwrap_or_default(),
           pos: as_cp_vec2(robot_tracked.pos),
           orientation: robot_tracked.orientation.to_degrees() as i32,
@@ -85,7 +85,7 @@ pub fn create_robot_data(
     };
 
     // At last set info stuff
-    robot.msg.infos = CpInfos {
+    robot.msg.infos = CrashpilotInfos {
       team_color,
       team_site,
       width: field.width,

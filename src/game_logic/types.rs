@@ -1,6 +1,6 @@
 use crate::FieldSetup;
 use core_dump::proto::referee::Command;
-use core_dump::proto::{InterfaceCommandCp, Referee, TrackerWrapperPacket};
+use core_dump::proto::{CrashpilotInterfaceCommand, Referee, TrackerWrapperPacket};
 use core_dump::vec::types::Vec2;
 use std::cmp::PartialEq;
 use std::collections::HashMap;
@@ -15,7 +15,7 @@ pub struct WorldState {
   pub ball: BallData,
 
   pub referee: Referee,
-  pub iface_cmd: InterfaceCommandCp,
+  pub iface_cmd: CrashpilotInterfaceCommand,
 
   pub team: Team,
   pub site: f32,
@@ -231,7 +231,7 @@ impl WorldState {
     robots_opp: Vec<Robot>,
     ball: BallData,
     referee: Referee,
-    iface_cmd: InterfaceCommandCp,
+    iface_cmd: CrashpilotInterfaceCommand,
     team: Team,
     site: f32,
   ) {

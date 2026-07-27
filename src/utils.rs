@@ -4,15 +4,15 @@ use crate::config;
 #[cfg(feature = "prometheus")]
 use crate::metrics::PrometheusMetrics;
 use core_dump::proto::{
-  CpRobot, InterfaceCommandCp, Referee, RobotCp, SslGeometryData, SslWrapperPacket,
-  TrackerWrapperPacket,
+  CrashpilotInterfaceCommand, CrashpilotRobot, CrashpilotRobotFeedback, Referee, SslGeometryData,
+  SslWrapperPacket, TrackerWrapperPacket,
 };
 use std::io::ErrorKind;
 
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct RobotData {
-  pub msg: CpRobot,
-  pub feedback: RobotCp,
+  pub msg: CrashpilotRobot,
+  pub feedback: CrashpilotRobotFeedback,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -57,7 +57,7 @@ impl From<&SslGeometryData> for FieldSetup {
 pub struct PacketBuffer {
   pub vis_raw: SslWrapperPacket,
   pub vis_tracked: TrackerWrapperPacket,
-  pub interface_command: InterfaceCommandCp,
+  pub interface_command: CrashpilotInterfaceCommand,
   pub referee: Referee,
   pub packet_id: u32,
 }
@@ -66,7 +66,7 @@ impl PacketBuffer {
   pub fn _clear(&mut self) {
     self.vis_raw = SslWrapperPacket::default();
     self.vis_tracked = TrackerWrapperPacket::default();
-    self.interface_command = InterfaceCommandCp::default();
+    self.interface_command = CrashpilotInterfaceCommand::default();
     self.referee = Referee::default();
     self.packet_id = 0;
   }

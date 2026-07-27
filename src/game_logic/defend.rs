@@ -1,6 +1,6 @@
 use crate::{Communication, CrashPilot};
-use core_dump::proto::CpState::StateFree;
-use core_dump::proto::CpTask::TaskPos;
+use core_dump::proto::CrashpilotState::Free;
+use core_dump::proto::CrashpilotTask::Pos;
 use core_dump::types::Ai;
 use core_dump::vec::types::Vec2;
 
@@ -75,9 +75,9 @@ pub fn goalie_wall<C: Communication, A: Ai + Send>(cp: &mut CrashPilot<C, A>) {
     let face_ball = ball - target;
 
     if let Some(robot) = cp.robots.get_mut(&(robot_id as u32)) {
-      robot.msg.cmd.state = StateFree as i32;
-      robot.msg.cmd.task = TaskPos as i32;
-      robot.msg.cmd.pos = Some(target.to_cp_vec2());
+      robot.msg.cmd.state = Free as i32;
+      robot.msg.cmd.task = Pos as i32;
+      robot.msg.cmd.pos = Some(target.to_crashpilot_vec2());
       robot.msg.cmd.speed = Some(WALL_SPEED_MM_S);
       robot.msg.cmd.orientation = Some(face_ball.angle_in_u16() as u32);
     }

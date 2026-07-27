@@ -1,8 +1,8 @@
 use crate::config::WorldModelConfig;
 use crate::utils::FieldSetup;
 use core_dump::proto::{
-  CpCommand, CpTask, KickedBall, RobotId, SslWrapperPacket, Team, TrackedBall, TrackedFrame,
-  TrackedRobot, TrackerWrapperPacket, Vector2, Vector3,
+  CrashpilotCommand, CrashpilotTask, KickedBall, RobotId, SslWrapperPacket, Team, TrackedBall,
+  TrackedFrame, TrackedRobot, TrackerWrapperPacket, Vector2, Vector3,
 };
 use std::collections::{HashMap, HashSet, VecDeque};
 
@@ -330,7 +330,7 @@ impl WorldModel {
   pub fn snapshot(
     &mut self,
     own_team: i32,
-    own_commands: &HashMap<u32, CpCommand>,
+    own_commands: &HashMap<u32, CrashpilotCommand>,
   ) -> Option<CleanWorldSnapshot> {
     let now = self.latest_time?;
     if self.last_output_time != Some(now) {
@@ -1106,15 +1106,15 @@ fn cleaned_tracker_packet(
 
 fn apply_own_command_prior(
   estimate: &mut MotionEstimate,
-  command: &CpCommand,
+  command: &CrashpilotCommand,
   track: &MotionTrack,
   config: &WorldModelConfig,
 ) {
   let desired = if command.speed == Some(0) {
     Some([0.0, 0.0])
   } else {
-    match CpTask::try_from(command.task).ok() {
-      Some(CpTask::TaskPos | CpTask::TaskDribble | CpTask::TaskPosBall) => {
+    match CrashpilotTask::try_from(command.task).ok() {
+      Some(CrashpilotTask::Pos | CrashpilotTask::Dribble | CrashpilotTask::PosBall) => {
         let Some(target) = command.pos else { return };
         let delta = [
           target.x as f64 - estimate.pos[0],

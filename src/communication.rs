@@ -18,8 +18,8 @@ use crate::communication::ssl_communication::get_ssl_data;
 use crate::communication::ssl_gc_handler::SslGameController;
 use crate::config;
 use core_dump::proto::{
-  ControllerToTeam, CpInterfaceWrapper, InterfaceWrapperCp, Referee, RobotCp, SslWrapperPacket,
-  TrackerWrapperPacket,
+  ControllerToTeam, CrashpilotInterfaceInput, CrashpilotInterfaceOutput, CrashpilotRobotFeedback,
+  Referee, SslWrapperPacket, TrackerWrapperPacket,
 };
 use prost::Message;
 use std::sync::Arc;
@@ -40,10 +40,10 @@ pub struct Events {
   pub raw_frames: Vec<SslWrapperPacket>,
   /// Every tracker packet received since the last drain, keyed later by UUID/source.
   pub tracked_frames: Vec<TrackerWrapperPacket>,
-  pub ws: Option<InterfaceWrapperCp>,
+  pub ws: Option<CrashpilotInterfaceInput>,
   pub gc: Option<Referee>,
   pub gc_team_messages: Vec<ControllerToTeam>,
-  pub rf: Option<RobotCp>,
+  pub rf: Option<CrashpilotRobotFeedback>,
 }
 
 impl Events {
@@ -79,7 +79,7 @@ pub type EventShare = Arc<RwLock<Events>>;
 #[derive(Default)]
 struct WsLatestState {
   seq: u64,
-  payload: Option<CpInterfaceWrapper>,
+  payload: Option<CrashpilotInterfaceOutput>,
   encoded_payload: Option<Vec<u8>>,
 }
 
@@ -103,7 +103,7 @@ impl WebsocketOut {
   }
 
   /// Publish a new binary payload.
-  pub async fn publish(&self, payload: CpInterfaceWrapper) {
+  pub async fn publish(&self, payload: CrashpilotInterfaceOutput) {
     let mut lock = self.state.write().await;
     lock.seq = lock.seq.wrapping_add(1);
     lock.encoded_payload = Some(payload.encode_to_vec());
@@ -113,7 +113,7 @@ impl WebsocketOut {
   }
 
   /// Synchronous variant for simulator loops that are not async themselves.
-  pub fn publish_sync(&self, payload: CpInterfaceWrapper) {
+  pub fn publish_sync(&self, payload: CrashpilotInterfaceOutput) {
     let mut lock = self.state.blocking_write();
     lock.seq = lock.seq.wrapping_add(1);
     lock.encoded_payload = Some(payload.encode_to_vec());
@@ -126,7 +126,7 @@ impl WebsocketOut {
   ///
   /// This is implemented in a race-free way (won't miss notifications): it creates the
   /// notification future *before* checking the current sequence.
-  pub async fn wait_latest_after(&self, last_seq: u64) -> (u64, CpInterfaceWrapper) {
+  pub async fn wait_latest_after(&self, last_seq: u64) -> (u64, CrashpilotInterfaceOutput) {
     loop {
       let notified = self.notify.notified();
 

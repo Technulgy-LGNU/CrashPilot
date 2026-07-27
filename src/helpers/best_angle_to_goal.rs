@@ -2,7 +2,7 @@ use crate::RobotData;
 use crate::game_logic::types::{Robot, WorldState};
 use crate::helpers::compensated_kick_direction;
 use crate::utils::FieldSetup;
-use core_dump::proto::CpTask::TaskKick;
+use core_dump::proto::CrashpilotTask::Kick;
 use core_dump::vec::types::Vec2;
 
 #[inline]
@@ -44,7 +44,7 @@ pub fn shoot_to_goal(
         GOAL_KICK_POWER,
       );
 
-      robot.msg.cmd.task = TaskKick as i32;
+      robot.msg.cmd.task = Kick as i32;
       robot.msg.cmd.kick_orient = Option::from(kick_direction.angle_in_u16() as u32);
       robot.msg.cmd.kick_speed = Option::from(GOAL_KICK_POWER);
     }
@@ -60,7 +60,7 @@ pub fn shoot_to_goal(
         GOAL_KICK_POWER,
       );
 
-      robot.msg.cmd.task = TaskKick as i32;
+      robot.msg.cmd.task = Kick as i32;
       robot.msg.cmd.kick_orient = Option::from(kick_direction.angle_in_u16() as u32);
       robot.msg.cmd.kick_speed = Option::from(GOAL_KICK_POWER);
     }
@@ -307,7 +307,7 @@ mod tests {
 
     shoot_to_goal(&mut robot, &robot_self, &[], &state, &FieldSetup::default());
 
-    assert_eq!(robot.msg.cmd.task, TaskKick as i32);
+    assert_eq!(robot.msg.cmd.task, Kick as i32);
     assert_eq!(robot.msg.cmd.kick_orient, Some(180));
   }
 
@@ -322,7 +322,7 @@ mod tests {
 
     shoot_to_goal(&mut robot, &robot_self, &[], &state, &FieldSetup::default());
 
-    assert_eq!(robot.msg.cmd.task, TaskKick as i32);
+    assert_eq!(robot.msg.cmd.task, Kick as i32);
     assert_eq!(robot.msg.cmd.kick_orient, Some(0));
   }
 
@@ -356,7 +356,7 @@ mod tests {
       &FieldSetup::default(),
     );
 
-    assert_eq!(robot.msg.cmd.task, TaskKick as i32);
+    assert_eq!(robot.msg.cmd.task, Kick as i32);
     let stationary_angle = stationary_robot.msg.cmd.kick_orient.unwrap();
     let moving_angle = robot.msg.cmd.kick_orient.unwrap();
     assert_eq!(stationary_angle, 0);
@@ -387,7 +387,7 @@ mod tests {
     );
     shoot_to_goal(&mut robot, &robot_self, &[], &state, &FieldSetup::default());
 
-    assert_eq!(robot.msg.cmd.task, TaskKick as i32);
+    assert_eq!(robot.msg.cmd.task, Kick as i32);
     let stationary_angle = stationary_robot.msg.cmd.kick_orient.unwrap();
     let moving_angle = robot.msg.cmd.kick_orient.unwrap();
     assert_eq!(stationary_angle, 0);
@@ -415,7 +415,7 @@ mod tests {
 
     shoot_to_goal(&mut robot, &robot_self, &[], &state, &FieldSetup::default());
 
-    assert_eq!(robot.msg.cmd.task, TaskKick as i32);
+    assert_eq!(robot.msg.cmd.task, Kick as i32);
     assert_eq!(robot.msg.cmd.kick_orient, Some(358));
   }
 

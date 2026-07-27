@@ -1,5 +1,7 @@
 use crate::world_model::{CleanWorldSnapshot, EstimateQuality, VectorQuality};
-use core_dump::proto::{CpGamePhase, CpRobot, Referee, SslWrapperPacket, TrackerWrapperPacket};
+use core_dump::proto::{
+  CrashpilotGamePhase, CrashpilotRobot, Referee, SslWrapperPacket, TrackerWrapperPacket,
+};
 use prost::Message;
 
 /// Wire-compatible superset of core_dump's CP_InterfaceWrapper. Keeping this
@@ -14,9 +16,9 @@ pub struct ExtendedInterfaceWrapper {
   #[prost(message, optional, tag = "3")]
   pub gc_data: Option<Referee>,
   #[prost(message, repeated, tag = "4")]
-  pub robot_commands: Vec<CpRobot>,
+  pub robot_commands: Vec<CrashpilotRobot>,
   #[prost(message, optional, tag = "5")]
-  pub cp_gamephase: Option<CpGamePhase>,
+  pub cp_gamephase: Option<CrashpilotGamePhase>,
   #[prost(message, repeated, tag = "6")]
   pub vision_raw_sources: Vec<SslWrapperPacket>,
   #[prost(message, repeated, tag = "7")]

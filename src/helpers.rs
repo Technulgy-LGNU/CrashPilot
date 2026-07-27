@@ -3,15 +3,15 @@ pub mod best_angle_to_goal;
 pub mod robot_data;
 
 use core_dump::proto::{
-  CpVector2, RobotId, SslDetectionFrame, SslDetectionRobot, Team, TrackedBall, TrackedFrame,
-  TrackedRobot, TrackerWrapperPacket, Vector2, Vector3,
+  CrashpilotVector2, RobotId, SslDetectionFrame, SslDetectionRobot, Team, TrackedBall,
+  TrackedFrame, TrackedRobot, TrackerWrapperPacket, Vector2, Vector3,
 };
 use core_dump::vec::types::Vec2;
 use std::collections::HashMap;
 
 #[inline]
-pub fn as_cp_vec2(v2: Vector2) -> CpVector2 {
-  CpVector2 {
+pub fn as_cp_vec2(v2: Vector2) -> CrashpilotVector2 {
+  CrashpilotVector2 {
     x: (v2.x * 1000.0) as i32,
     y: (v2.y * 1000.0) as i32,
   }

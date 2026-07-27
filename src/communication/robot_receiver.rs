@@ -1,7 +1,7 @@
 use crate::communication::RobotHeartbeat;
 use crate::communication::{EventShare, Events};
 use crate::config;
-use core_dump::proto::RobotCp;
+use core_dump::proto::CrashpilotRobotFeedback;
 use prost::Message;
 use std::sync::atomic::Ordering;
 use std::time::Instant;
@@ -11,7 +11,7 @@ pub fn robot_receiver(
   cfg: &config::Config,
   heartbeats: RobotHeartbeat,
   tx: EventShare,
-  wrap: fn(RobotCp, RwLockWriteGuard<Events>),
+  wrap: fn(CrashpilotRobotFeedback, RwLockWriteGuard<Events>),
   process_start: Instant,
 ) {
   let addr = format!(
@@ -34,7 +34,7 @@ pub fn robot_receiver(
       let mut buf = [0u8; 1024];
       match socket.recv_from(&mut buf).await {
         Ok((size, addr)) => {
-          if let Ok(msg) = RobotCp::decode(&buf[..size]) {
+          if let Ok(msg) = CrashpilotRobotFeedback::decode(&buf[..size]) {
             let robot_id = msg.robot_id;
             if robots
               .get(&robot_id)

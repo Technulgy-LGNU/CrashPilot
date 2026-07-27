@@ -3,9 +3,9 @@ use crate::game_logic::defend::goalie_wall;
 use crate::game_logic::types::{GamePhase, PrepPhase, PrepTask, PrepTaskStatus, Robot};
 use crate::helpers::best_angle_to_goal::shoot_to_goal;
 use crate::{Communication, CrashPilot};
-use core_dump::proto::CpState::{StateFree, StateGoalie, StateHalt, StateStop};
-use core_dump::proto::CpTask::{TaskKick, TaskPos, TaskPosBall, TaskRecKick};
-use core_dump::proto::CpVector2;
+use core_dump::proto::CrashpilotState::{Free, Goalie, Halt, Stop};
+use core_dump::proto::CrashpilotTask::{Kick, Pos, PosBall, RecKick};
+use core_dump::proto::CrashpilotVector2;
 use core_dump::types::Ai;
 use core_dump::vec::types::Vec2;
 
@@ -50,10 +50,10 @@ pub fn mode_game<C: Communication, A: Ai + Send>(cp: &mut CrashPilot<C, A>) {
 
   match cp.state.phase {
     GamePhase::Halted | GamePhase::Unknown => {
-      set_robot_state_for_all(cp, StateHalt as i32);
+      set_robot_state_for_all(cp, Halt as i32);
     }
     GamePhase::Stopped => {
-      set_robot_state_for_all(cp, StateStop as i32);
+      set_robot_state_for_all(cp, Stop as i32);
     }
     GamePhase::Running => {
       set_goalie(cp);
@@ -63,12 +63,12 @@ pub fn mode_game<C: Communication, A: Ai + Send>(cp: &mut CrashPilot<C, A>) {
       // Place all the robots in a line, defined in the config file
       // Max Speed 1500mm/s
       for robot in cp.robots.iter_mut() {
-        robot.1.msg.cmd.task = TaskPos as i32;
+        robot.1.msg.cmd.task = Pos as i32;
         robot.1.msg.cmd.speed = Some(1500);
 
-        let pos: CpVector2 = match cp.config.robots.get(&robot.1.msg.robot_id) {
-          None => CpVector2 { x: 0, y: 0 },
-          Some(r) => r.substitution_pos.to_cp_vec2(),
+        let pos: CrashpilotVector2 = match cp.config.robots.get(&robot.1.msg.robot_id) {
+          None => CrashpilotVector2 { x: 0, y: 0 },
+          Some(r) => r.substitution_pos.to_crashpilot_vec2(),
         };
         robot.1.msg.cmd.pos = Some(pos);
       }
@@ -95,9 +95,9 @@ pub fn mode_game<C: Communication, A: Ai + Send>(cp: &mut CrashPilot<C, A>) {
         return;
       };
 
-      robot_msg.msg.cmd.task = TaskPosBall as i32;
+      robot_msg.msg.cmd.task = PosBall as i32;
       robot_msg.msg.cmd.speed = Some(1500);
-      robot_msg.msg.cmd.pos = Some(CpVector2 {
+      robot_msg.msg.cmd.pos = Some(CrashpilotVector2 {
         x: ball_pos.x as i32,
         y: ball_pos.y as i32,
       });
@@ -118,7 +118,7 @@ fn handle_prep_task<C: Communication, A: Ai + Send>(
 
   match task.status {
     PrepTaskStatus::Preparing => {
-      set_robot_state_for_all(cp, StateStop as i32);
+      set_robot_state_for_all(cp, Stop as i32);
       set_goalie(cp);
 
       if task.phase.is_offensive() {
@@ -131,7 +131,7 @@ fn handle_prep_task<C: Communication, A: Ai + Send>(
       if task.phase.is_offensive() {
         execute_offensive_restart(cp, task, all_robots);
       } else {
-        set_robot_state_for_all(cp, StateStop as i32);
+        set_robot_state_for_all(cp, Stop as i32);
         set_goalie(cp);
       }
 
@@ -155,9 +155,9 @@ fn prepare_offensive_restart<C: Communication, A: Ai + Send>(
   let orientation = direction.angle_in_u16() as u32;
 
   if let Some(robot) = cp.robots.get_mut(&(actor_id as u32)) {
-    robot.msg.cmd.state = StateStop as i32;
-    robot.msg.cmd.task = TaskPos as i32;
-    robot.msg.cmd.pos = Some(target.to_cp_vec2());
+    robot.msg.cmd.state = Stop as i32;
+    robot.msg.cmd.task = Pos as i32;
+    robot.msg.cmd.pos = Some(target.to_crashpilot_vec2());
     robot.msg.cmd.speed = Some(PREP_SETUP_SPEED_MM_S);
     robot.msg.cmd.orientation = Some(orientation);
   }
@@ -205,7 +205,7 @@ fn execute_penalty<C: Communication, A: Ai + Send>(
     return;
   };
 
-  robot_msg.msg.cmd.state = StateFree as i32;
+  robot_msg.msg.cmd.state = Free as i32;
   shoot_to_goal(
     robot_msg,
     robot_state,
@@ -252,7 +252,7 @@ fn execute_kickoff<C: Communication, A: Ai + Send>(
       actor_target,
       actor_orientation,
       Some(0),
-      StateStop as i32,
+      Stop as i32,
     );
 
     if receiver_ready_to_shoot(cp, receiver_id) {
@@ -297,7 +297,7 @@ fn execute_free_kick<C: Communication, A: Ai + Send>(
       actor_target,
       actor_orientation,
       Some(0),
-      StateStop as i32,
+      Stop as i32,
     );
     command_receiver_shot(cp, receiver_id, all_robots);
     return;
@@ -310,7 +310,7 @@ fn execute_free_kick<C: Communication, A: Ai + Send>(
       actor_target,
       actor_orientation,
       Some(0),
-      StateStop as i32,
+      Stop as i32,
     );
 
     if receiver_ready_to_shoot(cp, receiver_id) {
@@ -347,7 +347,7 @@ fn execute_free_kick<C: Communication, A: Ai + Send>(
       actor_target,
       actor_orientation,
       Some(PREP_SETUP_SPEED_MM_S),
-      StateFree as i32,
+      Free as i32,
     );
   }
 }
@@ -360,8 +360,8 @@ fn execute_kick_restart<C: Communication, A: Ai + Send>(
   let kick_orientation = kick_direction_for_restart(cp, task).angle_in_u16() as u32;
 
   if let Some(robot) = cp.robots.get_mut(&(actor_id as u32)) {
-    robot.msg.cmd.state = StateFree as i32;
-    robot.msg.cmd.task = TaskKick as i32;
+    robot.msg.cmd.state = Free as i32;
+    robot.msg.cmd.task = Kick as i32;
     robot.msg.cmd.kick_orient = Some(kick_orientation);
     robot.msg.cmd.kick_speed = Some(RESTART_KICK_SPEED);
   }
@@ -519,8 +519,8 @@ fn command_kick_to_robot<C: Communication, A: Ai + Send>(
     return false;
   };
 
-  robot.msg.cmd.state = StateFree as i32;
-  robot.msg.cmd.task = TaskKick as i32;
+  robot.msg.cmd.state = Free as i32;
+  robot.msg.cmd.task = Kick as i32;
   robot.msg.cmd.kick_orient = Some(dir.angle_in_u16() as u32);
   robot.msg.cmd.kick_speed = Some(kick_speed);
   true
@@ -589,7 +589,7 @@ fn command_free_kick_receiver_setup<C: Communication, A: Ai + Send>(
     receiver_target,
     face_goal.angle_in_u16() as u32,
     Some(FREE_KICK_RECEIVER_SPEED_MM_S),
-    StateFree as i32,
+    Free as i32,
   );
 }
 
@@ -623,8 +623,8 @@ fn command_free_kick_pass<C: Communication, A: Ai + Send>(
     return false;
   };
 
-  robot.msg.cmd.state = StateFree as i32;
-  robot.msg.cmd.task = TaskKick as i32;
+  robot.msg.cmd.state = Free as i32;
+  robot.msg.cmd.task = Kick as i32;
   robot.msg.cmd.kick_orient = Some(dir.angle_in_u16() as u32);
   robot.msg.cmd.kick_speed = Some(50);
   true
@@ -639,8 +639,8 @@ fn command_receiver_receive<C: Communication, A: Ai + Send>(
     return;
   };
 
-  robot.msg.cmd.state = StateFree as i32;
-  robot.msg.cmd.task = TaskRecKick as i32;
+  robot.msg.cmd.state = Free as i32;
+  robot.msg.cmd.task = RecKick as i32;
   robot.msg.cmd.kick_orient = Some(pass_direction.angle_in_u16() as u32);
 }
 
@@ -663,7 +663,7 @@ fn command_receiver_shot<C: Communication, A: Ai + Send>(
     return false;
   };
 
-  robot_msg.msg.cmd.state = StateFree as i32;
+  robot_msg.msg.cmd.state = Free as i32;
   shoot_to_goal(
     robot_msg,
     &robot_state,
@@ -684,8 +684,8 @@ fn command_robot_pos<C: Communication, A: Ai + Send>(
 ) {
   if let Some(robot) = cp.robots.get_mut(&(robot_id as u32)) {
     robot.msg.cmd.state = state;
-    robot.msg.cmd.task = TaskPos as i32;
-    robot.msg.cmd.pos = Some(target.to_cp_vec2());
+    robot.msg.cmd.task = Pos as i32;
+    robot.msg.cmd.pos = Some(target.to_crashpilot_vec2());
     robot.msg.cmd.speed = speed;
     robot.msg.cmd.orientation = Some(orientation);
   }
@@ -818,6 +818,6 @@ fn set_goalie<C: Communication, A: Ai + Send>(cp: &mut CrashPilot<C, A>) {
   if let Some(goalie) = cp.state.goalie
     && let Some(robot) = cp.robots.get_mut(&(goalie as u32))
   {
-    robot.msg.cmd.state = StateGoalie as i32;
+    robot.msg.cmd.state = Goalie as i32;
   }
 }

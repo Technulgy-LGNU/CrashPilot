@@ -16,16 +16,18 @@ use crate::interface_protocol::{ExtendedInterfaceWrapper, WorldModelQuality};
 use crate::metrics::PrometheusMetrics;
 use crate::utils::{FieldSetup, PacketBuffer, spawn_robot_socket};
 use bangka::Bangka;
-use core_dump::proto::cp_game_phase::{
-  GamePhase as InterfaceGamePhase, PrepPhase as InterfacePrepPhase,
+use core_dump::proto::crashpilot::game_phase::{
+  Phase as InterfaceGamePhase, PrepPhase as InterfacePrepPhase,
 };
 #[cfg(feature = "ssl_game_controller")]
 use core_dump::proto::{AdvantageChoice, ControllerToTeam};
 use core_dump::proto::{
-  CpCommand, CpGamePhase, CpInterfaceWrapper, CpMode, CpRobot, SslWrapperPacket,
-  TrackerWrapperPacket,
+  CrashpilotCommand, CrashpilotGamePhase, CrashpilotInterfaceOutput, CrashpilotMode,
+  CrashpilotRobot, SslWrapperPacket, TrackerWrapperPacket,
 };
 use std::collections::HashMap;
+#[cfg(feature = "prometheus")]
+use std::collections::HashSet;
 use std::sync::Arc;
 use std::sync::atomic::AtomicU64;
 use std::time::{Duration, Instant};
@@ -66,7 +68,7 @@ pub struct CrashPilot<C = CommunicationChannels, A: Ai = Bangka> {
   #[cfg(feature = "loki")]
   loki: Option<LokiPublisher>,
   robots: HashMap<u32, RobotData>,
-  robots_ws_data: HashMap<u32, CpCommand>,
+  robots_ws_data: HashMap<u32, CrashpilotCommand>,
   state: WorldState,
   ai_data: core_dump::types::GameState,
   #[cfg(feature = "viewer-debug")]
@@ -233,7 +235,7 @@ impl CrashPilot {
       comm,
       ai,
       #[cfg(feature = "loki")]
-      loki,
+      Some(loki),
       #[cfg(feature = "prometheus")]
       metrics,
       robot_heartbeats,
@@ -248,12 +250,12 @@ impl CrashPilot {
       socket: &self.comm.robot_socket,
       data: &self.robots,
       #[cfg(feature = "loki")]
-      loki,
+      loki: self.loki.as_ref(),
       heartbeats: &self.heartbeat,
       cfg: &self.config,
       process_start: self.process_start,
     };
-    let _send_report = network_sender.send_to_all_robots();
+    let send_report = network_sender.send_to_all_robots();
     // if !send_report.failed.is_empty() {
     //   eprintln!(
     //     "Robot send: {} ok, {} failed",
@@ -271,11 +273,14 @@ impl CrashPilot {
       .map(|failure| failure.robot_id)
       .collect();
     #[cfg(feature = "prometheus")]
-    for robot_id in robots.keys().copied() {
-      metrics
+    for robot_id in self.robots.keys().copied() {
+      self
+        .metrics
         .record_send_result(robot_id, !failed_robot_ids.contains(&robot_id))
         .await;
     }
+    #[cfg(not(feature = "prometheus"))]
+    let _ = send_report;
   }
 
   pub async fn send(&mut self) {
@@ -319,12 +324,12 @@ impl CrashPilot {
     };
 
     #[cfg(feature = "prometheus")]
-    if let Some(packet) = tracked.as_ref() {
+    if let Some(packet) = events.tracked.as_ref() {
       self.metrics.record_tracked_frame(&packet).await;
     }
 
     #[cfg(feature = "prometheus")]
-    if let Some(packet) = rf.as_ref() {
+    if let Some(packet) = events.rf {
       self.metrics.record_robot_feedback(packet).await;
     }
 
@@ -424,7 +429,7 @@ impl<C, A: Ai> CrashPilot<C, A> {
       robots.insert(
         *robot.0,
         RobotData {
-          msg: CpRobot {
+          msg: CrashpilotRobot {
             robot_id: *robot.0,
             timestamp: Default::default(),
             packet_id: 0,
@@ -440,7 +445,7 @@ impl<C, A: Ai> CrashPilot<C, A> {
     }
 
     // Initialize the hashmap for the websocket data, which will be used to store the last command received for each robot
-    let mut robots_ws_data: HashMap<u32, CpCommand> = HashMap::new();
+    let mut robots_ws_data: HashMap<u32, CrashpilotCommand> = HashMap::new();
     for robot in config.robots.iter() {
       robots_ws_data.insert(*robot.0, Default::default());
     }
@@ -503,7 +508,7 @@ impl<C, A: Ai> CrashPilot<C, A> {
   /// be no interface client, so callers can set the same state explicitly once
   /// after construction.
   pub fn start_game(&mut self, options: GameStartOptions) {
-    self.packet_buffer.interface_command.mode = CpMode::ModeGame as i32;
+    self.packet_buffer.interface_command.mode = CrashpilotMode::Game as i32;
     self.packet_buffer.interface_command.team_color = matches!(options.team, GameTeam::Blue);
     self.packet_buffer.interface_command.side = matches!(options.side, FieldSide::NegativeX);
     self.packet_buffer.interface_command.manual.ball_tracked = true;
@@ -686,7 +691,7 @@ impl<C, A: Ai> CrashPilot<C, A> {
     }
 
     // Create state
-    let commands: HashMap<u32, CpCommand> = self
+    let commands: HashMap<u32, CrashpilotCommand> = self
       .robots
       .iter()
       .map(|(id, robot)| (*id, robot.msg.cmd.clone()))
@@ -788,8 +793,8 @@ impl<C, A: Ai> CrashPilot<C, A> {
     self.update_data();
   }
 
-  pub fn interface_packet(&self) -> CpInterfaceWrapper {
-    CpInterfaceWrapper {
+  pub fn interface_packet(&self) -> CrashpilotInterfaceOutput {
+    CrashpilotInterfaceOutput {
       vision_raw: Some(self.packet_buffer.vis_raw.clone()),
       vision_tracked: Some(self.packet_buffer.vis_tracked.clone()),
       gc_data: if self.packet_buffer.referee.packet_timestamp != 0 {
@@ -802,7 +807,7 @@ impl<C, A: Ai> CrashPilot<C, A> {
         .values()
         .map(|robot| robot.msg.clone())
         .collect(),
-      cp_gamephase: Some(CpGamePhase {
+      cp_gamephase: Some(CrashpilotGamePhase {
         game_phase: Some(interface_game_phase(self.state.phase) as i32),
         prep_phase: Some(interface_prep_phase(self.state.prep_phase) as i32),
       }),
@@ -871,7 +876,7 @@ impl<C: Communication, A: Ai + Send> CrashPilot<C, A> {
   pub fn step_with_data(
     &mut self,
     events: Events,
-  ) -> (CpInterfaceWrapper, HashMap<u32, RobotData>) {
+  ) -> (CrashpilotInterfaceOutput, HashMap<u32, RobotData>) {
     self.interpret(events);
     self.update();
 
@@ -880,7 +885,7 @@ impl<C: Communication, A: Ai + Send> CrashPilot<C, A> {
     (self.interface_packet(), robot_data)
   }
 
-  pub fn step_logic(&mut self) -> (CpInterfaceWrapper, HashMap<u32, RobotData>) {
+  pub fn step_logic(&mut self) -> (CrashpilotInterfaceOutput, HashMap<u32, RobotData>) {
     self.update_logic();
 
     let robot_data = self.robots.clone();

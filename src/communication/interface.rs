@@ -1,7 +1,7 @@
 use crate::communication::EventShare;
 use crate::communication::WebsocketOut;
 use crate::config;
-use core_dump::proto::InterfaceWrapperCp;
+use core_dump::proto::CrashpilotInterfaceInput;
 use futures_util::{SinkExt, StreamExt};
 use prost::Message;
 use tokio::net::TcpListener;
@@ -73,7 +73,7 @@ pub fn spawn_websocket(cfg: &config::Config, tx: EventShare, ws_out: WebsocketOu
             Ok(msg) if msg.is_binary() => {
               let data = msg.into_data();
 
-              match InterfaceWrapperCp::decode(&*data) {
+              match CrashpilotInterfaceInput::decode(&*data) {
                 Ok(decoded) => {
                   let mut lock = tx.write().await;
 

@@ -1,15 +1,19 @@
 use core_dump::proto::{
-  CpBall, CpVector2, InterfaceCommandCp, SslDetectionBall, TrackedBall, Vector3,
+  CrashpilotBall, CrashpilotInterfaceCommand, CrashpilotVector2, SslDetectionBall, TrackedBall,
+  Vector3,
 };
 
 pub enum VisionBalls {
   Raw(Vec<SslDetectionBall>),
   Tracked(Vec<TrackedBall>),
 }
-/// Convert a tracked ball into a CpBall
+/// Convert a tracked ball into a CrashpilotBall
 /// Also does only select the ball who is in the designated test area, if test mode is enabled
 #[inline]
-pub fn convert_ball(balls: VisionBalls, interface_command: &InterfaceCommandCp) -> CpBall {
+pub fn convert_ball(
+  balls: VisionBalls,
+  interface_command: &CrashpilotInterfaceCommand,
+) -> CrashpilotBall {
   // The correct ball, that gets passed on
   let mut correct_ball: TrackedBall = Default::default();
   // Converts all balls to the TrackedBall, so the function works with the default vision
@@ -73,12 +77,12 @@ pub fn convert_ball(balls: VisionBalls, interface_command: &InterfaceCommandCp) 
       correct_ball = balls_generic[0];
     }
   }
-  CpBall {
-    pos: CpVector2 {
+  CrashpilotBall {
+    pos: CrashpilotVector2 {
       x: (correct_ball.pos.x * 1000.0) as i32,
       y: (correct_ball.pos.y * 1000.0) as i32,
     },
-    vel: Option::from(CpVector2 {
+    vel: Option::from(CrashpilotVector2 {
       x: (correct_ball.vel.unwrap_or_default().x * 1000.0) as i32,
       y: (correct_ball.vel.unwrap_or_default().y * 1000.0) as i32,
     }),

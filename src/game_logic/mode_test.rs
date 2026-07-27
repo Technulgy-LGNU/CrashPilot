@@ -3,9 +3,9 @@ use crate::game_logic::WorldState;
 use crate::game_logic::types::Robot;
 use crate::helpers::best_angle_to_goal::shoot_to_goal;
 use crate::utils::FieldSetup;
-use core_dump::proto::CpState::{StateFree, StateGoalie, StateHalt};
-use core_dump::proto::CpTask::{TaskDribble, TaskKick, TaskPos, TaskPosBall, TaskRecKick};
-use core_dump::proto::{CpCommand, CpTests, CpVector2};
+use core_dump::proto::CrashpilotState::{Free, Goalie, Halt};
+use core_dump::proto::CrashpilotTask::{Dribble, Kick, Pos, PosBall, RecKick};
+use core_dump::proto::{CrashpilotCommand, CrashpilotTests, CrashpilotVector2};
 use std::collections::HashMap;
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -29,25 +29,25 @@ pub fn mode_test(
     .cloned()
     .collect();
 
-  match CpTests::try_from(state.iface_cmd.test.test).unwrap_or_default() {
-    CpTests::TestNone => {
+  match CrashpilotTests::try_from(state.iface_cmd.test.test).unwrap_or_default() {
+    CrashpilotTests::None => {
       for robot in robot_data.values_mut() {
-        robot.msg.cmd.state = StateHalt as i32;
+        robot.msg.cmd.state = Halt as i32;
         robot.msg.cmd.speed = Some(0);
       }
     }
-    CpTests::TestBallControl => {
+    CrashpilotTests::BallControl => {
       for_each_selected_robot(robot_data, state, |robot, _, _| {
-        robot.msg.cmd = free_command(TaskDribble as i32, None, Some(DRIBBLER_SPEED));
+        robot.msg.cmd = free_command(Dribble as i32, None, Some(DRIBBLER_SPEED));
       });
     }
-    CpTests::TestDribbler => {
+    CrashpilotTests::Dribbler => {
       for_each_selected_robot(robot_data, state, |robot, idx, _| {
         let target = random_target(state, idx, 0);
-        robot.msg.cmd = free_command(TaskPosBall as i32, Some(target), Some(TEST_SPEED));
+        robot.msg.cmd = free_command(PosBall as i32, Some(target), Some(TEST_SPEED));
       });
     }
-    CpTests::TestKicker => {
+    CrashpilotTests::Kicker => {
       let selected = selected_robot_ids(robot_data, state);
 
       match selected.as_slice() {
@@ -55,7 +55,7 @@ pub fn mode_test(
         [robot_id] => {
           if let Some(robot) = robot_data.get_mut(robot_id) {
             let target = random_target(state, 0, 1);
-            robot.msg.cmd = free_command(TaskPosBall as i32, Some(target), Some(TEST_SPEED));
+            robot.msg.cmd = free_command(PosBall as i32, Some(target), Some(TEST_SPEED));
           }
         }
         [first_id, second_id, ..] => {
@@ -77,23 +77,23 @@ pub fn mode_test(
             first.msg.cmd = if first_has_ball {
               kick_command(first_pos, second_pos)
             } else {
-              free_command(TaskPosBall as i32, Some(first_target), Some(TEST_SPEED))
+              free_command(PosBall as i32, Some(first_target), Some(TEST_SPEED))
             };
           }
 
           if let Some(second) = robot_data.get_mut(second_id) {
             second.msg.cmd = if first_has_ball {
-              free_command(TaskRecKick as i32, Some(second_target), Some(TEST_SPEED))
+              free_command(RecKick as i32, Some(second_target), Some(TEST_SPEED))
             } else if second_has_ball {
               kick_command(second_pos, first_pos)
             } else {
-              free_command(TaskPos as i32, Some(second_target), Some(TEST_SPEED))
+              free_command(Pos as i32, Some(second_target), Some(TEST_SPEED))
             };
           }
         }
       }
     }
-    CpTests::ModeGoalShoot => {
+    CrashpilotTests::GoalShoot => {
       // The selected robot should shoot towards the goal
       if let Some(&robot_id) = state.iface_cmd.test.robot_ids.first() {
         let robot_self = state
@@ -102,20 +102,20 @@ pub fn mode_test(
           .find(|r| r.robot_id == robot_id as u8);
         if let (Some(robot_self), Some(robot_data)) = (robot_self, robot_data.get_mut(&robot_id)) {
           shoot_to_goal(robot_data, robot_self, &all_robots, state, field_setup);
-          robot_data.msg.cmd.state = StateFree as i32;
+          robot_data.msg.cmd.state = Free as i32;
           robot_data.msg.cmd.speed = Some(400);
         }
       }
     }
-    CpTests::ModeGoalie => {
+    CrashpilotTests::Goalie => {
       // Put the selected robot into goalie mode
       if let Some(&robot_id) = state.iface_cmd.test.robot_ids.first()
         && let Some(robot_data) = robot_data.get_mut(&robot_id)
       {
-        robot_data.msg.cmd.state = StateGoalie as i32;
+        robot_data.msg.cmd.state = Goalie as i32;
       }
     }
-    CpTests::ModeGoalieAndShoot => {
+    CrashpilotTests::GoalieAndShoot => {
       // One robot gets goalie, the other shoots, into the goal, if it gets the ball
       // Put the selected robot into goalie mode
       if state.iface_cmd.test.robot_ids.len() >= 2 {
@@ -123,7 +123,7 @@ pub fn mode_test(
         let shooter_id = state.iface_cmd.test.robot_ids[1];
 
         if let Some(robot_goalie_data) = robot_data.get_mut(&goalie_id) {
-          robot_goalie_data.msg.cmd.state = StateGoalie as i32;
+          robot_goalie_data.msg.cmd.state = Goalie as i32;
         }
 
         let robot_self = state
@@ -140,7 +140,7 @@ pub fn mode_test(
             state,
             &FieldSetup::default(),
           );
-          robot_shooter_data.msg.cmd.state = StateFree as i32;
+          robot_shooter_data.msg.cmd.state = Free as i32;
         }
       }
     }
@@ -149,8 +149,8 @@ pub fn mode_test(
 
 fn clear_commands(robot_data: &mut HashMap<u32, RobotData>) {
   for robot in robot_data.values_mut() {
-    robot.msg.cmd = CpCommand::default();
-    robot.msg.cmd.state = StateFree as i32;
+    robot.msg.cmd = CrashpilotCommand::default();
+    robot.msg.cmd.state = Free as i32;
   }
 }
 
@@ -187,9 +187,13 @@ fn selected_robot_ids(robot_data: &HashMap<u32, RobotData>, state: &WorldState) 
   ids
 }
 
-fn free_command(task: i32, pos: Option<CpVector2>, speed: Option<u32>) -> CpCommand {
-  CpCommand {
-    state: StateFree as i32,
+fn free_command(
+  task: i32,
+  pos: Option<CrashpilotVector2>,
+  speed: Option<u32>,
+) -> CrashpilotCommand {
+  CrashpilotCommand {
+    state: Free as i32,
     task,
     pos,
     speed,
@@ -197,32 +201,32 @@ fn free_command(task: i32, pos: Option<CpVector2>, speed: Option<u32>) -> CpComm
   }
 }
 
-fn kick_command(from: CpVector2, to: CpVector2) -> CpCommand {
+fn kick_command(from: CrashpilotVector2, to: CrashpilotVector2) -> CrashpilotCommand {
   let dx = (to.x - from.x) as f32;
   let dy = (to.y - from.y) as f32;
 
-  CpCommand {
-    state: StateFree as i32,
-    task: TaskKick as i32,
+  CrashpilotCommand {
+    state: Free as i32,
+    task: Kick as i32,
     kick_orient: Some(angle_to_u16(dx, dy) as u32),
     kick_speed: Some(KICK_SPEED),
     ..Default::default()
   }
 }
 
-fn robot_position(state: &WorldState, robot_id: u32) -> Option<CpVector2> {
+fn robot_position(state: &WorldState, robot_id: u32) -> Option<CrashpilotVector2> {
   state
     .robots_self
     .iter()
     .find(|robot| robot.robot_id == robot_id as u8)
     .and_then(|robot| robot.pos)
-    .map(|pos| CpVector2 {
+    .map(|pos| CrashpilotVector2 {
       x: pos.x as i32,
       y: pos.y as i32,
     })
 }
 
-fn random_target(state: &WorldState, robot_idx: usize, salt: u64) -> CpVector2 {
+fn random_target(state: &WorldState, robot_idx: usize, salt: u64) -> CrashpilotVector2 {
   let half_width = field_half_width(state);
   let half_height = field_half_height(state);
   let bucket = now_ms() / TARGET_CHANGE_PERIOD_MS;
@@ -230,7 +234,7 @@ fn random_target(state: &WorldState, robot_idx: usize, salt: u64) -> CpVector2 {
   let x = scale_to_range(seed, -half_width, half_width);
   let y = scale_to_range(splitmix64(seed), -half_height, half_height);
 
-  CpVector2 { x, y }
+  CrashpilotVector2 { x, y }
 }
 
 fn field_half_width(state: &WorldState) -> i32 {

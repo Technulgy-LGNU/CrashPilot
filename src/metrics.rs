@@ -1,6 +1,6 @@
 use crate::config::Config;
 use anyhow::Context;
-use core_dump::proto::{RobotCp, TrackerWrapperPacket};
+use core_dump::proto::{CrashpilotRobotFeedback, TrackerWrapperPacket};
 use http_body_util::Full;
 use hyper::body::Incoming;
 use hyper::server::conn::http1;
@@ -83,7 +83,7 @@ impl PrometheusMetrics {
     lock.robots.entry(robot_id).or_default();
   }
 
-  pub async fn record_robot_feedback(&self, feedback: RobotCp) {
+  pub async fn record_robot_feedback(&self, feedback: CrashpilotRobotFeedback) {
     let mut lock = self.inner.write().await;
     let entry = lock.robots.entry(feedback.robot_id).or_default();
 
@@ -459,6 +459,7 @@ fn now_seconds() -> f64 {
 
 #[cfg(test)]
 mod tests {
+  use super::*;
   use core_dump::proto::{RobotId, Team, TrackedFrame, TrackedRobot, Vector2};
 
   #[tokio::test]
@@ -466,7 +467,7 @@ mod tests {
     let metrics = PrometheusMetrics::new();
     metrics.register_robot(7).await;
     metrics
-      .record_robot_feedback(RobotCp {
+      .record_robot_feedback(CrashpilotRobotFeedback {
         robot_id: 7,
         battery_voltage: Some(12345),
         current: Some(678),
@@ -475,6 +476,7 @@ mod tests {
         has_error: Some(true),
         acting: Some(false),
         last_rec_packet: Some(99),
+        ..Default::default()
       })
       .await;
     metrics.record_send_result(7, true).await;
@@ -528,7 +530,7 @@ mod tests {
   async fn registering_on_feedback_creates_series_for_unknown_robot() {
     let metrics = PrometheusMetrics::new();
     metrics
-      .record_robot_feedback(RobotCp {
+      .record_robot_feedback(CrashpilotRobotFeedback {
         robot_id: 42,
         battery_voltage: None,
         current: None,
@@ -537,6 +539,7 @@ mod tests {
         has_error: None,
         acting: None,
         last_rec_packet: None,
+        ..Default::default()
       })
       .await;
 
