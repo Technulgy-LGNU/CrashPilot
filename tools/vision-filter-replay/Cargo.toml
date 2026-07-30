@@ -17,10 +17,10 @@ tempfile = "3"
 tokio = { version = "1", features = ["macros", "net", "rt-multi-thread", "sync", "time"] }
 tokio-tungstenite = "0.29"
 toml = "1"
-webinterface-assets = { git = "https://github.com/Technulgy-LGNU/CrashPilot-Interface", rev = "e1df0dad5177b37451ad987914e740ad16c93661" }
-webinterface-core = { git = "https://github.com/Technulgy-LGNU/CrashPilot-Interface", rev = "e1df0dad5177b37451ad987914e740ad16c93661" }
-webinterface-crashpilot-bridge = { git = "https://github.com/Technulgy-LGNU/CrashPilot-Interface", rev = "e1df0dad5177b37451ad987914e740ad16c93661" }
-webinterface-protocol = { git = "https://github.com/Technulgy-LGNU/CrashPilot-Interface", rev = "e1df0dad5177b37451ad987914e740ad16c93661" }
+webinterface-assets = { git = "https://github.com/Technulgy-LGNU/CrashPilot-Interface", rev = "1e10e9cebeec8bfc4ce93eb36522971dd59f016f" }
+webinterface-core = { git = "https://github.com/Technulgy-LGNU/CrashPilot-Interface", rev = "1e10e9cebeec8bfc4ce93eb36522971dd59f016f" }
+webinterface-crashpilot-bridge = { git = "https://github.com/Technulgy-LGNU/CrashPilot-Interface", rev = "1e10e9cebeec8bfc4ce93eb36522971dd59f016f" }
+webinterface-protocol = { git = "https://github.com/Technulgy-LGNU/CrashPilot-Interface", rev = "1e10e9cebeec8bfc4ce93eb36522971dd59f016f" }
 
 [features]
 default = []

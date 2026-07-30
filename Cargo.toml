@@ -18,10 +18,10 @@ serde_json = "1.0.145"
 socket2 = "0.6.4"
 core_dump = { git = "https://github.com/Technulgy-LGNU/core-dump" }
 bangka = { path = "../bangka/bangka" }
-webinterface-assets = { git = "https://github.com/Technulgy-LGNU/CrashPilot-Interface", rev = "e1df0dad5177b37451ad987914e740ad16c93661", optional = true }
-webinterface-core = { git = "https://github.com/Technulgy-LGNU/CrashPilot-Interface", rev = "e1df0dad5177b37451ad987914e740ad16c93661", optional = true }
-webinterface-crashpilot-bridge = { git = "https://github.com/Technulgy-LGNU/CrashPilot-Interface", rev = "e1df0dad5177b37451ad987914e740ad16c93661", optional = true }
-webinterface-protocol = { git = "https://github.com/Technulgy-LGNU/CrashPilot-Interface", rev = "e1df0dad5177b37451ad987914e740ad16c93661", optional = true }
+webinterface-assets = { git = "https://github.com/Technulgy-LGNU/CrashPilot-Interface", rev = "1e10e9cebeec8bfc4ce93eb36522971dd59f016f", optional = true }
+webinterface-core = { git = "https://github.com/Technulgy-LGNU/CrashPilot-Interface", rev = "1e10e9cebeec8bfc4ce93eb36522971dd59f016f", optional = true }
+webinterface-crashpilot-bridge = { git = "https://github.com/Technulgy-LGNU/CrashPilot-Interface", rev = "1e10e9cebeec8bfc4ce93eb36522971dd59f016f", optional = true }
+webinterface-protocol = { git = "https://github.com/Technulgy-LGNU/CrashPilot-Interface", rev = "1e10e9cebeec8bfc4ce93eb36522971dd59f016f", optional = true }
 
 [build-dependencies]
 
