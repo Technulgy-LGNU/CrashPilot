@@ -11,18 +11,22 @@ use futures_util::{SinkExt, StreamExt};
 use loguna::{LogReader, MessageId};
 use prost::Message;
 use std::collections::HashMap;
-use std::fs;
 use std::io::{self, IsTerminal, Write};
 use std::net::Ipv4Addr;
 use std::os::unix::fs::FileExt;
-use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
-use std::process::{Child, Command, Stdio};
+use std::process::{Command, Stdio};
 use std::time::Duration;
-use tempfile::{NamedTempFile, TempDir};
+use tempfile::NamedTempFile;
 use tokio::net::TcpListener;
 use tokio::sync::{mpsc, watch};
 use tokio_tungstenite::tungstenite::{Bytes, Message as WebsocketMessage};
+use webinterface_assets::embedded_assets;
+use webinterface_core::{InterfaceConfig, InterfaceHost, InterfaceHostGuard};
+use webinterface_crashpilot_bridge::{
+  CrashPilotAdapter, LegacyBridgeConfig, run_legacy_controller,
+};
+use webinterface_protocol::{SessionKind, SessionLifecycle};
 
 #[path = "../../../src/config.rs"]
 #[allow(dead_code)]
@@ -41,7 +45,6 @@ use interface_protocol::{ExtendedInterfaceWrapper, WorldModelQuality};
 use utils::FieldSetup;
 use world_model::{CleanWorldSnapshot, WorldModel};
 
-const EMBEDDED_INTERFACE: &[u8] = include_bytes!("../../../crashpilot-interface");
 const MIN_SPEED: f64 = 0.03125;
 const MAX_SPEED: f64 = 64.0;
 
@@ -466,45 +469,48 @@ fn key_to_control(key: KeyEvent) -> Option<Control> {
 }
 
 struct InterfaceProcess {
-  child: Child,
-  _temp_dir: TempDir,
+  _guard: InterfaceHostGuard,
+  bridge_task: tokio::task::JoinHandle<()>,
 }
 
 impl InterfaceProcess {
   fn start(interface_port: u16, websocket_port: u16) -> Result<Self> {
-    let temp_dir = tempfile::tempdir().context("create temporary interface directory")?;
-    let binary_path = temp_dir.path().join("crashpilot-interface");
-    let config_path = temp_dir.path().join("interface.toml");
-    fs::write(&binary_path, EMBEDDED_INTERFACE)
-      .with_context(|| format!("write embedded interface to {}", binary_path.display()))?;
-    let mut permissions = fs::metadata(&binary_path)?.permissions();
-    permissions.set_mode(0o755);
-    fs::set_permissions(&binary_path, permissions)?;
-    fs::write(
-      &config_path,
-      format!(
-        "[server]\nhost = \"127.0.0.1\"\nport = {interface_port}\n\n\
-         [crashpilot]\nws_url = \"ws://127.0.0.1:{websocket_port}/ws\"\n\
-         reconnect_delay_ms = 250\nhandshake_timeout_ms = 10000\nwrite_timeout_ms = 2000\n"
-      ),
-    )?;
-    let child = Command::new(&binary_path)
-      .current_dir(temp_dir.path())
-      .env("CRASHPILOT_CONFIG", &config_path)
-      .stdin(Stdio::null())
-      .stdout(Stdio::null())
-      .stderr(Stdio::null())
-      .spawn()
-      .context("start embedded CrashPilot interface")?;
+    let (guard, handle) = InterfaceHost::start(InterfaceConfig {
+      bind_address: ([127, 0, 0, 1], interface_port).into(),
+      assets: embedded_assets(),
+      ..InterfaceConfig::default()
+    })
+    .context("start shared CrashPilot interface host")?;
+    let session = handle.create_session(
+      "vision filter replay",
+      SessionKind::Replay,
+      false,
+      vec!["crashpilot".into()],
+      1,
+    );
+    handle
+      .update_session(session.id, SessionLifecycle::Running, None)
+      .context("start replay interface session")?;
+    let adapter = CrashPilotAdapter::register(&handle, session.id)?;
+    let bridge_task = tokio::spawn(async move {
+      let _ = run_legacy_controller(
+        adapter,
+        LegacyBridgeConfig {
+          websocket_url: format!("ws://127.0.0.1:{websocket_port}/ws"),
+          reconnect_delay: Duration::from_millis(250),
+        },
+      )
+      .await;
+    });
     Ok(Self {
-      child,
-      _temp_dir: temp_dir,
+      _guard: guard,
+      bridge_task,
     })
   }
 
   fn check_running(&mut self) -> Result<()> {
-    if let Some(status) = self.child.try_wait()? {
-      bail!("embedded interface exited early with {status}; is its HTTP port already in use?");
+    if self.bridge_task.is_finished() {
+      bail!("shared interface bridge exited early");
     }
     Ok(())
   }
@@ -512,8 +518,7 @@ impl InterfaceProcess {
 
 impl Drop for InterfaceProcess {
   fn drop(&mut self) {
-    let _ = self.child.kill();
-    let _ = self.child.wait();
+    self.bridge_task.abort();
   }
 }
 

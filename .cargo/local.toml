@@ -28,3 +28,10 @@ bongka = { path = "../../../bangka/bongka" }
 
 [path."../dummy/ungabunga"]
 ungabunga = { path = "../../../bangka/ungabunga" }
+
+[patch."https://github.com/Technulgy-LGNU/CrashPilot-Interface"]
+webinterface-assets = { path = "../CrashPilot-Interface/crates/webinterface-assets" }
+webinterface-core = { path = "../CrashPilot-Interface/crates/webinterface-core" }
+webinterface-crashpilot-bridge = { path = "../CrashPilot-Interface/crates/webinterface-crashpilot-bridge" }
+webinterface-protocol = { path = "../CrashPilot-Interface/crates/webinterface-protocol" }
+webinterface-recording = { path = "../CrashPilot-Interface/crates/webinterface-recording" }

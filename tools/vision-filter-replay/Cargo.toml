@@ -7,7 +7,7 @@ publish = false
 [dependencies]
 anyhow = "1"
 clap = { version = "4", features = ["derive"] }
-core_dump = { git = "https://github.com/Technulgy-LGNU/core-dump", rev = "cc343c8294ee7fa16f1c138a160d1409eba236a8" }
+core_dump = { git = "https://github.com/Technulgy-LGNU/core-dump" }
 crossterm = "0.29"
 futures-util = "0.3"
 loguna = { git = "https://github.com/Technulgy-LGNU/loguna", rev = "35dbc333412512c053b2f3711d2cf5ab0d9580ef" }
@@ -17,6 +17,10 @@ tempfile = "3"
 tokio = { version = "1", features = ["macros", "net", "rt-multi-thread", "sync", "time"] }
 tokio-tungstenite = "0.29"
 toml = "1"
+webinterface-assets = { git = "https://github.com/Technulgy-LGNU/CrashPilot-Interface", rev = "e1df0dad5177b37451ad987914e740ad16c93661" }
+webinterface-core = { git = "https://github.com/Technulgy-LGNU/CrashPilot-Interface", rev = "e1df0dad5177b37451ad987914e740ad16c93661" }
+webinterface-crashpilot-bridge = { git = "https://github.com/Technulgy-LGNU/CrashPilot-Interface", rev = "e1df0dad5177b37451ad987914e740ad16c93661" }
+webinterface-protocol = { git = "https://github.com/Technulgy-LGNU/CrashPilot-Interface", rev = "e1df0dad5177b37451ad987914e740ad16c93661" }
 
 [features]
 default = []

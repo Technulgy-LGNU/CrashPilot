@@ -88,6 +88,8 @@ pub struct CrashPilot<C = CommunicationChannels, A: Ai = Bangka> {
   site: f32,
   sim_logic_dt: f32,
   last_world_model_timestamp: Option<f64>,
+  #[cfg(feature = "interface")]
+  _interface_thread: Option<std::thread::JoinHandle<()>>,
   #[cfg(feature = "sim-time")]
   last_sim_timestamp: Option<f64>,
   #[cfg(feature = "sim-time")]
@@ -178,9 +180,6 @@ impl CrashPilot {
 
   pub async fn with_ai(ai: Bangka) -> Self {
     let process_start = Instant::now();
-    // Interface as feature
-    #[cfg(feature = "interface")]
-    interface::spawn_interface();
 
     let config_path =
       std::env::var("CRASHPILOT_CONFIG").unwrap_or_else(|_| "config.toml".to_string());
@@ -188,6 +187,8 @@ impl CrashPilot {
       Ok(config) => config,
       Err(e) => panic!("{}", e),
     };
+    #[cfg(feature = "interface")]
+    let interface_websocket_url = format!("ws://127.0.0.1:{}/ws", config.server.websocket_port);
 
     // Heartbeats
     let robot_heartbeats = Arc::new((0..16).map(|_| AtomicU64::new(0)).collect::<Vec<_>>());
@@ -230,7 +231,7 @@ impl CrashPilot {
       ws_out,
     };
 
-    Self::from_parts(
+    let crashpilot = Self::from_parts(
       config,
       comm,
       ai,
@@ -240,7 +241,20 @@ impl CrashPilot {
       metrics,
       robot_heartbeats,
       process_start,
-    )
+    );
+    #[cfg(feature = "interface")]
+    {
+      let mut crashpilot = crashpilot;
+      crashpilot._interface_thread = Some(
+        interface::spawn_interface(interface_websocket_url)
+          .expect("failed to start Rust CrashPilot interface owner"),
+      );
+      crashpilot
+    }
+    #[cfg(not(feature = "interface"))]
+    {
+      crashpilot
+    }
   }
 
   /// Sends the latest data to all robots
@@ -487,6 +501,8 @@ impl<C, A: Ai> CrashPilot<C, A> {
       site: 0.0,
       sim_logic_dt: 1.0,
       last_world_model_timestamp: None,
+      #[cfg(feature = "interface")]
+      _interface_thread: None,
       #[cfg(feature = "sim-time")]
       last_sim_timestamp: None,
       #[cfg(feature = "sim-time")]

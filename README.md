@@ -178,9 +178,8 @@ cargo build --features loki
 cargo build --features "interface ssl_game_controller prometheus loki"
 ```
 
-The `interface` feature embeds and starts the `crashpilot-interface` binary from
-the repository root. That file must be a compiled executable-compatible binary
-for the target system.
+The `interface` feature starts the shared Rust interface host and CrashPilot
+protocol adapter in-process. No prebuilt interface executable is required.
 
 ## Running
 
@@ -246,7 +245,7 @@ Useful startup options include `--paused`, `--speed 4`, `--no-browser`,
 `--interface-port`, `--websocket-port`, and `--config`. Run with `--help` for
 the complete CLI. Match payloads are spooled to a temporary on-disk cache so
 compressed logs remain seekable without retaining every decoded protobuf in
-memory; the cache and embedded interface process are removed on exit.
+memory; the cache and in-process interface host are removed on exit.
 
 The replay executable is a separate workspace package under
 `tools/vision-filter-replay`. Its Loguna, Clap, and terminal dependencies are
@@ -257,7 +256,7 @@ workspace's default build member.
 
 | Feature | Effect |
 | --- | --- |
-| `interface` | Starts the embedded `crashpilot-interface` binary alongside the controller. |
+| `interface` | Starts the shared Rust interface host and adapter alongside the controller. |
 | `ssl_game_controller` | Enables the SSL GameController team TCP protocol handler and goalie requests. |
 | `prometheus` | Starts an HTTP metrics server with `/metrics` and `/health`. |
 | `loki` | Publishes outbound robot command logs to Loki. |
