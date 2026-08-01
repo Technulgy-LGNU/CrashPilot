@@ -6,7 +6,7 @@ edition = "2024"
 [dependencies]
 tokio = { version = "1.50.0", features = ["net", "sync", "rt", "rt-multi-thread", "macros", "time", "io-util"] }
 serde = { version = "1.0.228", features = ["derive"] }
-core_dump = { git = "https://github.com/Technulgy-LGNU/core-dump", features = ["serde"] }
+core_dump = { git = "https://github.com/Technulgy-LGNU/core-dump" }
 toml = "1.1.2"
 anyhow = "1.0.103"
 prost = "0.14.4"
@@ -16,3 +16,7 @@ socket2 = "0.6.4"
 
 [features]
 default = []
+ssl_vision = []
+
+[workspace]
+members = ["crates/*"]

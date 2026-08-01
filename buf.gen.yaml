@@ -1,8 +1,0 @@
-version: v2
-inputs:
-  - directory: proto
-managed:
-  enabled: true
-plugins:
-  - remote: buf.build/community/neoeinstein-prost:v0.5.0
-    out: crates/core_dump/src/proto
