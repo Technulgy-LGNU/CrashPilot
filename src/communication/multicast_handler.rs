@@ -79,7 +79,7 @@ pub fn multicast_handler<T>(
 }
 
 /// Creates a simple multicast socket
-fn create_multicast_socket(
+pub fn create_multicast_socket(
   multicast_host: Ipv4Addr,
   port: u16,
   interface: Ipv4Addr,

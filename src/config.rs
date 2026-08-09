@@ -54,16 +54,18 @@ impl Default for LoggingConfig {
 pub struct CPConfig {
   pub interface_host: Ipv4Addr,
   pub interface_port: u16,
-  pub robot_rec_host: Ipv4Addr,
-  pub robot_rec_port: u16,
+  pub cp_multicast_host: Ipv4Addr,
+  pub cp_multicast_port: u16,
+  pub cp_multicast_interface: Ipv4Addr,
 }
 impl Default for CPConfig {
   fn default() -> Self {
     Self {
       interface_host: Ipv4Addr::new(127, 0, 0, 1),
       interface_port: 8080,
-      robot_rec_host: Ipv4Addr::new(0, 0, 0, 0),
-      robot_rec_port: 1024,
+      cp_multicast_host: Ipv4Addr::new(224, 42, 69, 1),
+      cp_multicast_port: 1024,
+      cp_multicast_interface: Ipv4Addr::new(0, 0, 0, 0),
     }
   }
 }
@@ -71,14 +73,12 @@ impl Default for CPConfig {
 #[derive(Debug, Deserialize, Serialize)]
 pub struct RobotConfig {
   pub robot_id: u8,
-  pub robot_ip: Ipv4Addr,
   pub hold_point: Vec2<i32>,
 }
 impl Default for RobotConfig {
   fn default() -> Self {
     Self {
       robot_id: 0,
-      robot_ip: Ipv4Addr::new(0, 0, 0, 0),
       hold_point: Vec2::new(0, 0),
     }
   }
