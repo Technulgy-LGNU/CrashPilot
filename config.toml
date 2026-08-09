@@ -1,0 +1,21 @@
+[ssl]
+vision_raw_ip = "224.5.23.2"
+vision_raw_port = 10006
+vision_tracked_ip = "224.5.23.2"
+vision_tracked_port = 10010
+game_controller_ip = "224.5.23.1"
+game_controller_port = 10003
+ssl_interface = "0.0.0.0"
+
+[logging]
+prometheus_host = "10.0.64.41"
+prometheus_port = 9090
+
+[cp_config]
+interface_host = "127.0.0.1"
+interface_port = 8080
+cp_multicast_host = "224.42.69.1"
+cp_multicast_port = 1024
+cp_multicast_interface = "0.0.0.0"
+
+robots = []

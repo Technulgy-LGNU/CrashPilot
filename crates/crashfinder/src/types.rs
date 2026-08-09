@@ -1,7 +1,7 @@
 use std::error::Error;
 use std::fmt::{Display, Formatter};
 
-use core_dump::types::cp_types::{Ball, Robot};
+use core_dump::types::cp_types::{Ball, FieldData, Robot};
 use core_dump::vec::types::Vec2;
 
 pub const TEAM_YELLOW: u8 = 1;
@@ -48,23 +48,6 @@ impl CrashfinderRequest {
   pub fn avoid_penalty(&self) -> bool {
     self.flags & FLAG_ALLOW_PENALTY_AREAS == 0
   }
-}
-
-/// SSL field dimensions in mm, centred at `(0, 0)`.
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub struct FieldData {
-  /// Y extent between the field lines.
-  pub height: f32,
-  /// X extent between the field lines.
-  pub width: f32,
-  /// Additional usable space outside every field line.
-  pub runoff_area: f32,
-
-  pub goal_width: f32,
-  /// Penalty-area depth along X.
-  pub penalty_area_width: f32,
-  /// Penalty-area span along Y.
-  pub penalty_area_height: f32,
 }
 
 #[derive(Debug, Clone)]

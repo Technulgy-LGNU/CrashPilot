@@ -59,7 +59,7 @@ impl Events {
   }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct RobotData {
   pub robot_telemetry: Option<RobotTelemetryWire>,
   pub robot_sensor: Option<RobotSensorWire>,

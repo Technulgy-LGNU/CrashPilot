@@ -47,7 +47,7 @@ dependencies = [
 [[package]]
 name = "core_dump"
 version = "0.2.0"
-source = "git+https://github.com/Technulgy-LGNU/core-dump#fd909ef73efbfb2cee81b1dc719b17805d2ec104"
+source = "git+https://github.com/Technulgy-LGNU/core-dump#2591635c01486c66a7fbd96a310fbde77a9ac0d3"
 dependencies = [
  "num-traits",
  "postcard",

@@ -370,10 +370,9 @@ fn linear_program_3(lines: &[Line], begin_line: usize, radius: f32, result: &mut
 
 #[cfg(test)]
 mod tests {
-  use core_dump::types::cp_types::{Ball, Robot};
+  use core_dump::types::cp_types::{Ball, FieldData, Robot};
 
   use super::*;
-  use crate::types::FieldData;
 
   fn robot(id: u8, team: u8, x: f32, y: f32) -> Robot {
     Robot {

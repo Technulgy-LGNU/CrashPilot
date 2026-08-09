@@ -17,6 +17,7 @@ socket2 = "0.6.4"
 [features]
 default = []
 ssl_vision = []
+sim = []
 
 [workspace]
 members = ["crates/*"]

@@ -774,10 +774,9 @@ fn three_point_curvature(a: Vec2<f32>, b: Vec2<f32>, c: Vec2<f32>) -> f32 {
 
 #[cfg(test)]
 mod tests {
-  use core_dump::types::cp_types::Robot;
+  use core_dump::types::cp_types::{FieldData, Robot};
 
   use super::*;
-  use crate::types::FieldData;
 
   fn request() -> CrashfinderRequest {
     CrashfinderRequest {

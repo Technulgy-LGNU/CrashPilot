@@ -1,11 +1,11 @@
-use core_dump::types::cp_types::Robot;
+use core_dump::types::cp_types::{FieldData, Robot};
 use core_dump::vec::types::Vec2;
 
 use crate::geometry::{EPSILON, clamp_magnitude, is_finite, normalize_angle};
 use crate::global_planner::{GlobalPlan, PlanningWorld, path_is_clear, plan_path, track_path};
 use crate::local_avoidance::avoid_velocity;
 use crate::types::{
-  ConfigError, CrashfinderConfig, CrashfinderDebug, CrashfinderPath, CrashfinderRequest, FieldData,
+  ConfigError, CrashfinderConfig, CrashfinderDebug, CrashfinderPath, CrashfinderRequest,
   PlannerStatus, TEAM_BLUE, TEAM_YELLOW,
 };
 
